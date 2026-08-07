@@ -1,0 +1,11 @@
+name: hsfl-archive
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - httpx
+  - beautifulsoup4
+  - lxml
+  - pip
+  - pip:
+      - playwright
