@@ -365,3 +365,192 @@ generate_progress_html()
     no regressions. All 4 confirmed bugs are now fixed - only the
     "generalization risks" (untested-year assumptions) in `bugs.md`
     remain open.
+
+## Phase F — implementation (2026-08-07)
+
+24. Implemented all 8 `code/stats-aggregation/` modules (previously
+    stubs): `optimal_lineup.py` (greedy strict-positions-then-flex
+    solver, proven optimal for this problem shape - see the module
+    docstring's exchange-argument sketch), `standings.py`,
+    `breakdown.py`, `coaching.py`, `true_ranking.py`,
+    `players_started.py`, and the `aggregate_season.py` orchestrator.
+    Two documented simplifications (not bugs): standings rank ties are
+    broken by win_pct then cumulative points_for, not this league's real
+    "Head to Head Record" tiebreaker (full pairwise reconciliation judged
+    not worth the complexity); FLEX eligibility is hardcoded to RB/WR for
+    now (confirmed correct for 2024/2025, flagged as a generalization
+    risk for other years in the code same as `bugs.md`'s pattern).
+
+    Found and fixed one real bug during first run: `load_regular_season_weeks()`
+    initially treated "any week with a matchup" as regular season, but
+    playoff weeks (15-17) still have real (bye-reduced) matchups, so the
+    first run wrongly produced 17 weeks instead of 14. Fixed by parsing
+    the actual playoff start week out of `metadata.json`'s
+    `settings.playoff_teams_and_weeks` string and filtering to weeks
+    before it.
+
+    ```bash
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2025
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2024
+    ```
+
+25. Validated against both seasons (run by Claude): confirmed 14 regular-
+    season weeks for both years (post-fix); cross-checked final-week
+    cumulative `standings` rows against the already-verified
+    `standings.json` - wins/losses/ties/points_for/points_against matched
+    exactly for every team in both seasons, with the only discrepancies
+    being rank order among teams tied on win_pct (verified these are
+    exactly the documented tiebreaker-simplification cases, not bugs -
+    e.g. 2024 team 1 has the *highest* points_for among a 3-way tie but
+    ranks worst officially, confirming the real site tiebreaker isn't
+    points_for-based). Ran a structural integrity sweep across every
+    week/team in both seasons: coaching diff never positive (optimal
+    lineup is never worse than actual - would indicate a solver bug),
+    all-play weekly game counts always equal `team_count - 1`,
+    `true_ranking_score` always equals the sum of its 4 sub-ranks, and
+    every rank column is a clean 1..N permutation with no gaps/dupes.
+    **0 issues found** across both seasons. `players_started` counts
+    landed in a plausible 18-31 range per team per season.
+
+## Phase E begins — 2012 (first pre-2024 season, run by Claude)
+
+26. Ran the full pipeline for 2012 for the first time:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2012   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2012
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2012   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 all_time.py
+    ```
+    Fetch: all static pages 200 (no legacy-URL issues despite the
+    pre-2013 warning in `instructions.md` section 0), 4 teams / 15 weeks
+    discovered (vs 2024/2025's 10/17), 60 roster + 60 gamecenter + 39
+    transactions pages.
+
+    Found and fixed bug 5 (see `bugs.md`): champion detection failed
+    because 2012's title game used the literal label "Championship"
+    instead of "Fantasy Super Bowl" - `_placement_number()` didn't
+    recognize it, so the wrong team (3rd-place-game winner) was crowned
+    champion instead of the real winner (verified by comparing scores
+    directly). Fixed in both `code/raw-parsing/parse.py` and
+    `code/stats-aggregation/utils.py` (duplicate copy, per package
+    independence). Re-parsed 2012 and re-verified 2024/2025 for
+    regression (both still correct).
+
+    Also confirmed (not bugs, real findings): 2012 used a **snake**
+    draft (first real test of that previously-unverified code path - 60
+    picks, correctly ordered, 0 duplicates/missing fields); a
+    "Defensive Back" roster slot was declared in settings but never
+    actually used by any rostered player all season (solver correctly
+    leaves it unfilled); the consolation bracket is genuinely empty
+    (all 4 teams made the single championship bracket that year) and
+    parses to an empty-but-valid structure rather than erroring.
+
+    Validation: 0 anomalies across the full Phase D suite (standings,
+    draft, matchups/rosters, transactions, coaching-sign check) and the
+    all-time integrity suite (0 combined-sum mismatches, 0 H2H symmetry
+    issues, 3 total championships across 2012+2024+2025, 0 unresolved
+    lookups). Manager Ashwin (`userId 2772924`) correctly linked across
+    the 12-year gap between 2012 and 2024 - his 2012 championship counts
+    correctly in `career.championships` (1, matching that he wasn't
+    champion in 2024 or 2025).
+
+27. **2013 delegated to a background agent** (per user request, run in
+    parallel with 2012) - same pipeline and validation checks. See its
+    own report for results once it completes.
+
+28. **2013 background agent results.** Ran the full pipeline:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2013   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2013
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2013   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 all_time.py
+    ```
+    Fetch: all static season pages returned status=200 (no legacy-URL-
+    scheme issues despite the pre-2013-boundary warning in
+    `instructions.md` section 0 - 2013 fetched exactly like 2024/2025).
+    Discovered 8 teams / 16 weeks (a third distinct league size, after
+    2012's 4/15 and 2024/2025's 10/17) - 8 team home pages, 128 roster
+    pages, 128 game center pages, 67 transactions pages, 680 raw files
+    total (html + meta sidecars). No non-2xx statuses anywhere in the
+    fetch log.
+
+    Parse: 0 `WARNING` lines (no unresolved teams, no team-count
+    mismatches). Draft: 120 picks, 15/team, perfectly even across all 8
+    teams, 0 missing `team_id`/`player_id`, 0 duplicate `player_id`s.
+    Playoffs: `champion_team_id: "7"` correctly identified from a
+    round labeled literally "Championship" (same label style as 2012,
+    confirming bug 5's generalized placement-number detector handles
+    this label too, not just 2012) - winner's score (125.78) exceeds the
+    loser's (63.34) in that game, consistent with a correct pick.
+
+    Aggregate: 0 `WARNING` lines (no unresolved team_id-to-manager
+    lookups in `records.json`).
+
+    **Validation - all checks passed, 0 anomalies:**
+    - `standings.json` `final_standings`: 0 rows with any `None` value.
+    - `draft.json`: 0 missing fields, 0 duplicate `player_id`s, exactly
+      even picks-per-team (15 x 8).
+    - Matchup/roster anomaly scan: 0/64 matchup files and 0/128 roster
+      files with empty starters or a missing score.
+    - `transactions.json`: 1538 rows (1521 non-LM, 17 LM); 0 non-LM rows
+      missing `player_name`, 0 LM rows missing `message`.
+    - `all_time_manager_stats.json`: 0 combined-sum mismatches (checked
+      every manager x every stat: wins/losses/ties/points_for/
+      points_against, `combined` == sum of the 3 season-type buckets).
+    - Head-to-head symmetry: 0 issues across every manager pair in the
+      `combined` block.
+    - `all_time_unresolved.json`: empty (`{"unresolved": []}`) after
+      folding in 2013, as expected.
+
+    No new bugs found - 2013 reproduced the already-fixed bugs 1-5
+    correctly (via the generalized detectors) and hit none of the open
+    "generalization risk" items in `bugs.md`. `draft.json`'s
+    `draft_type` is `"snake"` (all 120 picks have `auction_amount: null`)
+    - a second real-world confirmation of the previously-unverified
+    snake-draft code path alongside 2012, no unusual roster slot labels,
+    week 1 had a full 8-team slate. Phase E now covers
+    2012 and 2013 (both pre-2024) alongside the original 2024/2025 -
+    four seasons folded into the all-time files with 0 unresolved
+    entries and 0 integrity issues.
+
+29. **2014 (background agent, immediately following 2013).** Ran the
+    full pipeline:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2014   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2014
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2014   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 all_time.py
+    ```
+    Fetch: all static pages status=200, no legacy-URL issues. Same
+    8 teams / 16 weeks league size as 2013 (8 team home, 128 roster,
+    128 gamecenter, 65 transactions pages, 676 raw files total).
+
+    Parse: 0 `WARNING` lines. Draft: `draft_type: "snake"`, 120 picks,
+    15/team exactly even, 0 missing fields, 0 duplicate `player_id`s -
+    a third real-world confirmation of the snake-draft path (after 2012
+    and 2013). Playoffs: champion detection correctly picked
+    `champion_team_id: "2"` from a round again literally labeled
+    "Championship" (not "Fantasy Super Bowl") - winner's score (85.78)
+    correctly exceeds the loser's (68.98), confirming bug 5's fix keeps
+    generalizing.
+
+    Aggregate: 0 `WARNING` lines.
+
+    **Validation - all checks passed, 0 anomalies:**
+    - `standings.json`: 0 `None`-value rows.
+    - `draft.json`: 0 missing fields, 0 duplicate `player_id`s, even
+      15-per-team picks.
+    - Matchup/roster scan: 0/64 matchup files, 0/128 roster files with
+      empty starters or missing scores.
+    - `transactions.json`: 1501 rows (1490 non-LM, 11 LM), 0 missing
+      `player_name`/`message`.
+    - `all_time_manager_stats.json`: 0 combined-sum mismatches.
+    - Head-to-head symmetry: 0 issues.
+    - `all_time_unresolved.json`: empty.
+    - `post_season_stats.json`'s `final_placements` forms a clean 1..N
+      permutation in **every** season parsed so far (2012: 1-4, 2013/
+      2014: 1-8, 2024/2025: 1-10) - checked as part of this run.
+
+    No new bugs. Phase E now covers 2012, 2013, 2014 plus 2024/2025 -
+    five seasons folded into the all-time files, still 0 unresolved
+    entries and 0 integrity issues.

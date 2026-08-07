@@ -47,7 +47,17 @@ ROSTER_POSITION_LABEL_TO_KEY = {
 }
 
 
-def parse_metadata(settings_html: str, schedule_week1_html: str, year: int) -> dict:
+def parse_metadata(settings_html: str, standings_final_html: str, year: int) -> dict:
+    """Team list source changed 2026-08-07: was schedule.html week 1's
+    matchups, which silently omits any team with a week-1 bye (odd team
+    count, a team not yet active, etc - a real risk once Phase E hits
+    seasons with a different team/manager roster than 2024/2025).
+    standings.html lists every team regardless of any single week's
+    schedule, so it's used for the team_id/team_name list instead.
+    Manager identity comes from each team's own team_home.html (fetched
+    once per team_id, independent of any week) rather than schedule.html's
+    week-1 matchup header - see raw_path(..., team_id=...) below.
+    """
     settings_soup = BeautifulSoup(settings_html, "lxml")
 
     confirmation_preview = settings_soup.select_one(".mod.confirmationPreview")
@@ -76,24 +86,40 @@ def parse_metadata(settings_html: str, schedule_week1_html: str, year: int) -> d
     draft_date_match = re.search(r"([A-Z][a-z]+ \d{1,2}, \d{4})", header.get("Draft Type", ""))
     draft_date = draft_date_match.group(1) if draft_date_match else ""
 
-    schedule_soup = BeautifulSoup(schedule_week1_html, "lxml")
+    from utils import raw_path  # file-access exception, same precedent as parse_schedule_from_gamecenters
+
+    standings_soup = BeautifulSoup(standings_final_html, "lxml")
     teams = []
-    for matchup in schedule_soup.select(".matchup"):
-        for team_wrap in matchup.select(".teamWrap"):
-            team_name_element = team_wrap.select_one("a.teamName")
-            user_name_element = team_wrap.select_one(".userName")
-            if not team_name_element:
-                continue
-            team_id_match = re.search(r"teamId-(\d+)", " ".join(team_name_element.get("class", [])))
-            user_id_match = re.search(r"userId-(\d+)", " ".join(user_name_element.get("class", []))) if user_name_element else None
-            teams.append(
-                {
-                    "team_id": team_id_match.group(1) if team_id_match else "",
-                    "team_name": team_name_element.get_text(strip=True),
-                    "manager_id": user_id_match.group(1) if user_id_match else "",
-                    "manager_display_name": user_name_element.get_text(strip=True) if user_name_element else "",
-                }
-            )
+    unresolved_teams = []
+    seen_team_ids = set()
+    for team_name_element in standings_soup.select("a.teamName"):
+        team_id_match = re.search(r"teamId-(\d+)", " ".join(team_name_element.get("class", [])))
+        if not team_id_match:
+            continue
+        team_id = team_id_match.group(1)
+        if team_id in seen_team_ids:  # standings.html repeats the #1 team in both the champion block and the ranked list
+            continue
+        seen_team_ids.add(team_id)
+        team_name = team_name_element.get_text(strip=True)
+
+        manager_id, manager_display_name = "", ""
+        team_home_path = raw_path(year, "team_home.html", team_id=team_id)
+        if team_home_path.exists():
+            user_name_element = BeautifulSoup(team_home_path.read_text(), "lxml").select_one(".userName")
+            if user_name_element:
+                user_id_match = re.search(r"userId-(\d+)", " ".join(user_name_element.get("class", [])))
+                manager_id = user_id_match.group(1) if user_id_match else ""
+                manager_display_name = user_name_element.get_text(strip=True)
+
+        if not manager_id:
+            unresolved_teams.append({"team_id": team_id, "team_name": team_name, "reason": "no manager userId found on team_home.html"})
+
+        teams.append({"team_id": team_id, "team_name": team_name, "manager_id": manager_id, "manager_display_name": manager_display_name})
+
+    expected_team_count = int(general_settings.get("Teams", 0) or 0)
+    notes = ""
+    if expected_team_count and len(teams) != expected_team_count:
+        notes = f"Team count mismatch: settings.html reports {expected_team_count} teams but standings.html yielded {len(teams)} - investigate before trusting this season's data."
 
     return {
         "season": year,
@@ -101,7 +127,7 @@ def parse_metadata(settings_html: str, schedule_week1_html: str, year: int) -> d
         "league_name": header.get("League Name", ""),
         "commissioner": header.get("Commissioner", ""),
         "settings": {
-            "num_teams": int(general_settings.get("Teams", 0) or 0),
+            "num_teams": expected_team_count,
             "roster_settings": roster_settings,
             "waiver_type": general_settings.get("Waiver Type", ""),
             "trade_deadline": general_settings.get("Trade Deadline", ""),
@@ -114,9 +140,10 @@ def parse_metadata(settings_html: str, schedule_week1_html: str, year: int) -> d
             "draft_format_raw": draft_format,
         },
         "teams": teams,
+        "unresolved_teams": unresolved_teams,
         "source_urls": [],
         "fetch_status": "ok",
-        "notes": "",
+        "notes": notes,
     }
 
 
@@ -319,13 +346,24 @@ def _parse_playoff_bracket(bracket_html: str) -> dict:
 
 def _placement_number(round_label: str) -> int | None:
     """Extracts the "Nth" from a placement game label. "Fantasy Super
-    Bowl" (or any label containing "super bowl") is placement 1. Confirmed
-    2026-08-06: both brackets share this "Nth Place Game" naming, with the
-    championship side counting from 1st and the consolation side
-    continuing the sequence (7th, 9th, 11th for this league's 10 teams) -
-    so the lowest placement number in a bracket's final round is always
-    that bracket's own "title game", regardless of which numbers appear."""
-    if "super bowl" in round_label.lower():
+    Bowl"/"Super Bowl"/"Championship" (any label containing one of those)
+    is placement 1. Confirmed 2026-08-06 (2025 data): both brackets share
+    this "Nth Place Game" naming, with the championship side counting
+    from 1st and the consolation side continuing the sequence (7th, 9th,
+    11th for this league's 10 teams) - so the lowest placement number in
+    a bracket's final round is always that bracket's own "title game",
+    regardless of which numbers appear.
+
+    Bug found and fixed 2026-08-07 (2012 data): the title-game label
+    isn't always "Fantasy Super Bowl" - a smaller/earlier-year bracket
+    used the literal label "Championship" instead, which this function
+    didn't recognize, so _find_bracket_winner() fell through to the only
+    OTHER placement-labeled game that round ("3rd Place Game") and
+    crowned its winner as champion instead of the actual championship
+    game's winner. Confirmed the real winner by comparing scores directly
+    against the raw bracket HTML before fixing."""
+    label_lower = round_label.lower()
+    if "super bowl" in label_lower or "championship" in label_lower:
         return 1
     match = re.search(r"(\d+)(?:st|nd|rd|th)\s+Place", round_label, re.IGNORECASE)
     return int(match.group(1)) if match else None

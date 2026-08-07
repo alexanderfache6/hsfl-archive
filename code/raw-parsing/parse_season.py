@@ -31,9 +31,13 @@ def parse_season(year: int) -> None:
 
     metadata = parse_metadata(
         raw_path(year, "settings.html").read_text(),
-        raw_path(year, "schedule.html").read_text(),
+        raw_path(year, "standings.html").read_text(),
         year,
     )
+    if metadata["unresolved_teams"]:
+        print(f"[{year}] WARNING: {len(metadata['unresolved_teams'])} team(s) with no resolvable manager: {metadata['unresolved_teams']}")
+    if metadata["notes"]:
+        print(f"[{year}] WARNING: {metadata['notes']}")
     write_json(parsed_path(year, "metadata.json"), metadata)
     print(f"[{year}] wrote metadata.json")
 

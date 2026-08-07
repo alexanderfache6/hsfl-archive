@@ -186,3 +186,73 @@ Playoff winner detection produced plausible, distinct results
 9/2/5, as expected for a different season/champion), giving some
 confidence the generic placement-number detector (fix for bug 1)
 generalizes beyond the exact season it was written against.
+
+## Phase E begins — bug 5 found and fixed in 2012 (first pre-2024 season)
+
+Fetched/parsed/aggregated 2012 for the first time 2026-08-07 - first real
+test of a season with a genuinely different league configuration: **4
+teams** (not 10), **15 weeks** (not 17), **snake draft** (not auction,
+first real test of that previously-unverified code path), a roster
+setting for an unused "Defensive Back" IDP slot, and all 4 teams making
+a single "championship" playoff bracket (no consolation bracket that
+year - correctly parsed as empty, not a bug).
+
+### 5. [FIXED] Champion detection failed on the literal label "Championship"
+`_placement_number()` (in both `code/raw-parsing/parse.py` and its
+duplicate in `code/stats-aggregation/utils.py`) only recognized "super
+bowl" or an "Nth Place Game" pattern as placement-1 signals. 2012's
+bracket used the literal label **"Championship"** for the title game
+instead of "Fantasy Super Bowl" - exactly the risk flagged in this
+file's "generalization risks" section back when bug 1 was fixed. Since
+"Championship" matched neither pattern, `_find_bracket_winner()` fell
+through to the only other placement-labeled game that round ("3rd Place
+Game") and crowned *its* winner (team 3) as season champion, when the
+real title game (team 1 beat team 2, 139.70-139.38) gave the title to
+team 1.
+- **Confirmed real bug, not a data artifact:** verified by reading the
+  actual bracket scores directly - team 1's score exceeded team 2's in
+  the game literally labeled "Championship".
+- **Fix:** added `"championship" in label_lower` as an additional
+  placement-1 synonym alongside `"super bowl"`, in both copies of the
+  function.
+- **Verified no regression:** re-parsed 2024/2025 after the fix - both
+  still correctly show their known champions (team 8 / team 9).
+- **Everything else in 2012 was clean:** 0 anomalies across all the
+  usual Phase D checks (standings None-values, draft integrity - 60
+  snake picks, 0 duplicates, 0 missing team_id/player_id - matchup/
+  roster scans, transactions, coaching-diff sign check); all-time
+  integrity checks (combined-sum, H2H symmetry, unresolved list) also
+  0 issues after folding 2012 into the cross-season files. Manager
+  Ashwin (`userId 2772924`) correctly linked across a 12-year gap -
+  played in 2012, reappears in 2024/2025, with his 2012 championship
+  correctly counted in `career.championships`.
+- **Confirmed real, not a bug:** the "Defensive Back" roster slot
+  declared in 2012's `settings.html` never had a single player with
+  that position value anywhere in the season's actual roster/matchup
+  data - the optimal-lineup solver correctly leaves it unfilled (0
+  players match) rather than crashing or fabricating a match. Likely a
+  vestigial/unused slot in the league's settings that year, not a
+  parsing gap.
+
+### 6. [FIXED] `last_place` empty for seasons with no real consolation bracket
+User-reported: 2012's `all_time_champions.json` entry had an empty
+`last_place` (team_id/manager_id/display_name all `""`). Root cause:
+`_find_last_place()` only ever looked at the consolation bracket, and
+2012 (4 teams, all 4 made the single championship bracket - see bug 5's
+entry above) has a genuinely empty consolation bracket, so there were no
+candidates to pick a loser from. But "last place" is still meaningful
+even without a consolation bracket - it's just whichever team finished
+worst in the regular season.
+- **Fix:** `_find_last_place()` now takes `final_standings` as a second
+  argument and falls back to the worst-ranked (`max(rank)`) team there
+  when the consolation bracket yields no candidates. Both call sites in
+  `all_time.py` updated - one already had `standings.json` loaded, the
+  other reuses `weekly_tables.json`'s final-week cumulative standings
+  (already loaded there) rather than reading `standings.json` again.
+- **Verified:** 2012's `last_place` now correctly shows team 4
+  ("bontenators", manager Jeremy, 6-7-0) - confirmed this matches
+  `standings.json`'s actual worst-ranked (rank 4) team exactly. Re-ran
+  the full all-time integrity suite across all 4 seasons (2012, 2013,
+  2024, 2025) folded in so far: 0 combined-sum mismatches, 0 H2H
+  symmetry issues, 4 championships total (1 per season, correct), 0
+  unresolved lookups.

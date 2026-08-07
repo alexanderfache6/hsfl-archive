@@ -120,18 +120,348 @@ cumulative-only per user confirmation):**
 
 23. Create `code/stats-aggregation/` (empty scaffold, first step - implementation
     comes after this plan is confirmed).
+
+    **Status 2026-08-07: scaffolded.** Module layout (all stubs, no logic
+    yet - raise `NotImplementedError`, matching how `parse.py` started in
+    Phase A):
+    - `utils.py` — paths only (`archive/parsed/` read, `archive/aggregated/`
+      write); deliberately does not import anything from `code/raw-parsing/`.
+    - `optimal_lineup.py` — `solve_optimal_lineup(players, roster_settings)`,
+      the lineup solver tables 3/4 depend on.
+    - `standings.py` / `breakdown.py` / `coaching.py` / `true_ranking.py` —
+      one module per sub-table, each a `compute_*_table(year, week)` (or,
+      for true_ranking, a pure function over the other three tables' rows).
+    - `players_started.py` — the season-long distinct-players stat.
+    - `aggregate_season.py` — orchestrator entrypoint (`--year`), matching
+      `fetch_season.py`/`parse_season.py`'s pattern; wires the above into
+      `archive/aggregated/{year}/weekly_tables.json` +
+      `players_started.json`.
+
 24. Design the output file shape (likely `archive/aggregated/{year}/*.json` -
     mirroring the `archive/parsed/{year}/` convention) before writing code.
+
+    **Status 2026-08-07: confirmed.**
+    ```
+    archive/aggregated/{year}/
+    ├── weekly_tables.json     # tables 1-4, one entry per regular-season week
+    └── players_started.json  # season-long distinct-players-started per team
+    ```
+    `weekly_tables.json` shape:
+    ```json
+    {
+      "season": 2025,
+      "weeks": [
+        {
+          "week": 1,
+          "standings": [
+            {"team_id": "9", "rank": 1, "wins": 1, "losses": 0, "ties": 0,
+             "win_pct": 1.0, "win_streak": "W1", "points_for": 130.2, "points_against": 98.4,
+             "weekly": {"result": "W", "points_for": 130.2, "points_against": 98.4}}
+          ],
+          "breakdown": [
+            {"team_id": "9",
+             "weekly": {"wins": 8, "losses": 1, "ties": 0, "win_pct": 0.889, "rank": 1},
+             "cumulative": {"wins": 8, "losses": 1, "ties": 0, "win_pct": 0.889, "rank": 1}}
+          ],
+          "coaching": [
+            {"team_id": "9",
+             "weekly": {"actual_points": 130.2, "optimal_points": 135.6, "diff": -5.4, "rank": 3},
+             "cumulative": {"diff_sum": -5.4, "rank": 3}}
+          ],
+          "true_ranking": [
+            {"team_id": "9", "record_rank": 1, "points_for_rank": 1,
+             "breakdown_rank": 1, "coaching_rank": 3,
+             "true_ranking_score": 6, "true_rank": 1}
+          ]
+        }
+      ]
+    }
+    ```
+    `players_started.json` shape:
+    ```json
+    {"season": 2025, "teams": [{"team_id": "9", "player_count": 24, "player_ids": ["2560955", "..."]}]}
+    ```
+    Notes:
+    - `weekly_tables.json` is regular-season only (playoff weeks use the
+      bracket format in `playoffs.json`, not a standings table, per §2).
+    - `standings[].rank` uses that season's actual tiebreaker from
+      `metadata.json.settings` — not hardcoded — since Phase D's
+      generalization risks already flagged league config can vary by year.
+    - Deliberately no separate "final standings" file - week N's row in
+      `weekly_tables.json` (where N = last regular-season week) already
+      **is** the cumulative end-of-regular-season table; re-deriving it
+      would duplicate `standings.json`.
+
 25. Implement the per-season aggregation script and validate it against
     2024 and 2025's already-parsed data.
-26. Decide how/when the interactive layer consumes this output (separate,
-    later phase - not scoped yet).
 
 ## Phase E — Full run (2012–2025)
+
+**Paused 2026-08-07** — deliberately not started yet. User wants to build
+out Phase G (the interactive layer) first, against the two seasons
+already fully archived/aggregated (2024, 2025), before committing to the
+full 12-season crawl. Resume this phase once Phase G's structure has
+proven out.
+
 19. Execute §6 step 2 (a–g) per remaining season, updating `index.json` after each sub-step.
 20. Regenerate `progress.html` after each season completes so status is checkable mid-run.
 21. Final pass: retry any `missing`/`partial` entries in `index.json`; resolve remaining `managers.json.unresolved` entries.
 22. Produce `archive/SUMMARY.md` per §6 step 5.
+
+## Phase G — Interactive layer (2026-08-07, moved from Phase F step 26)
+
+26. Decide how/when the interactive layer consumes Phase F's aggregated
+    output.
+
+**Confirmed design so far:**
+- New `frontend/` directory at the project root (a sibling of `code/`,
+  not nested under it) - holds all UI-related code, kept separate from
+  both `code/raw-parsing/` and `code/stats-aggregation/`.
+- **Data flow:** download → archive (raw HTML) → process (parse to JSON)
+  → aggregate (Phase F stats) happens for **all years first**, offline,
+  using the existing `code/raw-parsing/` and `code/stats-aggregation/`
+  pipelines. Output is committed to the GitHub repo (`archive/parsed/`,
+  `archive/aggregated/`). The frontend reads those committed static
+  files directly - **no external database**, for simplicity.
+- **Hosting: Streamlit Community Cloud** (confirmed 2026-08-07). GitHub
+  Pages can't run a Streamlit server (static files only), so the
+  original "GitHub Pages via Streamlit" framing was resolved to Streamlit
+  Community Cloud instead - free, deploys directly from the GitHub repo,
+  auto-redeploys on push, full Streamlit feature set. The repo itself
+  (with committed `archive/parsed/`/`archive/aggregated/` data) remains
+  on GitHub as the single source of truth; Streamlit Community Cloud
+  just points at it and runs `frontend/`'s app.
+
+**Page structure (confirmed 2026-08-07, starting set - more pages to be
+filled in incrementally, page by page, in future sessions):**
+1. **History** — all-time champions list, all-time records, stats
+   aggregated across every season.
+2. **Yearly** — pick a year, see weekly-stat graphs and season aggregates
+   (maps directly onto Phase F's `weekly_tables.json`/`players_started.json`
+   for that year - no new data needed).
+3. **Managers** — pick a single manager, see in-depth stats for that
+   manager's team across every season they've played (joins across
+   years via `managers.json`'s persistent manager_id).
+4. **Players** — which manager(s) have rostered a given player, and how
+   often (cross-season roster/draft history per player).
+
+**Cross-season data (confirmed 2026-08-07):** tabs 1/3/4 all need data
+joined *across* seasons, which Phase F doesn't produce (it's strictly
+per-season, run one year at a time). Resolved as **pre-computed, not
+computed live in Streamlit** — add a new cross-season step to
+`code/stats-aggregation/` that reads every year's already-aggregated
+output and writes combined all-time files (e.g.
+`archive/aggregated/all_time_*.json`), committed to the repo the same
+way as everything else. Keeps the frontend reading only static files
+(consistent with the Yearly tab, fast page loads, no logic duplicated
+between `stats-aggregation` and `frontend`). Not yet implemented - to be
+scoped alongside the pages that need it.
+
+**Status 2026-08-07: cross-season aggregation implemented** —
+`code/stats-aggregation/all_time.py`, sourcing stats from each season's
+already-computed `aggregate_season.py` output (not re-derived from
+`archive/parsed/`), with manager identity/championship results pulled
+from `metadata.json`/`playoffs.json` only (the two things Phase F
+doesn't produce). Writes 3 files directly under `archive/aggregated/`
+(not per-year): `all_time_champions.json` (one row per season - champion/
+runner-up/consolation winner, team + manager), `all_time_manager_stats.json`
+(one row per manager - career wins/losses/points/championships/
+career_players_started, cumulative from first season played to last),
+`all_time_records.json` (record-book superlatives: highest/lowest weekly
+score, highest/lowest season points_for, longest win/loss streak, best/
+worst coaching season, most players started in a season).
+
+Validated against 2024+2025: total championships across all managers
+sums to 2 (matches 2 seasons run so far), total games across all
+managers sums to 280 (= 2 years × 10 teams × 14 games, exact), and
+spot-checked `highest_season_points_for` / `most_players_started_season`
+against values already confirmed correct in earlier phases - both
+matched exactly. Note: two different managers happen to both be named
+"Alex" (manager_id 22089610 and 5049083) - correctly kept as separate
+career records via persistent manager_id, not merged by display name.
+
+```bash
+conda run -n hsfl-archive python3 all_time.py
+```
+
+**Status 2026-08-07: expanded and re-implemented per user confirmation.**
+- `all_time_champions.json`: now top 3 final standings per season (was
+  champion/runner-up only) + `last_place` ("consolation_loser" for
+  punishments - the loser of the consolation bracket's highest-
+  placement-number game, e.g. the "9th Place Game" loser in a 10-team
+  league); consolation *winner* removed entirely.
+- New per-season file `archive/aggregated/{year}/head_to_head.json`
+  (`code/stats-aggregation/head_to_head.py`, wired into
+  `aggregate_season.py`): `regular_season` matrix (from weekly matchups)
+  + `post_season` matrix split into `championship`/`consolation`
+  sub-matrices (the "flag that separates these 2 brackets") from
+  `playoffs.json`.
+- New per-season file `archive/aggregated/{year}/records.json`
+  (`code/stats-aggregation/records.py`, refactored out of the old
+  all-time-only scan): that season's own record book, so the Yearly UI
+  page can show it without waiting on the all-time file.
+- `all_time_manager_stats.json` restructured: each manager now has
+  `regular_season`/`post_season`/`combined` blocks (wins/losses/ties/
+  win_pct/points_for/points_against/head_to_head each), built from the
+  new per-season `head_to_head.json` files (not re-derived), plus
+  career-level `championships`/`runner_ups`/`last_place_finishes`/
+  `career_players_started_count`.
+- `all_time_records.json` rewritten to combine each season's `records.json`
+  (not re-scan `weekly_tables.json`).
+
+```bash
+conda run -n hsfl-archive python3 aggregate_season.py --year 2025  # now also writes head_to_head.json, records.json
+conda run -n hsfl-archive python3 aggregate_season.py --year 2024
+conda run -n hsfl-archive python3 all_time.py
+```
+
+**Validated** (run by Claude): all-time records output identical to the
+pre-restructure version (confirms the records.json-based rewrite is
+correct); H2H matrix fully symmetric across all 10×9 manager pairs (0
+issues); combined = regular_season + post_season for every manager and
+every stat (0 mismatches); total regular-season team-game entries = 280
+exactly (2 years × 10 teams × 14 weeks); total championships/runner_ups/
+last_place_finishes across all managers each sum to exactly 2 (matches 2
+seasons run so far); top-3/last-place matched all previously-confirmed
+champion data for both seasons.
+
+**Status 2026-08-07 (second revision, per further user feedback):**
+post-season stats split into two separate blocks instead of one merged
+`post_season` - championship and consolation are different competitive
+contexts and shouldn't be blended.
+- New per-season file `archive/aggregated/{year}/post_season_stats.json`
+  (`code/stats-aggregation/post_season_stats.py`, wired into
+  `aggregate_season.py`): per-team win/loss/points, split into
+  `championship`/`consolation` sections, refactored out of what used to
+  be inline logic in `all_time.py`.
+- `all_time_manager_stats.json`: each manager now has 4 blocks -
+  `regular_season`, `post_season_championship`, `post_season_consolation`,
+  `combined` (= sum of the other 3) - each with the full wins/losses/
+  ties/win_pct/points_for/points_against/head_to_head shape.
+- `all_time_champions.json`: `top_3` entries and `last_place` now each
+  carry both `regular_season` (from `standings.json`) and `post_season`
+  (from the new `post_season_stats.json` - championship side for top_3,
+  consolation side for last_place, since that's unambiguously which
+  bracket each played in) blocks, instead of one flat record.
+
+```bash
+conda run -n hsfl-archive python3 aggregate_season.py --year 2025  # now also writes post_season_stats.json
+conda run -n hsfl-archive python3 aggregate_season.py --year 2024
+conda run -n hsfl-archive python3 all_time.py
+```
+
+**Validated** (run by Claude): combined = sum of all 3 blocks for every
+manager/stat (0 mismatches); H2H symmetry holds across the full combined
+matrix (0 issues); championships/runner_ups/last_place_finishes/regular-
+season-games totals unchanged at 2/2/2/280 (no regression from the
+restructure); `all_time_records.json` unaffected and still correct.
+Found one genuinely interesting real result while validating: manager
+Liam has entries in *both* `post_season_championship` (2-0, won the
+2025 title) and `post_season_consolation` (2-0, won the 2024 consolation
+bracket - matches the already-confirmed 2024 `consolation_winner_team_id: 9`)
+- correctly tracked as two separate career lines rather than merged.
+
+**Status 2026-08-07 (third revision): "do not silently drop anything" hardening.**
+User flagged a real risk: 2024/2025 happened to share an identical
+manager roster, but team/manager counts will genuinely vary once Phase E
+covers 2012-2023. Three fixes:
+1. **Root fix** - `code/raw-parsing/parse.py`'s `parse_metadata()` used to
+   derive the entire team list from `schedule.html`'s week-1 matchups,
+   which silently omits any team with a week-1 bye. Changed to source the
+   team list from `standings.html` (guaranteed complete regardless of any
+   single week) and manager identity from each team's own
+   `team_home.html` (fetched once per team, independent of week) instead
+   of the week-1 matchup header. `metadata.json` gained `unresolved_teams`
+   (any team with no discoverable manager) and a `notes` warning if the
+   parsed team count doesn't match `settings.html`'s own "Teams: N" figure.
+2. Verified for 2024/2025: identical manager mapping, zero
+   `unresolved_teams`, no count-mismatch notes - the fix is a no-op for
+   already-clean data, as expected, while now being robust going forward.
+3. **Hardened every cross-season aggregation function** in
+   `code/stats-aggregation/all_time.py` and `records.py` - every place
+   that used to silently `continue`/default-to-`{}` on a failed
+   team_id→manager lookup now appends to an `unresolved` list instead.
+   Per-season `records.json` carries its own `unresolved` key; all-time
+   aggregation writes a new `archive/aggregated/all_time_unresolved.json`
+   combining every season's findings, plus a printed warning if non-empty.
+
+```bash
+conda run -n hsfl-archive python3 parse_season.py --year 2025  # from code/raw-parsing/
+conda run -n hsfl-archive python3 parse_season.py --year 2024
+conda run -n hsfl-archive python3 aggregate_season.py --year 2025  # from code/stats-aggregation/
+conda run -n hsfl-archive python3 aggregate_season.py --year 2024
+conda run -n hsfl-archive python3 all_time.py
+```
+
+**Validated** (run by Claude): zero warnings printed for either season
+(confirms the fix is a clean no-op on already-good data); re-ran the full
+integrity suite - 0 combined-sum mismatches, 0 H2H symmetry issues, 2
+championships / 280 regular-season games (unchanged, no regression);
+`all_time_unresolved.json` correctly empty.
+
+**Status 2026-08-07: frontend scaffolded, History tab (page 1) built.**
+- `frontend/requirements.txt` (streamlit, pandas, plotly - the pip file
+  Streamlit Community Cloud actually deploys from), `frontend/app.py`
+  (4-tab nav: History built, Yearly/Managers/Players stubbed),
+  `frontend/data_loader.py` (`@st.cache_data`-wrapped readers over the
+  committed `archive/aggregated/*.json` - no database, no live fetch),
+  `frontend/pages_history.py` (champions-by-season table, all-time
+  records as stat tiles, career manager standings table).
+- Verified with `streamlit.testing.v1.AppTest` (headless script-execution
+  check - no browser available in this environment) and a live
+  `streamlit run` process health-checked over HTTP: 0 exceptions, all
+  expected tables/metrics render with correct values.
+- Per further user request, extended the underlying aggregation (not
+  just the UI) with three new stats:
+  - `third_place_finishes` per manager (career standings table).
+  - `fewest_players_started_season` (per-season `records.json` and
+    all-time `all_time_records.json`), alongside the existing "most".
+  - `average_regular_season_finish` / `average_post_season_finish` per
+    manager - the latter required a new generalized
+    `compute_final_placements()` in `post_season_stats.py` that derives
+    a full 1..N overall postseason ranking from both brackets' final-
+    round placement games (winner of a "Nth Place" game = rank N, loser
+    = N+1) - validated to produce a clean gapless 1..N permutation
+    across all 4 seasons fetched so far (4/8/10/10 teams respectively),
+    confirming consolation-bracket placement numbers already continue
+    globally from the championship bracket without manual offsetting.
+- Re-ran the full pipeline for all 4 seasons (2012/2013/2024/2025) +
+  `all_time.py` after these additions: 0 warnings, 0 unresolved lookups,
+  all new stats validated against known-correct values.
+
+**Status 2026-08-07: manager name disambiguation + table styling.**
+- `archive/managers.json` (`code/raw-parsing/managers.py`) gained
+  `display_names_seen_alternate` per manager - manually set to "Alex K"
+  (manager_id 22089610) and "Alex F" (manager_id 5049083), the two
+  managers sharing the display name "Alex"; empty string for everyone
+  else.
+- Propagated into `all_time_manager_stats.json` via a new
+  `load_display_name_alternates()` in `code/stats-aggregation/utils.py`
+  (reads `archive/managers.json` - the one place stats-aggregation reads
+  a raw-parsing *output* file outside `archive/parsed/`, consistent with
+  its existing "reads only finished outputs" principle).
+- `frontend/data_loader.py` gained a single shared
+  `build_manager_name_resolver()` / `resolve_manager_name()` - prefers
+  the alternate name whenever set, used everywhere a manager name is
+  displayed (champions table, record stat tiles, career standings), not
+  just the table it was first requested for.
+- New `frontend/ui_helpers.py` with `render_left_aligned_table()`:
+  switched all tables from `st.dataframe` to `st.table` + a pandas
+  Styler, since `st.dataframe` renders through a canvas-based grid
+  (glide-data-grid) that right-aligns numeric columns by default with no
+  public per-column alignment API - CSS/Styler text-align doesn't
+  reliably reach canvas-drawn cells. `st.table` renders a real HTML
+  table where left-alignment is guaranteed (verified: the rendered HTML
+  contains explicit `text-align: left` on every header/cell). Tradeoff:
+  loses `st.dataframe`'s built-in sort/resize/scroll - fine at current
+  table sizes (~12 rows), worth reconsidering if a future page needs
+  hundreds of rows.
+- Verified via `AppTest`: both "Alex" managers now show correctly as
+  "Alex K"/"Alex F" everywhere (champions table's 2024 entry, career
+  standings table) instead of ambiguous "Alex" in both places.
+
+27+ (not yet numbered): remaining frontend pages (Yearly, Managers,
+Players) - not yet built.
 
 ---
 
@@ -140,7 +470,9 @@ cumulative-only per user confirmation):**
 - [x] Phase A, step 2: scaffolded `fetch.py`, `parse.py` (stubs — real parsing deferred to Phase C per markup verification in Phase B), `manifest.py`, `run.py`.
 - [x] Phase A, step 3: shared `utils.py` with rate limiting, idempotent fetch helpers, sidecar `.meta.json` writer, and `archive/progress/errors.log` logger.
 - [x] Phase B–D: complete for 2025 and 2024 (both fully fetched, parsed, bug-reviewed — see `instructions/bugs.md` and `instructions/execution.md`). All 4 confirmed bugs fixed and verified across both seasons.
-- [x] Phase F, step 23: `code/stats-aggregation/` directory created (empty scaffold).
-- [ ] Phase F, steps 24–26: output shape design + implementation — not yet started. Weekly standings table spec (4 sub-tables: standings/breakdown/coaching/true ranking) confirmed 2026-08-07, documented above.
+- [x] Phase F, step 23: `code/stats-aggregation/` module scaffold complete (8 files).
+- [x] Phase F, step 24: output shape confirmed — `archive/aggregated/{year}/weekly_tables.json` + `players_started.json`, schemas documented above.
+- [x] Phase F, step 25: implemented and validated against both 2024 and 2025 (see `instructions/execution.md` steps 24-25). 0 structural issues found; wins/losses/ties/points/points_against match `standings.json` exactly, only rank ties differ (documented tiebreaker simplification: win_pct + points_for, not true head-to-head). Two documented simplifications to revisit if Phase E surfaces a different league config: FLEX = RB/WR hardcoded, tiebreaker isn't the real head-to-head rule.
+- [ ] Phase F, step 26: interactive layer — not scoped yet.
 - [x] Reorganization (2026-08-07): all fetch/parse code moved from `code/` into `code/raw-parsing/` (see `instructions/execution.md`'s "Running the pipeline on any season" section for updated commands); `code/aggregation/` renamed to `code/stats-aggregation/`.
 - [ ] Phase E: not yet started (2012–2023 remaining, 12 seasons).

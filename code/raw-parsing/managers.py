@@ -12,6 +12,16 @@ import json
 
 from utils import MANAGERS_PATH, PARSED_DIRECTORY, write_json
 
+# Manual disambiguation for managers who share a display_name with someone
+# else in the league (confirmed 2026-08-07: two different persistent
+# manager_ids are both named "Alex"). Empty string = no disambiguation
+# needed. UI code should prefer this over display_names_seen whenever
+# it's non-empty - see frontend/data_loader.py's resolve_manager_name().
+DISPLAY_NAME_ALTERNATES = {
+    "5049083": "Alex F",
+    "22089610": "Alex K",
+}
+
 
 def discover_parsed_seasons() -> list[int]:
     if not PARSED_DIRECTORY.exists():
@@ -38,7 +48,16 @@ def build_managers_registry(years: list[int]) -> dict:
                 unresolved.append({"season": year, "team_id": team_id, "display_name": display_name, "reason": "no manager_id found in metadata.json for this team"})
                 continue
 
-            entry = managers_by_id.setdefault(manager_id, {"manager_id": manager_id, "display_names_seen": [], "seasons": [], "notes": ""})
+            entry = managers_by_id.setdefault(
+                manager_id,
+                {
+                    "manager_id": manager_id,
+                    "display_names_seen": [],
+                    "display_names_seen_alternate": DISPLAY_NAME_ALTERNATES.get(manager_id, ""),
+                    "seasons": [],
+                    "notes": "",
+                },
+            )
             if display_name and display_name not in entry["display_names_seen"]:
                 entry["display_names_seen"].append(display_name)
             entry["seasons"].append({"season": year, "team_id": team_id, "team_name": team_name})
