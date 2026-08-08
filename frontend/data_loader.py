@@ -72,6 +72,11 @@ def load_players_started(year: int) -> dict:
 
 
 @st.cache_resource
+def load_transactions(year: int) -> dict:
+    return _read_json(PARSED_DIRECTORY / str(year) / "transactions.json")
+
+
+@st.cache_resource
 def build_manager_name_resolver() -> dict[str, str]:
     """{manager_id: display name to actually show in the UI}. Prefers
     display_names_seen_alternate (set in archive/managers.json for

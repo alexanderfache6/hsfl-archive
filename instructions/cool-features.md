@@ -2,6 +2,11 @@
 - [ ] 
 
 # seasons
+- [x] standings tab
+- [x] breakdown tab
+- [x] coach tab
+- [x] true tab
+- [x] transactions tab
 - [ ] 
 
 # managers

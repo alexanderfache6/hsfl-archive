@@ -493,6 +493,10 @@ def _render_roster_table(
             if optimal_gains is not None and actual_total_points is not None:
                 total_diff = optimal_total_points - actual_total_points
                 total_columns[3].markdown(_cell(f"+{total_diff:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+            # The expander's own bottom padding is tightened (see the
+            # scoped CSS in _render_matchup_card), so this row needs its
+            # own explicit breathing room instead of relying on that.
+            st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
 
 
 def _pad_missing_starters(starters: list[dict], year: int) -> list[dict]:
@@ -563,20 +567,42 @@ def _render_matchup_card(
                     f"</div>",
                     unsafe_allow_html=True,
                 )
-                st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
                 # Unique per matchup+side so button keys never collide
                 # across the many cards that can be on screen at once
                 # (e.g. Season filter set to "Any").
                 row_key_prefix = f"{matchup['season']}_{matchup['week']}_{side['team_id']}"
                 padded_starters = _pad_missing_starters(side["starters"], matchup["season"])
-                _render_roster_table(
-                    padded_starters,
-                    season=matchup["season"],
-                    week=matchup["week"],
-                    row_key_prefix=f"{row_key_prefix}_starters",
-                    optimal_losses=optimal_details["losses"] if optimal_details else None,
+                # Scoped (not global - this would otherwise hit every
+                # expander on the page) negative margin to pull the Bench
+                # expander up against the starters table's own bottom
+                # border, same idea as the roster row spacing fix above.
+                card_key = f"card_{row_key_prefix}"
+                st.markdown(
+                    f"<style>"
+                    f".st-key-{card_key} div[data-testid='stExpander'] {{ margin-top: -0.8rem; }}"
+                    # Streamlit's expander body carries its own generous
+                    # internal padding by default (unlike the starters
+                    # table's plain bordered container) - tightened on
+                    # both sides so the bench rows sit close to the
+                    # expander's edges. When the optimal-lineup toggle is
+                    # on, _render_roster_table adds its own explicit
+                    # spacer after the "Optimal Lineup Total" row instead
+                    # (see there) so that row still gets breathing room
+                    # without needing this padding kept generous.
+                    f".st-key-{card_key} div[data-testid='stExpanderDetails'] {{ padding-top: 0.25rem; padding-bottom: 0.25rem; }}"
+                    f"</style>",
+                    unsafe_allow_html=True,
                 )
-                with st.expander(f"Bench ({len(side['bench'])})"):
+                bench_container = st.container(key=card_key)
+                with bench_container:
+                    _render_roster_table(
+                        padded_starters,
+                        season=matchup["season"],
+                        week=matchup["week"],
+                        row_key_prefix=f"{row_key_prefix}_starters",
+                        optimal_losses=optimal_details["losses"] if optimal_details else None,
+                    )
+                with bench_container, st.expander(f"Bench ({len(side['bench'])})"):
                     _render_roster_table(
                         side["bench"],
                         season=matchup["season"],

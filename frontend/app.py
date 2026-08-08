@@ -13,16 +13,12 @@ Run locally: streamlit run app.py
 
 import streamlit as st
 
-from data_loader import discover_seasons
 from pages_games import render_games_page
 from pages_history import render_history_page
 from pages_players import render_players_page
+from pages_yearly import render_yearly_page
 
 st.set_page_config(page_title="The Music League", page_icon="🏈", layout="wide")
-
-
-def render_yearly_page() -> None:
-    st.info("Coming soon - copy of weekly stats tables, live for current year, line charts for each stat for cumulative season, bracket.")
 
 
 def render_managers_page() -> None:

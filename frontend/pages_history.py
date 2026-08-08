@@ -600,9 +600,7 @@ def render_history_page() -> None:
 
     _render_champions_table(champions_data, name_resolver, manager_color_map)
     _render_champion_charts(champions_data, name_resolver, manager_color_map)
-    st.divider()
     _render_records(records_data, name_resolver)
-    st.divider()
     manager_standings_dataframe = _build_manager_standings_dataframe(manager_stats_data, name_resolver)
     _render_manager_standings_table(manager_standings_dataframe)
     _render_manager_stat_chart(manager_standings_dataframe, manager_color_map)
