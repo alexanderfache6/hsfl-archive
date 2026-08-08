@@ -35,8 +35,9 @@ def _full_table_height(row_count: int) -> int:
     scrolling once a table has more rows than fit - passing an explicit
     height sized to the actual row count instead shows every row with no
     fold/scroll. ~35px/row + ~38px header, based on Streamlit's default
-    row height."""
-    return 38 + 35 * row_count + 3
+    row height - no extra padding beyond that, or the table shows a
+    trailing sliver of empty space below the last row."""
+    return 38 + 35 * row_count
 
 
 RECORD_LABELS = {
@@ -291,7 +292,12 @@ def _go_to_game(entry: dict) -> None:
     st.switch_page(st.session_state["_games_page"])
 
 
-RECORD_ROW_COLUMN_RATIOS = [1, 3, 1]  # score | info | button - same ratio every row so all three align vertically
+# score | info | button - wide enough for the button column to fit
+# "View Game"/"View Season" on one line without wrapping (each record row
+# is itself in a half-width column, so this column only gets ~1/10 of
+# the page width) - same ratio every row so all three still align
+# vertically.
+RECORD_ROW_COLUMN_RATIOS = [1, 2.3, 1.7]
 
 
 def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
@@ -316,7 +322,7 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
             unsafe_allow_html=True,
         )
     button_label = "View Game" if "week" in entry else "View Season"
-    if entry.get("manager_id") and button_column.button(button_label, key=f"record_link_{key}_{ordinal}"):
+    if entry.get("manager_id") and button_column.button(button_label, key=f"record_link_{key}_{ordinal}", use_container_width=True):
         _go_to_game(entry)
 
 
@@ -342,46 +348,53 @@ def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, st
     # shares the same [score, info, button] column ratio so the buttons
     # (and each column's content) stay vertically aligned across all
     # three rows regardless of that font-size difference.
+    # row_height stays the SAME across all three rows - it has to match
+    # the button's real rendered height (roughly constant regardless of
+    # the row) for the score/info text to align with it, even though the
+    # 2nd/3rd rows deliberately use smaller font sizes than the 1st.
     _render_record_row(widget_key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
     for ordinal, entry in zip(("2nd", "3rd"), top_n[1:]):
-        _render_record_row(widget_key, ordinal, entry, name_resolver, row_height="1.6rem", score_size="1.1rem", info_size="0.85rem")
+        _render_record_row(widget_key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
 
 
 def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> None:
-    variant_suffix = st.selectbox(
-        "Streak type",
-        list(STREAK_VARIANTS),
-        format_func=lambda suffix: STREAK_VARIANTS[suffix],
-        key="streak_variant",
-    )
-    win_key = f"longest_win_streak_{variant_suffix}" if variant_suffix else "longest_win_streak"
-    loss_key = f"longest_losing_streak_{variant_suffix}" if variant_suffix else "longest_losing_streak"
+    with st.container(border=True):
+        variant_suffix = st.selectbox(
+            "Streak type",
+            list(STREAK_VARIANTS),
+            format_func=lambda suffix: STREAK_VARIANTS[suffix],
+            key="streak_variant",
+        )
+        win_key = f"longest_win_streak_{variant_suffix}" if variant_suffix else "longest_win_streak"
+        loss_key = f"longest_losing_streak_{variant_suffix}" if variant_suffix else "longest_losing_streak"
 
-    left_column, right_column = st.columns(2)
-    with left_column:
-        _render_record_cell(win_key, records_data.get(win_key) or [], name_resolver, label=RECORD_LABELS["longest_win_streak"])
-    with right_column:
-        _render_record_cell(loss_key, records_data.get(loss_key) or [], name_resolver, label=RECORD_LABELS["longest_losing_streak"])
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_record_cell(win_key, records_data.get(win_key) or [], name_resolver, label=RECORD_LABELS["longest_win_streak"])
+        with right_column:
+            _render_record_cell(loss_key, records_data.get(loss_key) or [], name_resolver, label=RECORD_LABELS["longest_losing_streak"])
 
 
 def _render_records(records_data: dict, name_resolver: dict[str, str]) -> None:
     st.subheader("All-Time Records")
 
     high_key, low_key = RECORD_ROW_PAIRS[0]
-    left_column, right_column = st.columns(2)
-    with left_column:
-        _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
-    with right_column:
-        _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
-
-    _render_streak_row(records_data, name_resolver)
-
-    for high_key, low_key in RECORD_ROW_PAIRS[1:]:
+    with st.container(border=True):
         left_column, right_column = st.columns(2)
         with left_column:
             _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
         with right_column:
             _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
+
+    _render_streak_row(records_data, name_resolver)
+
+    for high_key, low_key in RECORD_ROW_PAIRS[1:]:
+        with st.container(border=True):
+            left_column, right_column = st.columns(2)
+            with left_column:
+                _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
+            with right_column:
+                _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
 
 
 MANAGER_STAT_COLUMN_FORMATS = {

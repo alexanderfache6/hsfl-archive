@@ -135,6 +135,114 @@ def load_stat_id_labels() -> dict[str, str]:
     return {f"stat_{stat_id}": label for stat_id, label in raw_labels.items()}
 
 
+# stat_N -> the scoring_rules key (in archive/parsed/{year}/metadata.json)
+# it's scored under. Most map to their own obviously-named rule; a few
+# notes on the non-obvious ones, confirmed against every season's
+# scoring_rules (2012-2025, all identical in structure/key names):
+#   - stat_34 (PAT Miss) and stat_40-44 (FG Miss by distance) have no
+#     rule at all - misses simply aren't scored, so they're 0 points.
+#   - stat_45/46/47 (Sck/Int/Fum on a DEF entry) map to the TEAM defense
+#     rules ("Sacks"/"Interceptions"/"Fumbles Recovered"), not the
+#     IDP-specific "Defense Interception"/"Forced Fumble"/"Fumbles
+#     Recovery" rules (stat_72/73/75) - this league's DEF roster slot is
+#     a team defense, not an individual defender, except in 2012 which
+#     used real IDP scoring (stat_70-78) for actual individual players.
+#   - stat_54 ("Pts") on a DEF entry is POINTS ALLOWED that game, not a
+#     fantasy point value - it's scored via the tiered "Points Allowed
+#     0/1-6/7-13/.../35+" rules, handled specially in
+#     compute_stat_fantasy_points() rather than this flat table.
+STAT_ID_TO_SCORING_RULE = {
+    "stat_5": "Passing Yards",
+    "stat_6": "Passing Touchdowns",
+    "stat_7": "Interceptions Thrown",
+    "stat_14": "Rushing Yards",
+    "stat_15": "Rushing Touchdowns",
+    "stat_21": "Receiving Yards",
+    "stat_22": "Receiving Touchdowns",
+    "stat_30": "Fumbles Lost",
+    "stat_32": "2-Point Conversions",
+    "stat_33": "PAT Made",
+    "stat_35": "FG Made 0-19",
+    "stat_36": "FG Made 20-29",
+    "stat_37": "FG Made 30-39",
+    "stat_38": "FG Made 40-49",
+    "stat_39": "FG Made 50+",
+    "stat_45": "Sacks",
+    "stat_46": "Interceptions",
+    "stat_47": "Fumbles Recovered",
+    "stat_49": "Safeties",
+    "stat_50": "Touchdowns",
+    "stat_53": "Kickoff and Punt Return Touchdowns",
+    "stat_70": None,  # Tack(le) - not scored in this league's rule set
+    "stat_71": None,  # Ast(ist) - not scored
+    "stat_72": "Sacks",
+    "stat_73": "Defense Interception",
+    "stat_74": "Forced Fumble",
+    "stat_75": "Fumbles Recovery",
+    "stat_76": "Touchdown (Interception return)",
+    "stat_77": "Touchdown (Fumble return)",
+    "stat_78": "Touchdown (Blocked kick)",
+}
+
+# (points, allows tiers below) for the "Points Allowed" ladder - checked
+# in order, first matching upper bound wins. stat_54 on a DEF entry only.
+POINTS_ALLOWED_TIERS = [
+    (0, "Points Allowed 0"),
+    (6, "Points Allowed 1-6"),
+    (13, "Points Allowed 7-13"),
+    (20, "Points Allowed 14-20"),
+    (27, "Points Allowed 21-27"),
+    (34, "Points Allowed 28-34"),
+]
+POINTS_ALLOWED_TOP_TIER = "Points Allowed 35+"
+
+
+def _parse_scoring_rule(rule_text: str) -> tuple[float, float]:
+    """"4 points" -> (4.0, 1.0); "1 point per 25 yards" -> (1.0, 25.0);
+    "-2 points" -> (-2.0, 1.0). fantasy_points = value * points / per."""
+    import re
+
+    match = re.match(r"(-?[\d.]+)\s*points?(?:\s*per\s*([\d.]+)\s*yards?)?", rule_text.strip(), re.IGNORECASE)
+    if not match:
+        return (0.0, 1.0)
+    points = float(match.group(1))
+    per = float(match.group(2)) if match.group(2) else 1.0
+    return (points, per)
+
+
+def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, year: int) -> float | None:
+    """Fantasy points this one stat line contributed, or None if this
+    stat isn't scored at all (e.g. a missed FG) or isn't computable (no
+    known rule mapping). NOTE: this is NOT guaranteed to sum to the
+    player's actual total points for the week - some scoring components
+    (e.g. PPR reception-count bonuses) aren't captured as their own
+    stat_N in the archived box score data at all, so they can't be
+    itemized here."""
+    try:
+        value = float(raw_value)
+    except (TypeError, ValueError):
+        return None
+
+    scoring_rules = load_metadata(year)["scoring_rules"]
+
+    if stat_id == "stat_54" and position == "DEF":
+        for upper_bound, tier_key in POINTS_ALLOWED_TIERS:
+            if value <= upper_bound:
+                rule_key = tier_key
+                break
+        else:
+            rule_key = POINTS_ALLOWED_TOP_TIER
+        points, per = _parse_scoring_rule(scoring_rules.get(rule_key, "0 points"))
+        return points  # tiered rules are flat, not per-unit
+
+    rule_key = STAT_ID_TO_SCORING_RULE.get(stat_id)
+    if rule_key is None or rule_key not in scoring_rules:
+        return None
+
+    points, per = _parse_scoring_rule(scoring_rules[rule_key])
+    return round(value * points / per, 2)
+
+
 @st.cache_resource
 def load_nfl_season_lengths() -> dict[str, int]:
     """{"2012": 16, ..., "2021": 17, ...} - each year's real NFL
@@ -148,6 +256,33 @@ def load_nfl_season_lengths() -> dict[str, int]:
 @st.cache_resource
 def load_metadata(year: int) -> dict:
     return _read_json(PARSED_DIRECTORY / str(year) / "metadata.json")
+
+
+# roster_settings key -> the literal "slot" value matchup data uses for
+# it - most positions match their own settings key (QB/RB/WR/TE/K/DEF),
+# but the flex slot is always recorded as "W/R" in the archived data
+# regardless of season, and 2012's IDP flex-adjacent slot ("Defensive
+# Back" in roster_settings) is recorded as "DB". Confirmed by scanning
+# every season's roster_settings and a sample matchup file per year -
+# these are the only two that don't match their own settings key.
+ROSTER_SETTINGS_KEY_TO_SLOT = {"FLEX": "W/R", "Defensive Back": "DB"}
+NON_STARTING_ROSTER_SETTINGS_KEYS = {"BENCH", "RESERVE"}
+
+
+@st.cache_resource
+def load_starting_slot_counts(year: int) -> dict[str, int]:
+    """{slot: expected_count} for that season's STARTING lineup only
+    (BENCH/RESERVE excluded) - e.g. {"QB": 1, "RB": 2, "WR": 2, "TE": 1,
+    "W/R": 1, "K": 1, "DEF": 1} for a typical season. Used to detect a
+    starting slot the user simply forgot to fill that week (fewer actual
+    starters in a slot than the season's settings call for), as opposed
+    to a bye/injury which still shows an actual (if low-scoring) player."""
+    roster_settings = load_metadata(year)["settings"]["roster_settings"]
+    return {
+        ROSTER_SETTINGS_KEY_TO_SLOT.get(key, key): count
+        for key, count in roster_settings.items()
+        if key not in NON_STARTING_ROSTER_SETTINGS_KEYS
+    }
 
 
 def compute_optimal_lineup(players: list[dict], year: int) -> dict:

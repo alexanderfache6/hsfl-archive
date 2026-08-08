@@ -21,8 +21,10 @@ from data_loader import (
     discover_seasons,
     load_all_time_manager_stats,
     load_matchups,
+    load_starting_slot_counts,
     resolve_manager_name,
 )
+from player_modal import open_player_stats_modal
 
 MAX_WEEK = 17
 
@@ -113,10 +115,11 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             key=versioned_key("games_team1_manager_id"),
         )
     team2_options = [manager_id for manager_id, _ in manager_options if manager_id != team1_manager_id]
-    # Once Manager 1 is picked, only offer seasons they actually played -
-    # a season they weren't in the league for can never have a matchup
-    # for them anyway.
-    season_options = _seasons_played_by_manager().get(team1_manager_id, discover_seasons()) if team1_manager_id else discover_seasons()
+    # Season stays disabled (rather than just showing every season) until
+    # Manager 1 is picked - showing the full unfiltered season list first
+    # would let a user pick a season Manager 1 never actually played,
+    # which is confusing even though it gets reset automatically below.
+    season_options = _seasons_played_by_manager().get(team1_manager_id, []) if team1_manager_id else []
     # A previously-picked season can fall outside the new Manager 1's
     # season_options (e.g. Season=2015 picked before Manager 1 was set,
     # then a Manager 1 who never played 2015 gets chosen) - Streamlit
@@ -126,7 +129,15 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     if st.session_state.get(season_widget_key) not in season_options and st.session_state.get(season_widget_key) is not None:
         st.session_state[season_widget_key] = None
     with season_col:
-        season = st.selectbox("Season", season_options, index=None, placeholder="Any", key=season_widget_key)
+        season = st.selectbox(
+            "Season",
+            season_options,
+            index=None,
+            placeholder="Any",
+            disabled=team1_manager_id is None,
+            help="Select Manager 1 first" if team1_manager_id is None else None,
+            key=season_widget_key,
+        )
     with week_col:
         week = st.selectbox("Week", list(range(1, MAX_WEEK + 1)), index=None, placeholder="Any", key=versioned_key("games_week"))
     with team2_col:
@@ -260,9 +271,11 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         diffs.append(diff)
         colors.append(manager1_color if diff > 0 else BENCH_COLOR)
         hover_text.append(
-            f"{matchup['season']} · Week {matchup['week']}<br>{manager1_name} vs {manager2_name}"
+            f"{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}"
+            f"<br>{manager1_name} vs {manager2_name}"
             f"<br>{team1_side['team_name']} vs {team2_side['team_name']}"
-            f"<br>{team1_side['score']:g} vs {team2_side['score']:g}<br>Diff: {diff:+.2f}"
+            f"<br>{team1_side['score']:g} vs {team2_side['score']:g}"
+            f"<br>Point Differential: {diff:+.2f}"
         )
 
     # Numeric x positions (0, 1, 2, ...) with the season/week strings
@@ -311,7 +324,6 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     st.plotly_chart(figure, width="stretch")
 
 
-ROSTER_CARD_COLOR = "#F0F0F0"
 
 BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
 
@@ -343,23 +355,26 @@ def _bench_sort_key(player: dict) -> int:
 
 
 def _optimal_lineup_details(side: dict, year: int) -> dict:
-    """{"gains": {player_id: +points}, "optimal_points": float} - gains
-    covers bench players who belong in the optimal lineup
-    (compute_optimal_lineup - the same formula behind
-    best_coaching_season/worst_coaching_season); each gain is against the
-    WEAKEST actual starter eligible for that same slot (same position, or
-    RB/WR for FLEX) - not a full reconstruction of an exact multi-slot
-    swap chain, which stays simpler and more directly explainable ("this
-    bench player beats your worst eligible starter by X") at the cost of
-    not always summing exactly to the aggregate coaching diff in rare
-    multi-swap weeks. optimal_points is the true optimal lineup's total,
-    for the bench table's summary row."""
+    """{"gains": {player_id: +points}, "losses": {player_id: +points},
+    "optimal_points": float} - gains covers bench players who belong in
+    the optimal lineup (compute_optimal_lineup - the same formula behind
+    best_coaching_season/worst_coaching_season); losses is the mirror
+    image, keyed by the WEAKEST actual starter eligible for that same
+    slot (same position, or RB/WR for FLEX) who'd be displaced - same
+    magnitude as the matching gain, opposite sign when rendered. Not a
+    full reconstruction of an exact multi-slot swap chain, which stays
+    simpler and more directly explainable ("this bench player beats your
+    worst eligible starter by X") at the cost of not always summing
+    exactly to the aggregate coaching diff in rare multi-swap weeks.
+    optimal_points is the true optimal lineup's total, for the bench
+    table's summary row."""
     all_players = side["starters"] + side["bench"]
     optimal = compute_optimal_lineup(all_players, year)
     optimal_by_id = {p["player_id"]: p for p in optimal["optimal_starters"] if p.get("player_id")}
     actual_starter_ids = {p["player_id"] for p in side["starters"] if p.get("player_id")}
 
     gains: dict[str, float] = {}
+    losses: dict[str, float] = {}
     for bench_player in side["bench"]:
         player_id = bench_player.get("player_id")
         optimal_entry = optimal_by_id.get(player_id) if player_id else None
@@ -377,75 +392,131 @@ def _optimal_lineup_details(side: dict, year: int) -> dict:
             continue
 
         weakest_displaced = min(displaced_candidates, key=lambda starter: starter["points"])
-        gains[player_id] = bench_player["points"] - weakest_displaced["points"]
+        gain = bench_player["points"] - weakest_displaced["points"]
+        gains[player_id] = gain
+        losses[weakest_displaced["player_id"]] = gain
 
-    return {"gains": gains, "optimal_points": optimal["optimal_points"]}
+    return {"gains": gains, "losses": losses, "optimal_points": optimal["optimal_points"]}
 
 
 def _render_roster_table(
     players: list[dict],
+    season: int,
+    week: int,
+    row_key_prefix: str,
     sort_by_position: bool = False,
     optimal_gains: dict[str, float] | None = None,
+    optimal_losses: dict[str, float] | None = None,
     optimal_total_points: float | None = None,
     actual_total_points: float | None = None,
+    show_border: bool = True,
 ) -> None:
+    """Each real player's name is a button (opens the player-stats modal
+    for this exact season/week) rather than raw HTML table text - a raw
+    HTML <table> (the previous approach, and still used for the score
+    header etc elsewhere on this card) has no way to call back into
+    Python on click, so per-row Streamlit buttons are required to make
+    rows clickable at all. That does mean this can't reuse the rounded
+    colored-background card styling used elsewhere on the page (multiple
+    st.markdown/element calls don't nest into each other's HTML the way
+    literal nested tags would - each is its own sibling in the DOM) - a
+    plain bordered container stands in instead."""
     if sort_by_position:
         players = sorted(players, key=_bench_sort_key)
 
-    def _name_cell(player: dict) -> str:
-        nfl_team = player["nfl_team"] or DEF_TEAM_ABBREVIATIONS.get(player["player_name"], "")
-        return f"{player['player_name']} ({nfl_team})"
+    column_ratios = [1, 3, 1, 1] if optimal_gains is not None else [1, 3, 1]
 
-    def _gain_cell(player: dict) -> str:
-        if optimal_gains is None:
-            return ""
-        gain = optimal_gains.get(player.get("player_id"))
-        if gain is None:
-            return "<td style='padding:3px 8px; text-align:right; color:#999999;'>—</td>"
-        return f"<td style='padding:3px 8px; text-align:right; font-weight:600; color:#2E7D32;'>+{gain:.2f}</td>"
+    # st.columns(vertical_alignment="center") centers each column's own
+    # content box within the row, but a markdown <div>'s tightly-padded
+    # box is much shorter than a real st.button's rendered height, so
+    # "centered" still visually floats away from the button's own text
+    # baseline. Same fix as the All-Time Records rows on the History page
+    # (_render_record_row): give every cell an explicit height matching
+    # the button's actual rendered height, with its own content centered
+    # inside that height via flex - now all cells share one true height
+    # to align against instead of each other's very different natural sizes.
+    ROSTER_ROW_HEIGHT = "2.5rem"
 
-    rows_html = "".join(
-        f"<tr><td style='padding:3px 8px; color:#666666;'>{player['position']}</td>"
-        f"<td style='padding:3px 8px;'>{_name_cell(player)}</td>"
-        f"<td style='padding:3px 8px; text-align:right; font-weight:600;'>{player['points']:.2f}</td>"
-        f"{_gain_cell(player)}</tr>"
-        for player in players
-    )
-    if optimal_total_points is not None:
-        # colspan spans Position+Player so the label and the total line
-        # up with the Points/±Pts columns like a normal totals row. The
-        # trailing cell shows the total points the optimal lineup would
-        # have added over the actual lineup's score, in the same green
-        # "+" styling as each individual bench player's gain above it.
-        if optimal_gains is not None and actual_total_points is not None:
-            total_diff = optimal_total_points - actual_total_points
-            trailing_cell = f"<td style='padding:3px 8px; text-align:right; font-weight:600; color:#2E7D32;'>+{total_diff:.2f}</td>"
-        elif optimal_gains is not None:
-            trailing_cell = "<td></td>"
-        else:
-            trailing_cell = ""
-        column_count = 4 if optimal_gains is not None else 3
-        # A visibly blank spacer row (not just the border-top above)
-        # makes it unambiguous that "Optimal Lineup Total" is a separate
-        # summary, not just the last bench player's row.
-        rows_html += f"<tr><td colspan='{column_count}' style='padding:6px;'></td></tr>"
-        rows_html += (
-            "<tr style='border-top:1px solid #CCCCCC;'>"
-            "<td colspan='2' style='padding:3px 8px; font-weight:600;'>Optimal Lineup Total</td>"
-            f"<td style='padding:3px 8px; text-align:right; font-weight:600;'>{optimal_total_points:.2f}</td>"
-            f"{trailing_cell}</tr>"
+    def _cell(text: str, align: str = "left", color: str = "inherit", weight: str = "400") -> str:
+        return (
+            f"<div style='display:flex; align-items:center; justify-content:{'flex-end' if align == 'right' else 'flex-start'}; "
+            f"height:{ROSTER_ROW_HEIGHT}; padding:0 8px; font-weight:{weight}; color:{color}; font-size:0.85em;'>{text}</div>"
         )
+
+    # st.container(key=...) tags its DOM node with a unique "st-key-*"
+    # class, which lets this <style> block tighten row spacing ONLY
+    # inside this specific roster table - a global CSS override would
+    # also hit every other st.columns row on the page (the filter row,
+    # the card layout, etc).
+    container_key = f"roster_{row_key_prefix}"
     st.markdown(
-        # border-collapse:collapse ignores border-radius entirely - the
-        # radius only takes effect (on all 4 corners) with
-        # border-collapse:separate + border-spacing:0 + overflow:hidden
-        # directly on the <table>, which also lets the table carry its
-        # own background rather than a separate wrapper div.
-        f"<table style='width:100%; border-collapse:separate; border-spacing:0; border-radius:6px; "
-        f"overflow:hidden; background-color:{ROSTER_CARD_COLOR}; font-size:0.85em; color:#333333;'>"
-        f"{rows_html}</table>",
+        f"<style>.st-key-{container_key} div[data-testid='stHorizontalBlock'] {{ gap: 0.5rem; margin-bottom: -0.6rem; }}</style>",
         unsafe_allow_html=True,
     )
+    with st.container(border=show_border, key=container_key):
+        for index, player in enumerate(players):
+            columns = st.columns(column_ratios, vertical_alignment="center")
+            columns[0].markdown(_cell(player["position"], color="#666666"), unsafe_allow_html=True)
+
+            if player.get("is_empty_slot"):
+                columns[1].markdown(_cell("—"), unsafe_allow_html=True)
+                columns[2].markdown(_cell("—", align="right"), unsafe_allow_html=True)
+                if optimal_gains is not None:
+                    columns[3].markdown(_cell("—", align="right"), unsafe_allow_html=True)
+                continue
+
+            nfl_team = player["nfl_team"] or DEF_TEAM_ABBREVIATIONS.get(player["player_name"], "")
+            button_key = f"player_row_{row_key_prefix}_{player.get('player_id')}_{season}_{week}_{index}"
+            if columns[1].button(f"{player['player_name']} ({nfl_team})", key=button_key, use_container_width=True):
+                open_player_stats_modal(player.get("player_id"), player["player_name"], player["position"], nfl_team, season, week)
+
+            # Starters who should be replaced (per optimal_losses) show
+            # their own actual points value unchanged - just recolored
+            # red instead of the normal black, to flag them without
+            # altering the number.
+            is_displaced = optimal_losses is not None and player.get("player_id") in optimal_losses
+            points_color = "#C62828" if is_displaced else "inherit"
+            columns[2].markdown(_cell(f"{player['points']:.2f}", align="right", color=points_color, weight="600"), unsafe_allow_html=True)
+
+            if optimal_gains is not None:
+                gain = optimal_gains.get(player.get("player_id"))
+                if gain is None:
+                    columns[3].markdown(_cell("—", align="right", color="#999999"), unsafe_allow_html=True)
+                else:
+                    columns[3].markdown(_cell(f"+{gain:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+
+        if optimal_total_points is not None:
+            st.markdown("<hr style='margin:4px 0; border-color:#CCCCCC;'>", unsafe_allow_html=True)
+            total_columns = st.columns(column_ratios, vertical_alignment="center")
+            total_columns[1].markdown(_cell("Optimal Lineup Total", weight="600"), unsafe_allow_html=True)
+            total_columns[2].markdown(_cell(f"{optimal_total_points:.2f}", align="right", weight="600"), unsafe_allow_html=True)
+            if optimal_gains is not None and actual_total_points is not None:
+                total_diff = optimal_total_points - actual_total_points
+                total_columns[3].markdown(_cell(f"+{total_diff:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+
+
+def _pad_missing_starters(starters: list[dict], year: int) -> list[dict]:
+    """Rebuilds the starters list in roster_settings' own slot order
+    (QB, RB, RB, WR, WR, TE, FLEX, K, DEF, ...), inserting a blank
+    placeholder row wherever that season's settings call for a slot this
+    week's actual starters list is short on - e.g. settings call for 2 RB
+    but only 1 RB actually started, so the second RB slot renders empty
+    in its normal position rather than being silently omitted or tacked
+    on at the end out of order. This is a real gap the manager likely
+    just forgot to fill (as opposed to a bye/injury, which still shows an
+    actual, if low-scoring, player)."""
+    expected_slot_counts = load_starting_slot_counts(year)
+    remaining_by_slot: dict[str, list[dict]] = {}
+    for player in starters:
+        slot = player.get("slot", player["position"])
+        remaining_by_slot.setdefault(slot, []).append(player)
+
+    ordered: list[dict] = []
+    for slot, expected_count in expected_slot_counts.items():
+        available = remaining_by_slot.get(slot, [])
+        for _ in range(expected_count):
+            ordered.append(available.pop(0) if available else {"position": slot, "is_empty_slot": True})
+    return ordered
 
 
 def _render_matchup_card(
@@ -493,14 +564,32 @@ def _render_matchup_card(
                     unsafe_allow_html=True,
                 )
                 st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-                _render_roster_table(side["starters"])
+                # Unique per matchup+side so button keys never collide
+                # across the many cards that can be on screen at once
+                # (e.g. Season filter set to "Any").
+                row_key_prefix = f"{matchup['season']}_{matchup['week']}_{side['team_id']}"
+                padded_starters = _pad_missing_starters(side["starters"], matchup["season"])
+                _render_roster_table(
+                    padded_starters,
+                    season=matchup["season"],
+                    week=matchup["week"],
+                    row_key_prefix=f"{row_key_prefix}_starters",
+                    optimal_losses=optimal_details["losses"] if optimal_details else None,
+                )
                 with st.expander(f"Bench ({len(side['bench'])})"):
                     _render_roster_table(
                         side["bench"],
+                        season=matchup["season"],
+                        week=matchup["week"],
+                        row_key_prefix=f"{row_key_prefix}_bench",
                         sort_by_position=True,
                         optimal_gains=optimal_details["gains"] if optimal_details else None,
                         optimal_total_points=optimal_details["optimal_points"] if optimal_details else None,
                         actual_total_points=side["score"],
+                        # No border here - the expander it's already
+                        # inside provides its own visual boundary, so a
+                        # second nested border just wastes vertical space.
+                        show_border=False,
                     )
 
 
@@ -535,8 +624,8 @@ def render_games_page() -> None:
     show_optimal = st.toggle(
         "Show Optimal Lineup",
         key="games_show_optimal",
-        help="Adds a +Pts column to each bench table for players who belong in that week's optimal lineup - "
-        "the gain shown is against the weakest actual starter eligible for that slot.",
+        help="Adds a green +points column to each bench table for players who belong in that week's optimal lineup."
+        "Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
     )
 
     for matchup in matchups:

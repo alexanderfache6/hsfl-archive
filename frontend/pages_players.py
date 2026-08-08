@@ -472,6 +472,9 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
     managers_column.metric("Managers", managers)
 
 
+PLAYER_FILTER_WIDGET_BASE_KEYS = ("player_selected_player_id", "player_season_filter")
+
+
 def render_players_page() -> None:
     players_data = load_players()["players"]
     ownership_data = load_player_ownership()["player_ownership"]
@@ -487,21 +490,87 @@ def render_players_page() -> None:
     player_names_by_id = {player_id: player["name"] for player_id, player in players_data.items()}
     sorted_player_ids = sorted(player_names_by_id, key=lambda player_id: player_names_by_id[player_id])
 
-    selected_player_id = st.selectbox(
-        "Search for a player",
-        sorted_player_ids,
-        format_func=lambda player_id: player_names_by_id[player_id],
-        index=None,
-        placeholder="Type a player's name...",
-    )
+    # Same versioned-widget-key pattern as the Games tab's Clear Filters:
+    # each filter's ACTUAL key includes a generation counter, so Clear
+    # Filters can bump the counter and force brand-new widget instances
+    # instead of relying on session_state deletion alone, which left
+    # stale-looking dropdowns in some browsers even after the underlying
+    # value was cleared (see pages_games.py's _render_filters).
+    generation = st.session_state.setdefault("player_filters_generation", 0)
 
-    if selected_player_id is None:
+    def versioned_key(base_key: str) -> str:
+        return f"{base_key}_gen{generation}"
+
+    for base_key in PLAYER_FILTER_WIDGET_BASE_KEYS:
+        widget_key = versioned_key(base_key)
+        if widget_key not in st.session_state and base_key in st.session_state:
+            st.session_state[widget_key] = st.session_state[base_key]
+
+    player_column, season_column = st.columns(2)
+    with player_column:
+        selected_player_id = st.selectbox(
+            "Search for a player",
+            sorted_player_ids,
+            format_func=lambda player_id: player_names_by_id[player_id],
+            index=None,
+            placeholder="Type a player's name...",
+            key=versioned_key("player_selected_player_id"),
+        )
+
+    # Only seasons this specific player actually has data for - same
+    # "Any" (single season or all) treatment as the Games tab's Season
+    # filter.
+    player_seasons = sorted({entry["season"] for entry in ownership_data.get(selected_player_id, [])}) if selected_player_id else []
+    season_widget_key = versioned_key("player_season_filter")
+    # A previously-picked season can fall outside the new player's
+    # player_seasons (e.g. a season picked before switching players) -
+    # Streamlit errors if a selectbox's existing session_state value
+    # isn't in its options list, so clear it first rather than letting
+    # that happen.
+    if st.session_state.get(season_widget_key) not in player_seasons and st.session_state.get(season_widget_key) is not None:
+        st.session_state[season_widget_key] = None
+    with season_column:
+        selected_season = st.selectbox(
+            "Season",
+            player_seasons,
+            index=None,
+            placeholder="Any",
+            disabled=selected_player_id is None,
+            help="Select a player first" if selected_player_id is None else None,
+            key=season_widget_key,
+        )
+
+    st.session_state["player_selected_player_id"] = selected_player_id
+    st.session_state["player_season_filter"] = selected_season
+
+    apply_column, clear_column, _ = st.columns([1, 1, 3])
+    with apply_column:
+        applied = st.button("Apply Filters", disabled=selected_player_id is None, help="Select a player first" if selected_player_id is None else None)
+    with clear_column:
+        if st.button("Clear Filters"):
+            for base_key in PLAYER_FILTER_WIDGET_BASE_KEYS:
+                st.session_state.pop(base_key, None)
+            st.session_state.pop("player_applied_filters", None)
+            st.session_state["player_filters_generation"] = generation + 1
+            st.rerun()
+
+    if applied:
+        st.session_state["player_applied_filters"] = {"player_id": selected_player_id, "season": selected_season}
+
+    applied_filters = st.session_state.get("player_applied_filters")
+    if applied_filters is None:
+        st.info("Set your filters above and click Apply Filters.")
         return
 
-    timeline = ownership_data.get(selected_player_id, [])
-    if not timeline:
+    selected_player_id = applied_filters["player_id"]
+    selected_season = applied_filters["season"]
+
+    full_timeline = ownership_data.get(selected_player_id, [])
+    if not full_timeline:
         st.info(f"{player_names_by_id[selected_player_id]} has never been on a roster in the archive.")
         return
+
+    timeline = [entry for entry in full_timeline if entry["season"] == selected_season] if selected_season else full_timeline
 
     stints = _build_ownership_stints(timeline)
 
