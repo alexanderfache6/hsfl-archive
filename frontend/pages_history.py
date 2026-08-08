@@ -1,6 +1,11 @@
-"""History tab - all-time champions, records, and career manager stats
+"""
+History tab - all-time champions, records, and career manager stats
 across every season in the archive. See execution-plan.md Phase G.
 """
+
+# ========================================
+# IMPORTS
+# ========================================
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -18,6 +23,10 @@ from data_loader import (
     team_id_to_manager_map,
 )
 
+# ========================================
+# CONSTANTS
+# ========================================
+
 # Standard real-world medal colors - not a generated categorical palette,
 # so not run through the dataviz skill's CVD validator (this exact
 # 3-color convention is a fixed, universally recognized domain standard,
@@ -26,22 +35,6 @@ from data_loader import (
 CHAMPION_COLOR = "#d0b04e"
 RUNNER_UP_COLOR = "#a7a7a7"
 THIRD_PLACE_COLOR = "#9f724b"
-
-def _hex_to_rgba(hex_color: str, alpha: float) -> str:
-    hex_color = hex_color.lstrip("#")
-    red, green, blue = (int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-    return f"rgba({red}, {green}, {blue}, {alpha})"
-
-
-def _full_table_height(row_count: int) -> int:
-    """st.dataframe defaults to a fixed max height with internal
-    scrolling once a table has more rows than fit - passing an explicit
-    height sized to the actual row count instead shows every row with no
-    fold/scroll. ~35px/row + ~38px header, based on Streamlit's default
-    row height - no extra padding beyond that, or the table shows a
-    trailing sliver of empty space below the last row."""
-    return 38 + 35 * row_count
-
 
 RECORD_LABELS = {
     "highest_weekly_score": "Highest Weekly Score",
@@ -74,11 +67,101 @@ STREAK_VARIANTS = {
     "combined_cross_season": "Spans Regular and Postseason",
 }
 
-
 ORDINAL_WORDS = [
     "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
     "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
 ]
+
+# score | info | button - wide enough for the button column to fit
+# "View Matchup"/"View Season" on one line without wrapping (each record row
+# is itself in a half-width column, so this column only gets ~1/10 of
+# the page width) - same ratio every row so all three still align
+# vertically.
+RECORD_ROW_COLUMN_RATIOS = [1, 2.3, 1.7]
+
+MANAGER_STAT_COLUMN_FORMATS = {
+    "Win %": "%.3f",
+    "Avg Reg. Finish": "%.2f",
+    "Avg Post. Finish": "%.2f",
+    "Points For": "%.2f",
+    "Points Against": "%.2f",
+}
+
+# Every selectable stat for the chart below the standings table - all
+# numeric columns of that table except "Manager" itself (the x-axis).
+MANAGER_STAT_COLUMNS = [
+    "Seasons",
+    "Championships",
+    "Runner-Ups",
+    "3rd Place",
+    "Podiums",
+    "Last Place",
+    "Best Finish",
+    "Worst Finish",
+    "Avg Reg. Finish",
+    "Avg Post. Finish",
+    "W",
+    "L",
+    "T",
+    "Win %",
+    "Points For",
+    "Points Against",
+    "Players Started",
+]
+
+# Full-length labels for chart titles/axes/dropdown - the table itself
+# keeps the compact column headers above (space is tighter there).
+MANAGER_STAT_FULL_LABELS = {
+    "Seasons": "# Seasons Played",
+    "Championships": "# Championships",
+    "Runner-Ups": "# Runner-Up Finishes",
+    "3rd Place": "# 3rd Place Finishes",
+    "Podiums": "# Podium Finishes",
+    "Last Place": "# Last Place Finishes",
+    "Best Finish": "Best Finish",
+    "Worst Finish": "Worst Finish",
+    "Avg Reg. Finish": "Average Regular Season Finish",
+    "Avg Post. Finish": "Average Postseason Finish",
+    "W": "Wins",
+    "L": "Losses",
+    "T": "Ties",
+    "Win %": "Win Percentage",
+    "Points For": "Points For",
+    "Points Against": "Points Against",
+    "Players Started": "Players Started",
+}
+
+# Only these totals make sense divided by a manager's season/game count -
+# the rest (Championships, Win %, Avg Finish, etc) are either already
+# per-season/per-game rates or counts that don't mean anything normalized
+# this way. Per Game deliberately excludes Players Started (unlike Per
+# Season) - a career "players started per game" rate isn't a meaningful
+# stat the way a per-season rate is.
+PER_SEASON_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against", "Players Started"}
+PER_GAME_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against"}
+
+NORMALIZATION_LABELS = {"all_time": "All Time", "per_season": "Per Season", "per_game": "Per Game"}
+NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against (Per Season also covers Players Started)."
+
+# ========================================
+# FUNCTIONS
+# ========================================
+
+
+def _hex_to_rgba(hex_color: str, alpha: float) -> str:
+    hex_color = hex_color.lstrip("#")
+    red, green, blue = (int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({red}, {green}, {blue}, {alpha})"
+
+
+def _full_table_height(row_count: int) -> int:
+    """st.dataframe defaults to a fixed max height with internal
+    scrolling once a table has more rows than fit - passing an explicit
+    height sized to the actual row count instead shows every row with no
+    fold/scroll. ~35px/row + ~38px header, based on Streamlit's default
+    row height - no extra padding beyond that, or the table shows a
+    trailing sliver of empty space below the last row."""
+    return 38 + 35 * row_count
 
 
 def _ordinal_word(n: int) -> str:
@@ -86,6 +169,143 @@ def _ordinal_word(n: int) -> str:
         return ORDINAL_WORDS[n]
     suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix}"
+
+
+def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
+    """{manager_id: {"champion_years": [...], "runner_up_years": [...],
+    "third_place_years": [...]}} - only managers who were ever top-3 in
+    some season get an entry (built strictly from top_3 rows), so a
+    manager who never placed doesn't show up as an all-zero row later."""
+    placements: dict[str, dict] = {}
+    for season_entry in champions_data["champions"]:
+        season = season_entry["season"]
+        for row in season_entry["top_3"]:
+            manager_id = row.get("manager_id", "")
+            if not manager_id:
+                continue
+            entry = placements.setdefault(manager_id, {"champion_years": [], "runner_up_years": [], "third_place_years": []})
+            if row["rank"] == 1:
+                entry["champion_years"].append(season)
+            elif row["rank"] == 2:
+                entry["runner_up_years"].append(season)
+            elif row["rank"] == 3:
+                entry["third_place_years"].append(season)
+    return placements
+
+
+def _years_label(years: list[int], empty_placeholder: str = "😢") -> str:
+    return ", ".join(str(year) for year in sorted(years)) if years else empty_placeholder
+
+
+def _record_context_line(entry: dict, name_resolver: dict[str, str]) -> str:
+    display_name = resolve_manager_name(entry.get("manager_id", ""), name_resolver, entry.get("display_name", ""))
+
+    if "start_week" in entry:
+        # Streak entries: show the full start->end range, not just the
+        # peak week. start_season defaults to the (single) season for
+        # per-season streaks, which don't carry their own start_season
+        # field since it's always identical to "season" there.
+        start_season = entry.get("start_season", entry["season"])
+        end_season, end_week, start_week = entry["season"], entry["week"], entry["start_week"]
+        if start_season == end_season:
+            week_range = f"Wk {start_week}" if start_week == end_week else f"Wk {start_week}-{end_week}"
+            return f"{display_name} · {end_season} {week_range}"
+        return f"{display_name} · {start_season} Wk{start_week} – {end_season} Wk{end_week}"
+
+    parts = [display_name, f"{entry['season']}"]
+    if "week" in entry:
+        parts.append(f"Wk {entry['week']}")
+    return " · ".join(parts)
+
+
+def _go_to_game(entry: dict) -> None:
+    """Jumps to the Games page with Manager 1 (and Week, if this record
+    is week-specific rather than season-long) pre-filled to this record's
+    game, via st.switch_page() - the whole reason app.py uses
+    st.navigation/st.Page instead of st.tabs, since st.tabs has no way to
+    programmatically switch which tab is active. Must be called from the
+    main script body, not a button's on_click callback - st.switch_page()
+    (like st.rerun()) is a no-op/error when called from within a
+    callback, since a callback runs before the script rerun it would
+    need to trigger."""
+    manager_id = entry.get("manager_id", "")
+    # Pre-set every filter WIDGET's own key (not just the applied-filters
+    # result used to query matchups) so the Season/Week/Manager 2/Matchup
+    # Type controls visually reflect the record's filters too, not just
+    # the results below them.
+    st.session_state["games_team1_manager_id"] = manager_id
+    st.session_state["games_season"] = entry["season"]
+    st.session_state["games_week"] = entry.get("week")
+    st.session_state["games_team2_manager_id"] = None
+    st.session_state["games_matchup_type"] = "all"
+    # Bump the same widget-key generation counter Clear Filters uses, so
+    # the Games page mounts brand-new filter widgets that pick up these
+    # values via their first-mount seeding, rather than showing whatever
+    # was left over from a previous visit to that page.
+    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
+    st.session_state["games_applied_filters"] = {
+        "season": entry["season"],
+        "week": entry.get("week"),
+        "team1_manager_id": manager_id,
+        "team2_manager_id": None,
+        "matchup_type": "all",
+    }
+    st.switch_page(st.session_state["_games_page"])
+
+
+def _best_worst_finish_by_manager() -> dict[str, tuple[int, int]]:
+    """{manager_id: (best final rank, worst final rank)} - the FINAL
+    (post-season) standings rank each season, i.e.
+    post_season_stats.json's final_placements (same source as the Yearly
+    page's Final Standings tab), not the regular-season standings rank."""
+    finishes: dict[str, list[int]] = {}
+    for year in discover_seasons():
+        post_season_stats = load_post_season_stats(year)
+        if not post_season_stats:
+            continue
+        team_info = team_id_to_manager_map(year)
+        for team_id, rank in post_season_stats["final_placements"].items():
+            manager_id = team_info.get(team_id, {}).get("manager_id", "")
+            if manager_id:
+                finishes.setdefault(manager_id, []).append(rank)
+    return {manager_id: (min(ranks), max(ranks)) for manager_id, ranks in finishes.items()}
+
+
+def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: dict[str, str]) -> pd.DataFrame:
+    best_worst_finish = _best_worst_finish_by_manager()
+    rows = []
+    for manager in manager_stats_data["managers"]:
+        combined = manager["combined"]
+        best_finish, worst_finish = best_worst_finish.get(manager["manager_id"], (None, None))
+        rows.append(
+            {
+                "manager_id": manager["manager_id"],
+                "Manager": resolve_manager_name(manager["manager_id"], name_resolver),
+                "Seasons": len(manager["seasons_played"]),
+                "Championships": manager["championships"],
+                "Runner-Ups": manager["runner_ups"],
+                "3rd Place": manager["third_place_finishes"],
+                "Podiums": manager["championships"] + manager["runner_ups"] + manager["third_place_finishes"],
+                "Last Place": manager["last_place_finishes"],
+                "Best Finish": best_finish,
+                "Worst Finish": worst_finish,
+                "Avg Reg. Finish": manager["average_regular_season_finish"],
+                "Avg Post. Finish": manager["average_post_season_finish"],
+                "W": combined["wins"],
+                "L": combined["losses"],
+                "T": combined["ties"],
+                "Win %": combined["win_pct"],
+                "Points For": combined["points_for"],
+                "Points Against": combined["points_against"],
+                "Players Started": manager["career_players_started_count"],
+            }
+        )
+    return pd.DataFrame(rows).sort_values(["Seasons", "Manager"], ascending=[False, True])
+
+
+# ========================================
+# RENDER
+# ========================================
 
 
 def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[str, str]) -> None:
@@ -109,8 +329,6 @@ def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[s
 
     champion_count = len(championship_count_by_manager)
 
-    
-
     if not championship_count_by_manager:
         return
 
@@ -126,7 +344,7 @@ def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[s
     st.markdown(
         f"The Music League began in {first_year} and has run for {season_count} successive seasons, featuring {champion_count} champions. "
         f"The most winning manager is {most_winning_manager_name} with {most_wins} championships. "
-        f"The reigning champion is {reigning_manager_name} who won their {_ordinal_word(reigning_ordinal)} championship."    
+        f"The reigning champion is {reigning_manager_name} who won their {_ordinal_word(reigning_ordinal)} championship."
     )
 
 
@@ -167,32 +385,6 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
 
     styled_dataframe = dataframe.style.apply(_highlight_champion_column, axis=0)
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(rows)))
-
-
-def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
-    """{manager_id: {"champion_years": [...], "runner_up_years": [...],
-    "third_place_years": [...]}} - only managers who were ever top-3 in
-    some season get an entry (built strictly from top_3 rows), so a
-    manager who never placed doesn't show up as an all-zero row later."""
-    placements: dict[str, dict] = {}
-    for season_entry in champions_data["champions"]:
-        season = season_entry["season"]
-        for row in season_entry["top_3"]:
-            manager_id = row.get("manager_id", "")
-            if not manager_id:
-                continue
-            entry = placements.setdefault(manager_id, {"champion_years": [], "runner_up_years": [], "third_place_years": []})
-            if row["rank"] == 1:
-                entry["champion_years"].append(season)
-            elif row["rank"] == 2:
-                entry["runner_up_years"].append(season)
-            elif row["rank"] == 3:
-                entry["third_place_years"].append(season)
-    return placements
-
-
-def _years_label(years: list[int], empty_placeholder: str = "😢") -> str:
-    return ", ".join(str(year) for year in sorted(years)) if years else empty_placeholder
 
 
 def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -294,70 +486,6 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
         st.plotly_chart(bar_figure, width="stretch")
 
 
-def _record_context_line(entry: dict, name_resolver: dict[str, str]) -> str:
-    display_name = resolve_manager_name(entry.get("manager_id", ""), name_resolver, entry.get("display_name", ""))
-
-    if "start_week" in entry:
-        # Streak entries: show the full start->end range, not just the
-        # peak week. start_season defaults to the (single) season for
-        # per-season streaks, which don't carry their own start_season
-        # field since it's always identical to "season" there.
-        start_season = entry.get("start_season", entry["season"])
-        end_season, end_week, start_week = entry["season"], entry["week"], entry["start_week"]
-        if start_season == end_season:
-            week_range = f"Wk {start_week}" if start_week == end_week else f"Wk {start_week}-{end_week}"
-            return f"{display_name} · {end_season} {week_range}"
-        return f"{display_name} · {start_season} Wk{start_week} – {end_season} Wk{end_week}"
-
-    parts = [display_name, f"{entry['season']}"]
-    if "week" in entry:
-        parts.append(f"Wk {entry['week']}")
-    return " · ".join(parts)
-
-
-def _go_to_game(entry: dict) -> None:
-    """Jumps to the Games page with Manager 1 (and Week, if this record
-    is week-specific rather than season-long) pre-filled to this record's
-    game, via st.switch_page() - the whole reason app.py uses
-    st.navigation/st.Page instead of st.tabs, since st.tabs has no way to
-    programmatically switch which tab is active. Must be called from the
-    main script body, not a button's on_click callback - st.switch_page()
-    (like st.rerun()) is a no-op/error when called from within a
-    callback, since a callback runs before the script rerun it would
-    need to trigger."""
-    manager_id = entry.get("manager_id", "")
-    # Pre-set every filter WIDGET's own key (not just the applied-filters
-    # result used to query matchups) so the Season/Week/Manager 2/Matchup
-    # Type controls visually reflect the record's filters too, not just
-    # the results below them.
-    st.session_state["games_team1_manager_id"] = manager_id
-    st.session_state["games_season"] = entry["season"]
-    st.session_state["games_week"] = entry.get("week")
-    st.session_state["games_team2_manager_id"] = None
-    st.session_state["games_matchup_type"] = "all"
-    # Bump the same widget-key generation counter Clear Filters uses, so
-    # the Games page mounts brand-new filter widgets that pick up these
-    # values via their first-mount seeding, rather than showing whatever
-    # was left over from a previous visit to that page.
-    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
-    st.session_state["games_applied_filters"] = {
-        "season": entry["season"],
-        "week": entry.get("week"),
-        "team1_manager_id": manager_id,
-        "team2_manager_id": None,
-        "matchup_type": "all",
-    }
-    st.switch_page(st.session_state["_games_page"])
-
-
-# score | info | button - wide enough for the button column to fit
-# "View Matchup"/"View Season" on one line without wrapping (each record row
-# is itself in a half-width column, so this column only gets ~1/10 of
-# the page width) - same ratio every row so all three still align
-# vertically.
-RECORD_ROW_COLUMN_RATIOS = [1, 2.3, 1.7]
-
-
 def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
     # Both the score and info columns get their OWN identically-sized
     # flex box (same explicit row_height, align-items:center) rather
@@ -455,109 +583,6 @@ def _render_records(records_data: dict, name_resolver: dict[str, str]) -> None:
                 _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
 
 
-MANAGER_STAT_COLUMN_FORMATS = {
-    "Win %": "%.3f",
-    "Avg Reg. Finish": "%.2f",
-    "Avg Post. Finish": "%.2f",
-    "Points For": "%.2f",
-    "Points Against": "%.2f",
-}
-
-# Every selectable stat for the chart below the standings table - all
-# numeric columns of that table except "Manager" itself (the x-axis).
-MANAGER_STAT_COLUMNS = [
-    "Seasons",
-    "Championships",
-    "Runner-Ups",
-    "3rd Place",
-    "Podiums",
-    "Last Place",
-    "Best Finish",
-    "Worst Finish",
-    "Avg Reg. Finish",
-    "Avg Post. Finish",
-    "W",
-    "L",
-    "T",
-    "Win %",
-    "Points For",
-    "Points Against",
-    "Players Started",
-]
-
-# Full-length labels for chart titles/axes/dropdown - the table itself
-# keeps the compact column headers above (space is tighter there).
-MANAGER_STAT_FULL_LABELS = {
-    "Seasons": "# Seasons Played",
-    "Championships": "# Championships",
-    "Runner-Ups": "# Runner-Up Finishes",
-    "3rd Place": "# 3rd Place Finishes",
-    "Podiums": "# Podium Finishes",
-    "Last Place": "# Last Place Finishes",
-    "Best Finish": "Best Finish",
-    "Worst Finish": "Worst Finish",
-    "Avg Reg. Finish": "Average Regular Season Finish",
-    "Avg Post. Finish": "Average Postseason Finish",
-    "W": "Wins",
-    "L": "Losses",
-    "T": "Ties",
-    "Win %": "Win Percentage",
-    "Points For": "Points For",
-    "Points Against": "Points Against",
-    "Players Started": "Players Started",
-}
-
-
-def _best_worst_finish_by_manager() -> dict[str, tuple[int, int]]:
-    """{manager_id: (best final rank, worst final rank)} - the FINAL
-    (post-season) standings rank each season, i.e.
-    post_season_stats.json's final_placements (same source as the Yearly
-    page's Final Standings tab), not the regular-season standings rank."""
-    finishes: dict[str, list[int]] = {}
-    for year in discover_seasons():
-        post_season_stats = load_post_season_stats(year)
-        if not post_season_stats:
-            continue
-        team_info = team_id_to_manager_map(year)
-        for team_id, rank in post_season_stats["final_placements"].items():
-            manager_id = team_info.get(team_id, {}).get("manager_id", "")
-            if manager_id:
-                finishes.setdefault(manager_id, []).append(rank)
-    return {manager_id: (min(ranks), max(ranks)) for manager_id, ranks in finishes.items()}
-
-
-def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: dict[str, str]) -> pd.DataFrame:
-    best_worst_finish = _best_worst_finish_by_manager()
-    rows = []
-    for manager in manager_stats_data["managers"]:
-        combined = manager["combined"]
-        best_finish, worst_finish = best_worst_finish.get(manager["manager_id"], (None, None))
-        rows.append(
-            {
-                "manager_id": manager["manager_id"],
-                "Manager": resolve_manager_name(manager["manager_id"], name_resolver),
-                "Seasons": len(manager["seasons_played"]),
-                "Championships": manager["championships"],
-                "Runner-Ups": manager["runner_ups"],
-                "3rd Place": manager["third_place_finishes"],
-                "Podiums": manager["championships"] + manager["runner_ups"] + manager["third_place_finishes"],
-                "Last Place": manager["last_place_finishes"],
-                "Best Finish": best_finish,
-                "Worst Finish": worst_finish,
-                "Avg Reg. Finish": manager["average_regular_season_finish"],
-                "Avg Post. Finish": manager["average_post_season_finish"],
-                "W": combined["wins"],
-                "L": combined["losses"],
-                "T": combined["ties"],
-                "Win %": combined["win_pct"],
-                "Points For": combined["points_for"],
-                "Points Against": combined["points_against"],
-                "Players Started": manager["career_players_started_count"],
-            }
-        )
-    return pd.DataFrame(rows).sort_values(["Seasons", "Manager"], ascending=[False, True])
-
-
 def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
     st.subheader("Career Manager Standings")
     st.dataframe(
@@ -570,19 +595,6 @@ def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
             **{column: st.column_config.NumberColumn(format=fmt) for column, fmt in MANAGER_STAT_COLUMN_FORMATS.items()},
         },
     )
-
-
-# Only these totals make sense divided by a manager's season/game count -
-# the rest (Championships, Win %, Avg Finish, etc) are either already
-# per-season/per-game rates or counts that don't mean anything normalized
-# this way. Per Game deliberately excludes Players Started (unlike Per
-# Season) - a career "players started per game" rate isn't a meaningful
-# stat the way a per-season rate is.
-PER_SEASON_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against", "Players Started"}
-PER_GAME_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against"}
-
-NORMALIZATION_LABELS = {"all_time": "All Time", "per_season": "Per Season", "per_game": "Per Game"}
-NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against (Per Season also covers Players Started)."
 
 
 def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[str, str]) -> None:

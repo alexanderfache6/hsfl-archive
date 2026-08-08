@@ -16,7 +16,6 @@ from utils import (
     combine_top_n_records,
     load_display_name_alternates,
     parsed_path,
-    placement_number,
     read_json,
     team_id_to_manager,
     write_json,
@@ -29,37 +28,25 @@ def discover_aggregated_seasons() -> list[int]:
     return sorted(int(child.name) for child in AGGREGATED_DIRECTORY.iterdir() if child.is_dir() and child.name.isdigit())
 
 
-def _find_last_place(consolation_bracket: dict, final_standings: list[dict]) -> str:
-    """Loser of the highest-placement-number game (e.g. "9th Place Game"
-    in a 10-team league) - the mirror image of parse.py's
-    consolation_winner_team_id (lowest placement number's winner).
+def _find_last_place(final_placements: dict) -> str:
+    """The team with the highest (worst) final placement number, straight
+    from post_season_stats.json's final_placements - the one place this
+    archive computes a true, complete final rank for EVERY team that
+    season, including any team that never played a single post-season
+    game at all.
 
-    Fallback added 2026-08-07 (found via 2012, a 4-team season): when a
-    season has no real consolation bracket at all (e.g. every team made
-    the single championship bracket, as happened in a small league), the
-    bracket-based lookup has no candidates - fall back to the
-    worst-ranked team in that season's final regular-season standings,
-    since "last place" is still a well-defined concept even without a
-    consolation bracket to derive it from."""
-    candidates = []
-    for round_entry in consolation_bracket.get("rounds", []):
-        for matchup in round_entry.get("matchups", []):
-            if matchup.get("is_bye"):
-                continue
-            placement = placement_number(matchup.get("round_label", ""))
-            home_id, away_id, winner_id = matchup.get("team_id_home"), matchup.get("team_id_away"), matchup.get("winner_team_id")
-            if placement is None or not home_id or not away_id or not winner_id:
-                continue
-            loser_id = away_id if winner_id == home_id else home_id
-            candidates.append((placement, loser_id))
-    if candidates:
-        _, loser_id = max(candidates, key=lambda pair: pair[0])
-        return loser_id
-
-    if not final_standings:
+    Replaced 2026-08-08 (found via 2020: team 9 finished true last, rank
+    10, but never played in the consolation bracket - the league's
+    bracket only fit 8 of the 10 teams that year): the previous approach
+    scanned the consolation bracket for the loser of its
+    highest-placement-number game, which silently returns the BRACKET's
+    own worst finisher (rank 8 that year) whenever the true last-place
+    team(s) never played a bracket game at all - final_placements has no
+    such gap, since it's derived from the full final standings, not from
+    bracket participation."""
+    if not final_placements:
         return ""
-    worst_row = max(final_standings, key=lambda row: row["rank"])
-    return worst_row["team_id"]
+    return max(final_placements.items(), key=lambda pair: pair[1])[0]
 
 
 def _empty_totals() -> dict:
@@ -110,7 +97,7 @@ def build_all_time_champions(years: list[int], unresolved: list) -> dict:
                 }
             )
 
-        last_place_team_id = _find_last_place(playoffs["consolation_bracket"], standings["final_standings"])
+        last_place_team_id = _find_last_place(post_season_stats.get("final_placements", {}))
         last_place_manager = manager_by_team_id.get(last_place_team_id)
         if last_place_manager is None:
             if last_place_team_id:
@@ -302,7 +289,7 @@ def build_all_time_manager_stats(years: list[int], unresolved: list) -> dict:
             else:
                 unresolved.append({"season": year, "team_id": team_id, "context": "manager_stats.post_season_rank"})
 
-        last_place_team_id = _find_last_place(playoffs["consolation_bracket"], final_week_standings)
+        last_place_team_id = _find_last_place(final_placements)
         last_place_manager = manager_by_team_id.get(last_place_team_id)
         if last_place_manager:
             get_manager(last_place_manager["manager_id"], last_place_manager["display_name"])

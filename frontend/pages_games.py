@@ -9,6 +9,10 @@ Manager 2's options depend on it and need an immediate rerun to update.
 See execution-plan.md Phase G.
 """
 
+# ========================================
+# IMPORTS
+# ========================================
+
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -26,6 +30,10 @@ from data_loader import (
 )
 from player_modal import open_player_stats_modal
 
+# ========================================
+# CONSTANTS
+# ========================================
+
 MAX_WEEK = 17
 
 # Same neutral gray used for the "Bench" segment in the Players tab's
@@ -40,6 +48,31 @@ MATCHUP_TYPE_LABELS = {
     "championship": "Championship Bracket",
     "consolation": "Consolation Bracket",
 }
+
+FILTER_WIDGET_BASE_KEYS = ("games_team1_manager_id", "games_season", "games_week", "games_team2_manager_id", "games_matchup_type")
+
+BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
+
+# DEF entries carry an empty "nfl_team" in the archived data - it was
+# never captured during parsing (only individual players' teams were),
+# so this display-only lookup fills it back in from the DEF's own
+# player_name (e.g. "49ers") rather than requiring a full re-parse of
+# every season just for this one field.
+DEF_TEAM_ABBREVIATIONS = {
+    "49ers": "SF", "Bears": "CHI", "Bengals": "CIN", "Bills": "BUF",
+    "Broncos": "DEN", "Browns": "CLE", "Buccaneers": "TB", "Cardinals": "ARI",
+    "Chargers": "LAC", "Chiefs": "KC", "Colts": "IND", "Commanders": "WAS",
+    "Cowboys": "DAL", "Dolphins": "MIA", "Eagles": "PHI", "Falcons": "ATL",
+    "Giants": "NYG", "Jaguars": "JAX", "Jets": "NYJ", "Lions": "DET",
+    "Packers": "GB", "Panthers": "CAR", "Patriots": "NE", "Raiders": "LV",
+    "Rams": "LAR", "Ravens": "BAL", "Redskins": "WAS", "Saints": "NO",
+    "Seahawks": "SEA", "Steelers": "PIT", "Texans": "HOU", "Titans": "TEN",
+    "Vikings": "MIN",
+}
+
+# ========================================
+# FUNCTIONS
+# ========================================
 
 
 def _manager_options(name_resolver: dict[str, str]) -> list[tuple[str, str]]:
@@ -56,7 +89,87 @@ def _seasons_played_by_manager() -> dict[str, list[int]]:
     return {manager["manager_id"]: manager["seasons_played"] for manager in manager_stats["managers"]}
 
 
-FILTER_WIDGET_BASE_KEYS = ("games_team1_manager_id", "games_season", "games_week", "games_team2_manager_id", "games_matchup_type")
+def _bench_sort_key(player: dict) -> int:
+    # Any position not in the named order (e.g. IDP slots like "DB")
+    # falls into a catch-all "RESERVE" bucket at the end.
+    try:
+        return BENCH_POSITION_ORDER.index(player["position"])
+    except ValueError:
+        return len(BENCH_POSITION_ORDER)
+
+
+def _optimal_lineup_details(side: dict, year: int) -> dict:
+    """{"gains": {player_id: +points}, "losses": {player_id: +points},
+    "optimal_points": float} - gains covers bench players who belong in
+    the optimal lineup (compute_optimal_lineup - the same formula behind
+    best_coaching_season/worst_coaching_season); losses is the mirror
+    image, keyed by the WEAKEST actual starter eligible for that same
+    slot (same position, or RB/WR for FLEX) who'd be displaced - same
+    magnitude as the matching gain, opposite sign when rendered. Not a
+    full reconstruction of an exact multi-slot swap chain, which stays
+    simpler and more directly explainable ("this bench player beats your
+    worst eligible starter by X") at the cost of not always summing
+    exactly to the aggregate coaching diff in rare multi-swap weeks.
+    optimal_points is the true optimal lineup's total, for the bench
+    table's summary row."""
+    all_players = side["starters"] + side["bench"]
+    optimal = compute_optimal_lineup(all_players, year)
+    optimal_by_id = {p["player_id"]: p for p in optimal["optimal_starters"] if p.get("player_id")}
+    actual_starter_ids = {p["player_id"] for p in side["starters"] if p.get("player_id")}
+
+    gains: dict[str, float] = {}
+    losses: dict[str, float] = {}
+    for bench_player in side["bench"]:
+        player_id = bench_player.get("player_id")
+        optimal_entry = optimal_by_id.get(player_id) if player_id else None
+        if not player_id or optimal_entry is None or player_id in actual_starter_ids:
+            continue
+
+        slot = optimal_entry["optimal_slot"]
+        eligible_positions = FLEX_ELIGIBLE_POSITIONS if slot == "FLEX" else {slot}
+        displaced_candidates = [
+            starter
+            for starter in side["starters"]
+            if starter.get("position") in eligible_positions and starter.get("player_id") not in optimal_by_id
+        ]
+        if not displaced_candidates:
+            continue
+
+        weakest_displaced = min(displaced_candidates, key=lambda starter: starter["points"])
+        gain = bench_player["points"] - weakest_displaced["points"]
+        gains[player_id] = gain
+        losses[weakest_displaced["player_id"]] = gain
+
+    return {"gains": gains, "losses": losses, "optimal_points": optimal["optimal_points"]}
+
+
+def _pad_missing_starters(starters: list[dict], year: int) -> list[dict]:
+    """Rebuilds the starters list in roster_settings' own slot order
+    (QB, RB, RB, WR, WR, TE, FLEX, K, DEF, ...), inserting a blank
+    placeholder row wherever that season's settings call for a slot this
+    week's actual starters list is short on - e.g. settings call for 2 RB
+    but only 1 RB actually started, so the second RB slot renders empty
+    in its normal position rather than being silently omitted or tacked
+    on at the end out of order. This is a real gap the manager likely
+    just forgot to fill (as opposed to a bye/injury, which still shows an
+    actual, if low-scoring, player)."""
+    expected_slot_counts = load_starting_slot_counts(year)
+    remaining_by_slot: dict[str, list[dict]] = {}
+    for player in starters:
+        slot = player.get("slot", player["position"])
+        remaining_by_slot.setdefault(slot, []).append(player)
+
+    ordered: list[dict] = []
+    for slot, expected_count in expected_slot_counts.items():
+        available = remaining_by_slot.get(slot, [])
+        for _ in range(expected_count):
+            ordered.append(available.pop(0) if available else {"position": slot, "is_empty_slot": True})
+    return ordered
+
+
+# ========================================
+# RENDER
+# ========================================
 
 
 def _render_filters(name_resolver: dict[str, str]) -> dict | None:
@@ -324,81 +437,6 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     st.plotly_chart(figure, width="stretch")
 
 
-
-BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
-
-# DEF entries carry an empty "nfl_team" in the archived data - it was
-# never captured during parsing (only individual players' teams were),
-# so this display-only lookup fills it back in from the DEF's own
-# player_name (e.g. "49ers") rather than requiring a full re-parse of
-# every season just for this one field.
-DEF_TEAM_ABBREVIATIONS = {
-    "49ers": "SF", "Bears": "CHI", "Bengals": "CIN", "Bills": "BUF",
-    "Broncos": "DEN", "Browns": "CLE", "Buccaneers": "TB", "Cardinals": "ARI",
-    "Chargers": "LAC", "Chiefs": "KC", "Colts": "IND", "Commanders": "WAS",
-    "Cowboys": "DAL", "Dolphins": "MIA", "Eagles": "PHI", "Falcons": "ATL",
-    "Giants": "NYG", "Jaguars": "JAX", "Jets": "NYJ", "Lions": "DET",
-    "Packers": "GB", "Panthers": "CAR", "Patriots": "NE", "Raiders": "LV",
-    "Rams": "LAR", "Ravens": "BAL", "Redskins": "WAS", "Saints": "NO",
-    "Seahawks": "SEA", "Steelers": "PIT", "Texans": "HOU", "Titans": "TEN",
-    "Vikings": "MIN",
-}
-
-
-def _bench_sort_key(player: dict) -> int:
-    # Any position not in the named order (e.g. IDP slots like "DB")
-    # falls into a catch-all "RESERVE" bucket at the end.
-    try:
-        return BENCH_POSITION_ORDER.index(player["position"])
-    except ValueError:
-        return len(BENCH_POSITION_ORDER)
-
-
-def _optimal_lineup_details(side: dict, year: int) -> dict:
-    """{"gains": {player_id: +points}, "losses": {player_id: +points},
-    "optimal_points": float} - gains covers bench players who belong in
-    the optimal lineup (compute_optimal_lineup - the same formula behind
-    best_coaching_season/worst_coaching_season); losses is the mirror
-    image, keyed by the WEAKEST actual starter eligible for that same
-    slot (same position, or RB/WR for FLEX) who'd be displaced - same
-    magnitude as the matching gain, opposite sign when rendered. Not a
-    full reconstruction of an exact multi-slot swap chain, which stays
-    simpler and more directly explainable ("this bench player beats your
-    worst eligible starter by X") at the cost of not always summing
-    exactly to the aggregate coaching diff in rare multi-swap weeks.
-    optimal_points is the true optimal lineup's total, for the bench
-    table's summary row."""
-    all_players = side["starters"] + side["bench"]
-    optimal = compute_optimal_lineup(all_players, year)
-    optimal_by_id = {p["player_id"]: p for p in optimal["optimal_starters"] if p.get("player_id")}
-    actual_starter_ids = {p["player_id"] for p in side["starters"] if p.get("player_id")}
-
-    gains: dict[str, float] = {}
-    losses: dict[str, float] = {}
-    for bench_player in side["bench"]:
-        player_id = bench_player.get("player_id")
-        optimal_entry = optimal_by_id.get(player_id) if player_id else None
-        if not player_id or optimal_entry is None or player_id in actual_starter_ids:
-            continue
-
-        slot = optimal_entry["optimal_slot"]
-        eligible_positions = FLEX_ELIGIBLE_POSITIONS if slot == "FLEX" else {slot}
-        displaced_candidates = [
-            starter
-            for starter in side["starters"]
-            if starter.get("position") in eligible_positions and starter.get("player_id") not in optimal_by_id
-        ]
-        if not displaced_candidates:
-            continue
-
-        weakest_displaced = min(displaced_candidates, key=lambda starter: starter["points"])
-        gain = bench_player["points"] - weakest_displaced["points"]
-        gains[player_id] = gain
-        losses[weakest_displaced["player_id"]] = gain
-
-    return {"gains": gains, "losses": losses, "optimal_points": optimal["optimal_points"]}
-
-
 def _render_roster_table(
     players: list[dict],
     season: int,
@@ -497,30 +535,6 @@ def _render_roster_table(
             # scoped CSS in _render_matchup_card), so this row needs its
             # own explicit breathing room instead of relying on that.
             st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
-
-
-def _pad_missing_starters(starters: list[dict], year: int) -> list[dict]:
-    """Rebuilds the starters list in roster_settings' own slot order
-    (QB, RB, RB, WR, WR, TE, FLEX, K, DEF, ...), inserting a blank
-    placeholder row wherever that season's settings call for a slot this
-    week's actual starters list is short on - e.g. settings call for 2 RB
-    but only 1 RB actually started, so the second RB slot renders empty
-    in its normal position rather than being silently omitted or tacked
-    on at the end out of order. This is a real gap the manager likely
-    just forgot to fill (as opposed to a bye/injury, which still shows an
-    actual, if low-scoring, player)."""
-    expected_slot_counts = load_starting_slot_counts(year)
-    remaining_by_slot: dict[str, list[dict]] = {}
-    for player in starters:
-        slot = player.get("slot", player["position"])
-        remaining_by_slot.setdefault(slot, []).append(player)
-
-    ordered: list[dict] = []
-    for slot, expected_count in expected_slot_counts.items():
-        available = remaining_by_slot.get(slot, [])
-        for _ in range(expected_count):
-            ordered.append(available.pop(0) if available else {"position": slot, "is_empty_slot": True})
-    return ordered
 
 
 def _render_matchup_card(

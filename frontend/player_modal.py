@@ -1,4 +1,5 @@
-"""Reusable "player stats for one week" modal (st.dialog) - triggered by
+"""
+Reusable "player stats for one week" modal (st.dialog) - triggered by
 clicking a player anywhere in the app that shows them for a specific
 (season, week), starting with the Games tab's roster tables. Player name/
 position/team on the first row, that week's raw stat breakdown (decoded
@@ -6,11 +7,23 @@ via archive/stat_id_labels.json) as a table below it. See
 execution-plan.md Phase G.
 """
 
+# ========================================
+# IMPORTS
+# ========================================
+
 import streamlit as st
 
 from data_loader import compute_stat_fantasy_points, load_player_ownership, load_stat_id_labels
 
+# ========================================
+# CONSTANTS
+# ========================================
+
 MODAL_CONTEXT_KEY = "_player_stats_modal_context"
+
+# ========================================
+# RENDER
+# ========================================
 
 
 @st.dialog("Player Stats")

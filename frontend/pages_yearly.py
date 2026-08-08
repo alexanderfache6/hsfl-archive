@@ -2,6 +2,10 @@
 single selected season. See execution-plan.md Phase G.
 """
 
+# ========================================
+# IMPORTS
+# ========================================
+
 import html
 from datetime import datetime
 
@@ -25,11 +29,34 @@ from data_loader import (
 )
 from pages_history import CHAMPION_COLOR, RUNNER_UP_COLOR, THIRD_PLACE_COLOR
 
+# ========================================
+# CONSTANTS
+# ========================================
+
 BRACKET_NEUTRAL_COLOR = "#888888"
 BRACKET_CARD_HEIGHT_PX = 190
 BRACKET_CARD_GAP_PX = 40
 BRACKET_ROW_UNIT_PX = BRACKET_CARD_HEIGHT_PX + BRACKET_CARD_GAP_PX
 BRACKET_HEADER_HEIGHT_PX = 40
+
+TRANSACTIONS_PAGE_SIZE = 10
+
+PODIUM_BLOCK_HEIGHT_PX = {1: 250, 2: 190, 3: 140}
+PODIUM_COLOR = {1: CHAMPION_COLOR, 2: RUNNER_UP_COLOR, 3: THIRD_PLACE_COLOR}
+PODIUM_LABEL = {1: "1st", 2: "2nd", 3: "3rd"}
+PODIUM_DISPLAY_ORDER = [2, 1, 3]
+
+PODIUM_LOGO_SIZE_PX = {1: 120, 2: 100, 3: 90}
+PODIUM_LOGO_GAP_PX = 10
+
+PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
+LAST_PLACE_EMOJI = "🥞"
+
+SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.2, 4]
+
+# ========================================
+# FUNCTIONS
+# ========================================
 
 
 def _full_table_height(row_count: int) -> int:
@@ -38,6 +65,313 @@ def _full_table_height(row_count: int) -> int:
     has more rows than fit; passing an explicit height instead shows
     every row with no fold/scroll."""
     return 38 + 35 * row_count
+
+
+def _parse_transaction_date(date_text: str, season: int) -> datetime:
+    """"Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
+    can run into January of the FOLLOWING calendar year (confirmed for
+    2012, 2021, 2022) - only "Jan" dates get season+1, everything else
+    (Aug-Dec) uses the season's own year."""
+    month_text = date_text.split(" ", 1)[0]
+    year = season + 1 if month_text == "Jan" else season
+    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")
+
+
+def _bracket_effective_winner(game: dict) -> str:
+    """A bye game has no winner_team_id (nobody actually played) - the
+    lone present team advances automatically, so it's treated as this
+    game's "winner" for the purpose of wiring a connector into the next
+    round. Some brackets (e.g. 2023's 6-team championship bracket) also
+    have a round-1-loser "continues on" slot that has only one side
+    filled but is NOT flagged is_bye - checking "exactly one side
+    present" directly (rather than trusting is_bye) catches those too."""
+    if game["winner_team_id"]:
+        return game["winner_team_id"]
+    home, away = game["team_id_home"], game["team_id_away"]
+    if bool(home) != bool(away):
+        return home or away
+    return ""
+
+
+def _bracket_team_label(team_id: str, seed: int | None, team_info: dict[str, dict], name_resolver: dict[str, str]) -> str:
+    info = team_info.get(team_id, {})
+    team_name = info.get("team_name", "")
+    manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+    seed_text = f"#{seed} " if seed else ""
+    return f"{seed_text}{team_name} ({manager_name})"
+
+
+def _bracket_highlight_style(team_id: str, winner_team_id: str, team_info: dict[str, dict], manager_color_map: dict[str, str]) -> str:
+    """Background-color + contrasting text-color for the winning side's
+    name/score lines - same manager-color-highlight convention as the
+    Matchups page's own matchup cards - empty string (no highlight) for
+    the losing side."""
+    if team_id != winner_team_id:
+        return ""
+    manager_id = team_info.get(team_id, {}).get("manager_id", "")
+    background_color = manager_color_map.get(manager_id, BRACKET_NEUTRAL_COLOR)
+    text_color = contrasting_text_color(background_color)
+    return f"background-color:{background_color}; color:{text_color}; border-radius:4px;"
+
+
+def _bracket_game_card_html(
+    game: dict, top_px: float, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], round_label: str
+) -> str:
+    """Reusable single-game card - one call site per bracket (Championship,
+    Consolation), used for every round. Byes render as a single
+    auto-advancing team with no opponent line. Returns an absolutely
+    positioned HTML div (not an st.container - no invisible spacer
+    containers needed to push it to the right row; its "top" is the exact
+    pixel the connector math also uses, so lines tie to the true card
+    center). round_label is the DISPLAY label (see
+    _bracket_display_round_label) - not always game["round_label"]
+    verbatim, since some rounds need one synthesized."""
+    winner_team_id = _bracket_effective_winner(game)
+
+    lines_html = []
+    if round_label:
+        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
+
+    # "Only one side present" (not the is_bye flag, which some brackets
+    # leave False on a loser's "continues on" slot with an empty
+    # opponent - see _bracket_effective_winner) is what actually
+    # determines whether this is a single-team card.
+    if bool(game["team_id_home"]) != bool(game["team_id_away"]):
+        lone_team_id = game["team_id_home"] or game["team_id_away"]
+        lone_seed = game["seed_home"] or game["seed_away"]
+        lone_label = html.escape(_bracket_team_label(lone_team_id, lone_seed, team_info, name_resolver))
+        lone_highlight = _bracket_highlight_style(lone_team_id, winner_team_id, team_info, manager_color_map)
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><strong>{lone_label}</strong></div>')
+        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.7; font-style:italic;">Bye</div>')
+    else:
+        home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
+        away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
+        home_html = f"<strong>{home_label}</strong>" if game["team_id_home"] == winner_team_id else home_label
+        away_html = f"<strong>{away_label}</strong>" if game["team_id_away"] == winner_team_id else away_label
+        score_home_text = f"{game['score_home']:.2f}" if game["score_home"] is not None else "—"
+        score_away_text = f"{game['score_away']:.2f}" if game["score_away"] is not None else "—"
+        score_home_html = f"<strong>{score_home_text}</strong>" if game["team_id_home"] == winner_team_id else score_home_text
+        score_away_html = f"<strong>{score_away_text}</strong>" if game["team_id_away"] == winner_team_id else score_away_text
+        home_highlight = _bracket_highlight_style(game["team_id_home"], winner_team_id, team_info, manager_color_map)
+        away_highlight = _bracket_highlight_style(game["team_id_away"], winner_team_id, team_info, manager_color_map)
+        # Row 1 = round label (above), row 2 = team 1 name, row 3 = team 1
+        # score, row 4 = "vs", row 5 = team 2 score, row 6 = team 2 name.
+        # A winning side's name+score are ONE outer div (one continuous
+        # highlighted box spanning both lines), not two separately
+        # highlighted divs - the inner name/score lines carry no
+        # background of their own, just the outer wrapper.
+        lines_html.append(
+            f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>'
+        )
+        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.6;">vs</div>')
+        lines_html.append(
+            f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>'
+        )
+
+    return (
+        f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; '
+        f'border:2px solid black; border-radius:8px; padding:10px; '
+        f'height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
+    )
+
+
+def _layout_bracket_rounds(
+    rounds: list[dict],
+) -> tuple[list[tuple[int, str, list[tuple[dict, float]]]], list[tuple[int, float, int, float, str]]]:
+    """Assigns each game a vertical "row" (row 0 = top): round-1 games get
+    evenly spaced whole-number rows in bracket_position order; every later
+    round's game whose team(s) can be traced back to a specific prior-round
+    game ("connected") is centered on the average row of the game(s) it
+    drew its two teams from (found via each team's most recent
+    advancement, not by assuming a fixed bracket_position parent/child
+    shape - some rounds mix a semifinal with unrelated placement games, so
+    position alone doesn't imply lineage). A round's "orphan" games -
+    byes/placement slots with no traceable prior game - are always placed
+    BELOW every connected game in that same round, each spaced a full row
+    apart, so they never visually overlap the main bracket. A minimum
+    1-row gap is also enforced between consecutive connected games for the
+    same reason, in case two of them average out to nearly the same row.
+    Returns (rounds_with_rows, connectors) where rounds_with_rows entries
+    are (round_order, round_name, games) and each connector is
+    (from_round_order, from_row, to_round_order, to_row, winner_team_id) -
+    winner_team_id colors the connector line."""
+    rounds_with_rows: list[tuple[int, str, list[tuple[dict, float]]]] = []
+    connectors: list[tuple[int, float, int, float, str]] = []
+    last_advanced_from: dict[str, tuple[int, float]] = {}  # team_id -> (round_order, row)
+    previous_round_order: int | None = None
+
+    for round_entry in sorted(rounds, key=lambda r: r["round_order"]):
+        round_order = round_entry["round_order"]
+        games = sorted(round_entry["matchups"], key=lambda g: g["bracket_position"])
+
+        # Pending connectors for this round, target row filled in once
+        # every game's final (de-overlapped) row is known below.
+        pending_connectors: list[dict] = []
+        connected_games: list[tuple[dict, float]] = []
+        orphan_games: list[dict] = []
+
+        for game in games:
+            source_rows = []
+            for team_id in (game["team_id_home"], game["team_id_away"]):
+                source = last_advanced_from.get(team_id) if team_id else None
+                # Only a team that WON its immediately preceding round (or
+                # had a bye there) gets a connector drawn - a team that
+                # lost isn't tracked past that loss (see the winner-only
+                # update below), and a stale older win (skipping a round)
+                # doesn't count as "connected" either, so it can't draw a
+                # line spanning past a round it didn't actually win.
+                if source is not None and source[0] == previous_round_order:
+                    source_round_order, source_row = source
+                    source_rows.append(source_row)
+                    pending_connectors.append({"from_round": source_round_order, "from_row": source_row, "team_id": team_id, "game": game})
+            if source_rows:
+                connected_games.append((game, sum(source_rows) / len(source_rows)))
+            else:
+                orphan_games.append(game)
+
+        connected_games.sort(key=lambda entry: entry[1])
+
+        final_row_by_id: dict[int, float] = {}
+        cursor = -1.0
+        for game, raw_row in connected_games:
+            row = max(raw_row, cursor + 1.0)
+            final_row_by_id[id(game)] = row
+            cursor = row
+        for game in orphan_games:
+            cursor += 1.0
+            final_row_by_id[id(game)] = cursor
+
+        # A 3-round championship bracket's final round is a special case:
+        # the generic connected/orphan ordering above puts the untraceable
+        # 3rd Place Game (both entrants LOST their semifinal, so neither
+        # is trackable) below the 5th Place Game, purely because it's
+        # processed as an orphan after 5th place happens to be
+        # "connected" via its own bye-like continuation slots. The 5th
+        # Place Game's own row is already correctly centered on its two
+        # parent cells (round 2's continuation slots) - leave it as-is.
+        # Only reposition the 3rd Place Game, into the otherwise-empty gap
+        # between the championship and that already-centered 5th place
+        # row, instead of pushing it below everything.
+        round_label_set = {game["round_label"] for game in games}
+        if round_label_set == {"Fantasy Super Bowl", "3rd Place Game", "5th Place Game"}:
+            row_by_label = {game["round_label"]: final_row_by_id[id(game)] for game in games}
+            championship_row = row_by_label["Fantasy Super Bowl"]
+            fifth_place_row = row_by_label["5th Place Game"]
+            third_place_game = next(game for game in games if game["round_label"] == "3rd Place Game")
+            gap_top = championship_row + 1.0
+            gap_bottom = fifth_place_row - 1.0
+            final_row_by_id[id(third_place_game)] = gap_top if gap_top <= gap_bottom else (championship_row + fifth_place_row) / 2
+
+        games_with_rows = [(game, final_row_by_id[id(game)]) for game in games]
+
+        for pending in pending_connectors:
+            connectors.append((pending["from_round"], pending["from_row"], round_order, final_row_by_id[id(pending["game"])], pending["team_id"]))
+
+        rounds_with_rows.append((round_order, round_entry["round_name"], games_with_rows))
+        for game, row in games_with_rows:
+            winner_team_id = _bracket_effective_winner(game)
+            if winner_team_id:
+                last_advanced_from[winner_team_id] = (round_order, row)
+        previous_round_order = round_order
+
+    return rounds_with_rows, connectors
+
+
+def _bracket_display_round_label(game: dict, round_order: int, max_round_order: int, is_consolation: bool) -> str:
+    """The raw round_label (e.g. "Semifinal", "7th Place Game") when the
+    data has one - but the consolation bracket's OWN semifinal-equivalent
+    round often comes through with an empty round_label (only its later
+    placement-game rounds, like "7th Place Game", are labeled), so that
+    empty case is synthesized as "Consolation Semifinal" specifically for
+    the second-to-last round of the consolation bracket."""
+    if game["round_label"]:
+        return game["round_label"]
+    if is_consolation and round_order == max_round_order - 1:
+        return "Consolation Semifinal"
+    return ""
+
+
+def _championship_bye_team_ids(season: int) -> set[str]:
+    """Team ids that received a first-round bye in the CHAMPIONSHIP
+    bracket only (per request, consolation byes don't count) - just the
+    FIRST round's is_bye=True games (real seed-1/seed-2 byes). Later
+    rounds can also carry is_bye=True on a "loser continues on" placement
+    slot (e.g. 2022's Week 16 pos 4) - restricting to round_order == the
+    minimum keeps those out."""
+    playoffs = load_playoffs(season)
+    if not playoffs:
+        return set()
+    rounds = playoffs.get("championship_bracket", {}).get("rounds", [])
+    if not rounds:
+        return set()
+    first_round = min(rounds, key=lambda round_entry: round_entry["round_order"])
+    return {game["team_id_home"] or game["team_id_away"] for game in first_round["matchups"] if game["is_bye"]}
+
+
+def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> dict[int, tuple[str, str, str, str]]:
+    """{rank: (team_id, team_name, manager_name, combined_record)} for
+    ranks 1-3 - post-season final_placements when available (matches the
+    Final Standings tab), falling back to the final week's regular-season
+    standings rank for a season with no recorded playoff bracket.
+    combined_record sums the regular-season W-L-T with the post-season
+    (championship or consolation bracket) W-L, when there was one."""
+    team_info = team_id_to_manager_map(season)
+    post_season_stats = load_post_season_stats(season)
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    if not weekly_tables:
+        return {}
+    regular_season_record_by_team = {row["team_id"]: (row["wins"], row["losses"], row["ties"]) for row in weekly_tables[-1]["standings"]}
+
+    if post_season_stats and post_season_stats.get("final_placements"):
+        ranked_team_ids = sorted(post_season_stats["final_placements"].items(), key=lambda entry: entry[1])
+    else:
+        ranked_team_ids = [(row["team_id"], row["rank"]) for row in weekly_tables[-1]["standings"]]
+
+    top_three = {}
+    for team_id, rank in ranked_team_ids:
+        if rank not in (1, 2, 3):
+            continue
+        info = team_info.get(team_id, {})
+        team_name = info.get("team_name", "")
+        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+
+        wins, losses, ties = regular_season_record_by_team.get(team_id, (0, 0, 0))
+        if post_season_stats:
+            post_season_record = post_season_stats["championship"].get(team_id) or post_season_stats["consolation"].get(team_id)
+            if post_season_record:
+                wins += post_season_record["wins"]
+                losses += post_season_record["losses"]
+                ties += post_season_record["ties"]
+        combined_record = f"{wins}-{losses}-{ties}" if ties else f"{wins}-{losses}"
+
+        top_three[rank] = (team_id, team_name, manager_name, combined_record)
+    return top_three
+
+
+def _go_to_game_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
+    """Jumps to the Games page pre-filtered to this exact matchup, same
+    st.switch_page pattern as the History tab's _go_to_game - must be
+    called from the main script body (not a button's on_click callback),
+    since st.switch_page is a no-op/error from within a callback."""
+    st.session_state["games_team1_manager_id"] = team1_manager_id
+    st.session_state["games_season"] = season
+    st.session_state["games_week"] = week
+    st.session_state["games_team2_manager_id"] = team2_manager_id
+    st.session_state["games_matchup_type"] = "regular"
+    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
+    st.session_state["games_applied_filters"] = {
+        "season": season,
+        "week": week,
+        "team1_manager_id": team1_manager_id,
+        "team2_manager_id": team2_manager_id,
+        "matchup_type": "regular",
+    }
+    st.switch_page(st.session_state["_games_page"])
+
+
+# ========================================
+# RENDER
+# ========================================
 
 
 def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
@@ -549,19 +883,6 @@ def _render_true_ranking_table(season: int, name_resolver: dict[str, str]) -> No
     )
 
 
-def _parse_transaction_date(date_text: str, season: int) -> datetime:
-    """"Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
-    can run into January of the FOLLOWING calendar year (confirmed for
-    2012, 2021, 2022) - only "Jan" dates get season+1, everything else
-    (Aug-Dec) uses the season's own year."""
-    month_text = date_text.split(" ", 1)[0]
-    year = season + 1 if month_text == "Jan" else season
-    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")
-
-
-TRANSACTIONS_PAGE_SIZE = 10
-
-
 def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> None:
     st.subheader("Transactions")
 
@@ -688,206 +1009,6 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     )
 
 
-def _bracket_effective_winner(game: dict) -> str:
-    """A bye game has no winner_team_id (nobody actually played) - the
-    lone present team advances automatically, so it's treated as this
-    game's "winner" for the purpose of wiring a connector into the next
-    round. Some brackets (e.g. 2023's 6-team championship bracket) also
-    have a round-1-loser "continues on" slot that has only one side
-    filled but is NOT flagged is_bye - checking "exactly one side
-    present" directly (rather than trusting is_bye) catches those too."""
-    if game["winner_team_id"]:
-        return game["winner_team_id"]
-    home, away = game["team_id_home"], game["team_id_away"]
-    if bool(home) != bool(away):
-        return home or away
-    return ""
-
-
-def _bracket_team_label(team_id: str, seed: int | None, team_info: dict[str, dict], name_resolver: dict[str, str]) -> str:
-    info = team_info.get(team_id, {})
-    team_name = info.get("team_name", "")
-    manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
-    seed_text = f"#{seed} " if seed else ""
-    return f"{seed_text}{team_name} ({manager_name})"
-
-
-def _bracket_highlight_style(team_id: str, winner_team_id: str, team_info: dict[str, dict], manager_color_map: dict[str, str]) -> str:
-    """Background-color + contrasting text-color for the winning side's
-    name/score lines - same manager-color-highlight convention as the
-    Matchups page's own matchup cards - empty string (no highlight) for
-    the losing side."""
-    if team_id != winner_team_id:
-        return ""
-    manager_id = team_info.get(team_id, {}).get("manager_id", "")
-    background_color = manager_color_map.get(manager_id, BRACKET_NEUTRAL_COLOR)
-    text_color = contrasting_text_color(background_color)
-    return f"background-color:{background_color}; color:{text_color}; border-radius:4px;"
-
-
-def _bracket_game_card_html(
-    game: dict, top_px: float, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], round_label: str
-) -> str:
-    """Reusable single-game card - one call site per bracket (Championship,
-    Consolation), used for every round. Byes render as a single
-    auto-advancing team with no opponent line. Returns an absolutely
-    positioned HTML div (not an st.container - no invisible spacer
-    containers needed to push it to the right row; its "top" is the exact
-    pixel the connector math also uses, so lines tie to the true card
-    center). round_label is the DISPLAY label (see
-    _bracket_display_round_label) - not always game["round_label"]
-    verbatim, since some rounds need one synthesized."""
-    winner_team_id = _bracket_effective_winner(game)
-
-    lines_html = []
-    if round_label:
-        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
-
-    # "Only one side present" (not the is_bye flag, which some brackets
-    # leave False on a loser's "continues on" slot with an empty
-    # opponent - see _bracket_effective_winner) is what actually
-    # determines whether this is a single-team card.
-    if bool(game["team_id_home"]) != bool(game["team_id_away"]):
-        lone_team_id = game["team_id_home"] or game["team_id_away"]
-        lone_seed = game["seed_home"] or game["seed_away"]
-        lone_label = html.escape(_bracket_team_label(lone_team_id, lone_seed, team_info, name_resolver))
-        lone_highlight = _bracket_highlight_style(lone_team_id, winner_team_id, team_info, manager_color_map)
-        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><strong>{lone_label}</strong></div>')
-        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.7; font-style:italic;">Bye</div>')
-    else:
-        home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
-        away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
-        home_html = f"<strong>{home_label}</strong>" if game["team_id_home"] == winner_team_id else home_label
-        away_html = f"<strong>{away_label}</strong>" if game["team_id_away"] == winner_team_id else away_label
-        score_home_text = f"{game['score_home']:.2f}" if game["score_home"] is not None else "—"
-        score_away_text = f"{game['score_away']:.2f}" if game["score_away"] is not None else "—"
-        score_home_html = f"<strong>{score_home_text}</strong>" if game["team_id_home"] == winner_team_id else score_home_text
-        score_away_html = f"<strong>{score_away_text}</strong>" if game["team_id_away"] == winner_team_id else score_away_text
-        home_highlight = _bracket_highlight_style(game["team_id_home"], winner_team_id, team_info, manager_color_map)
-        away_highlight = _bracket_highlight_style(game["team_id_away"], winner_team_id, team_info, manager_color_map)
-        # Row 1 = round label (above), row 2 = team 1 name, row 3 = team 1
-        # score, row 4 = "vs", row 5 = team 2 score, row 6 = team 2 name.
-        # A winning side's name+score are ONE outer div (one continuous
-        # highlighted box spanning both lines), not two separately
-        # highlighted divs - the inner name/score lines carry no
-        # background of their own, just the outer wrapper.
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>'
-        )
-        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.6;">vs</div>')
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>'
-        )
-
-    return (
-        f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; '
-        f'border:2px solid black; border-radius:8px; padding:10px; '
-        f'height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
-    )
-
-
-def _layout_bracket_rounds(
-    rounds: list[dict],
-) -> tuple[list[tuple[int, str, list[tuple[dict, float]]]], list[tuple[int, float, int, float, str]]]:
-    """Assigns each game a vertical "row" (row 0 = top): round-1 games get
-    evenly spaced whole-number rows in bracket_position order; every later
-    round's game whose team(s) can be traced back to a specific prior-round
-    game ("connected") is centered on the average row of the game(s) it
-    drew its two teams from (found via each team's most recent
-    advancement, not by assuming a fixed bracket_position parent/child
-    shape - some rounds mix a semifinal with unrelated placement games, so
-    position alone doesn't imply lineage). A round's "orphan" games -
-    byes/placement slots with no traceable prior game - are always placed
-    BELOW every connected game in that same round, each spaced a full row
-    apart, so they never visually overlap the main bracket. A minimum
-    1-row gap is also enforced between consecutive connected games for the
-    same reason, in case two of them average out to nearly the same row.
-    Returns (rounds_with_rows, connectors) where rounds_with_rows entries
-    are (round_order, round_name, games) and each connector is
-    (from_round_order, from_row, to_round_order, to_row, winner_team_id) -
-    winner_team_id colors the connector line."""
-    rounds_with_rows: list[tuple[int, str, list[tuple[dict, float]]]] = []
-    connectors: list[tuple[int, float, int, float, str]] = []
-    last_advanced_from: dict[str, tuple[int, float]] = {}  # team_id -> (round_order, row)
-    previous_round_order: int | None = None
-
-    for round_entry in sorted(rounds, key=lambda r: r["round_order"]):
-        round_order = round_entry["round_order"]
-        games = sorted(round_entry["matchups"], key=lambda g: g["bracket_position"])
-
-        # Pending connectors for this round, target row filled in once
-        # every game's final (de-overlapped) row is known below.
-        pending_connectors: list[dict] = []
-        connected_games: list[tuple[dict, float]] = []
-        orphan_games: list[dict] = []
-
-        for game in games:
-            source_rows = []
-            for team_id in (game["team_id_home"], game["team_id_away"]):
-                source = last_advanced_from.get(team_id) if team_id else None
-                # Only a team that WON its immediately preceding round (or
-                # had a bye there) gets a connector drawn - a team that
-                # lost isn't tracked past that loss (see the winner-only
-                # update below), and a stale older win (skipping a round)
-                # doesn't count as "connected" either, so it can't draw a
-                # line spanning past a round it didn't actually win.
-                if source is not None and source[0] == previous_round_order:
-                    source_round_order, source_row = source
-                    source_rows.append(source_row)
-                    pending_connectors.append({"from_round": source_round_order, "from_row": source_row, "team_id": team_id, "game": game})
-            if source_rows:
-                connected_games.append((game, sum(source_rows) / len(source_rows)))
-            else:
-                orphan_games.append(game)
-
-        connected_games.sort(key=lambda entry: entry[1])
-
-        final_row_by_id: dict[int, float] = {}
-        cursor = -1.0
-        for game, raw_row in connected_games:
-            row = max(raw_row, cursor + 1.0)
-            final_row_by_id[id(game)] = row
-            cursor = row
-        for game in orphan_games:
-            cursor += 1.0
-            final_row_by_id[id(game)] = cursor
-
-        # A 3-round championship bracket's final round is a special case:
-        # the generic connected/orphan ordering above puts the untraceable
-        # 3rd Place Game (both entrants LOST their semifinal, so neither
-        # is trackable) below the 5th Place Game, purely because it's
-        # processed as an orphan after 5th place happens to be
-        # "connected" via its own bye-like continuation slots. The 5th
-        # Place Game's own row is already correctly centered on its two
-        # parent cells (round 2's continuation slots) - leave it as-is.
-        # Only reposition the 3rd Place Game, into the otherwise-empty gap
-        # between the championship and that already-centered 5th place
-        # row, instead of pushing it below everything.
-        round_label_set = {game["round_label"] for game in games}
-        if round_label_set == {"Fantasy Super Bowl", "3rd Place Game", "5th Place Game"}:
-            row_by_label = {game["round_label"]: final_row_by_id[id(game)] for game in games}
-            championship_row = row_by_label["Fantasy Super Bowl"]
-            fifth_place_row = row_by_label["5th Place Game"]
-            third_place_game = next(game for game in games if game["round_label"] == "3rd Place Game")
-            gap_top = championship_row + 1.0
-            gap_bottom = fifth_place_row - 1.0
-            final_row_by_id[id(third_place_game)] = gap_top if gap_top <= gap_bottom else (championship_row + fifth_place_row) / 2
-
-        games_with_rows = [(game, final_row_by_id[id(game)]) for game in games]
-
-        for pending in pending_connectors:
-            connectors.append((pending["from_round"], pending["from_row"], round_order, final_row_by_id[id(pending["game"])], pending["team_id"]))
-
-        rounds_with_rows.append((round_order, round_entry["round_name"], games_with_rows))
-        for game, row in games_with_rows:
-            winner_team_id = _bracket_effective_winner(game)
-            if winner_team_id:
-                last_advanced_from[winner_team_id] = (round_order, row)
-        previous_round_order = round_order
-
-    return rounds_with_rows, connectors
-
-
 def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
     card_center = BRACKET_CARD_HEIGHT_PX / 2
     color = "black"  # matches the cards' own black outline, per request
@@ -909,20 +1030,6 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
         )
 
     st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{"".join(segments)}</div>', unsafe_allow_html=True)
-
-
-def _bracket_display_round_label(game: dict, round_order: int, max_round_order: int, is_consolation: bool) -> str:
-    """The raw round_label (e.g. "Semifinal", "7th Place Game") when the
-    data has one - but the consolation bracket's OWN semifinal-equivalent
-    round often comes through with an empty round_label (only its later
-    placement-game rounds, like "7th Place Game", are labeled), so that
-    empty case is synthesized as "Consolation Semifinal" specifically for
-    the second-to-last round of the consolation bracket."""
-    if game["round_label"]:
-        return game["round_label"]
-    if is_consolation and round_order == max_round_order - 1:
-        return "Consolation Semifinal"
-    return ""
 
 
 def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], is_consolation: bool) -> None:
@@ -998,23 +1105,6 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
         _render_bracket(playoffs.get("consolation_bracket", {}), team_info, name_resolver, manager_color_map, is_consolation=True)
 
 
-def _championship_bye_team_ids(season: int) -> set[str]:
-    """Team ids that received a first-round bye in the CHAMPIONSHIP
-    bracket only (per request, consolation byes don't count) - just the
-    FIRST round's is_bye=True games (real seed-1/seed-2 byes). Later
-    rounds can also carry is_bye=True on a "loser continues on" placement
-    slot (e.g. 2022's Week 16 pos 4) - restricting to round_order == the
-    minimum keeps those out."""
-    playoffs = load_playoffs(season)
-    if not playoffs:
-        return set()
-    rounds = playoffs.get("championship_bracket", {}).get("rounds", [])
-    if not rounds:
-        return set()
-    first_round = min(rounds, key=lambda round_entry: round_entry["round_order"])
-    return {game["team_id_home"] or game["team_id_away"] for game in first_round["matchups"] if game["is_bye"]}
-
-
 def _render_final_standings_table(season: int, name_resolver: dict[str, str]) -> None:
     post_season_stats = load_post_season_stats(season)
     if not post_season_stats:
@@ -1087,56 +1177,6 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(dataframe)))
 
 
-PODIUM_BLOCK_HEIGHT_PX = {1: 250, 2: 190, 3: 140}
-PODIUM_COLOR = {1: CHAMPION_COLOR, 2: RUNNER_UP_COLOR, 3: THIRD_PLACE_COLOR}
-PODIUM_LABEL = {1: "1st", 2: "2nd", 3: "3rd"}
-PODIUM_DISPLAY_ORDER = [2, 1, 3]
-
-
-def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> dict[int, tuple[str, str, str, str]]:
-    """{rank: (team_id, team_name, manager_name, combined_record)} for
-    ranks 1-3 - post-season final_placements when available (matches the
-    Final Standings tab), falling back to the final week's regular-season
-    standings rank for a season with no recorded playoff bracket.
-    combined_record sums the regular-season W-L-T with the post-season
-    (championship or consolation bracket) W-L, when there was one."""
-    team_info = team_id_to_manager_map(season)
-    post_season_stats = load_post_season_stats(season)
-    weekly_tables = load_weekly_tables(season)["weeks"]
-    if not weekly_tables:
-        return {}
-    regular_season_record_by_team = {row["team_id"]: (row["wins"], row["losses"], row["ties"]) for row in weekly_tables[-1]["standings"]}
-
-    if post_season_stats and post_season_stats.get("final_placements"):
-        ranked_team_ids = sorted(post_season_stats["final_placements"].items(), key=lambda entry: entry[1])
-    else:
-        ranked_team_ids = [(row["team_id"], row["rank"]) for row in weekly_tables[-1]["standings"]]
-
-    top_three = {}
-    for team_id, rank in ranked_team_ids:
-        if rank not in (1, 2, 3):
-            continue
-        info = team_info.get(team_id, {})
-        team_name = info.get("team_name", "")
-        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
-
-        wins, losses, ties = regular_season_record_by_team.get(team_id, (0, 0, 0))
-        if post_season_stats:
-            post_season_record = post_season_stats["championship"].get(team_id) or post_season_stats["consolation"].get(team_id)
-            if post_season_record:
-                wins += post_season_record["wins"]
-                losses += post_season_record["losses"]
-                ties += post_season_record["ties"]
-        combined_record = f"{wins}-{losses}-{ties}" if ties else f"{wins}-{losses}"
-
-        top_three[rank] = (team_id, team_name, manager_name, combined_record)
-    return top_three
-
-
-PODIUM_LOGO_SIZE_PX = {1: 120, 2: 100, 3: 90}
-PODIUM_LOGO_GAP_PX = 10
-
-
 def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
     top_three = _top_three_final_standings(season, name_resolver)
     if len(top_three) < 3:
@@ -1177,10 +1217,6 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
                 f"</div></div></div>",
                 unsafe_allow_html=True,
             )
-
-
-PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
-LAST_PLACE_EMOJI = "🥞"
 
 
 def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> None:
@@ -1255,30 +1291,6 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
             "Points Against": st.column_config.NumberColumn(format="%.2f"),
         },
     )
-
-
-def _go_to_game_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
-    """Jumps to the Games page pre-filtered to this exact matchup, same
-    st.switch_page pattern as the History tab's _go_to_game - must be
-    called from the main script body (not a button's on_click callback),
-    since st.switch_page is a no-op/error from within a callback."""
-    st.session_state["games_team1_manager_id"] = team1_manager_id
-    st.session_state["games_season"] = season
-    st.session_state["games_week"] = week
-    st.session_state["games_team2_manager_id"] = team2_manager_id
-    st.session_state["games_matchup_type"] = "regular"
-    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
-    st.session_state["games_applied_filters"] = {
-        "season": season,
-        "week": week,
-        "team1_manager_id": team1_manager_id,
-        "team2_manager_id": team2_manager_id,
-        "matchup_type": "regular",
-    }
-    st.switch_page(st.session_state["_games_page"])
-
-
-SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.2, 4]
 
 
 def _render_schedule_highlight(team: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str], align: str) -> None:

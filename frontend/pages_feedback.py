@@ -1,9 +1,14 @@
-"""Feedback tab - lets an approved (Streamlit Cloud viewer-list) user file
+"""
+Feedback tab - lets an approved (Streamlit Cloud viewer-list) user file
 a bug/improvement/new-feature note as a GitHub Issue on this repo,
 tagged with the submitter's authenticated email, then lists the repo's
 issues (filterable by state/type/page) below the form. See
 execution-plan.md Phase G.
 """
+
+# ========================================
+# IMPORTS
+# ========================================
 
 import re
 import time
@@ -15,6 +20,10 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
+# ========================================
+# CONSTANTS
+# ========================================
+
 PACIFIC_TIMEZONE = ZoneInfo("America/Los_Angeles")
 
 GITHUB_REPO = "alexanderfache6/hsfl-archive"
@@ -24,6 +33,28 @@ FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
 REAL_PAGES = ["History", "Seasons", "Matchups", "Managers", "Players", "Drafts"]
 TITLE_MAX_CHARS = 50
 DESCRIPTION_MAX_CHARS = 400
+
+ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["enhancement"]}
+
+FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
+
+# Issues filed by this form always have a title of "[{feedback_type}]
+# {title}" and "**Page:**"/"**Description:**" lines in the body (see
+# _render_feedback_form) - parsed back out via these rather than relying
+# on labels, since "Improvement" and "New Feature" both map to the same
+# "enhancement" label and so can't be told apart from labels alone.
+ISSUE_TITLE_PATTERN = re.compile(r"^\[(.*?)\]\s*(.*)$")
+ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
+ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
+
+ISSUES_PAGE_SIZE = 10
+
+ISSUES_OPENED_COLOR = "#2E7D32"
+ISSUES_CLOSED_COLOR = "#1E88E5"
+
+# ========================================
+# FUNCTIONS
+# ========================================
 
 
 def _viewer_email() -> str:
@@ -52,10 +83,94 @@ def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
     return response.json()
 
 
-ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["enhancement"]}
+def _format_pacific(iso_timestamp: str | None) -> str:
+    """GitHub's timestamps are ISO 8601 UTC ("...Z") - converted to
+    Pacific wall-clock time here, but always labeled "PST" per request
+    (not a dynamic PST/PDT label based on whether daylight saving is
+    actually in effect for that date)."""
+    if not iso_timestamp:
+        return "—"
+    utc_time = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+    pacific_time = utc_time.astimezone(PACIFIC_TIMEZONE)
+    return pacific_time.strftime("%Y-%m-%d %H:%M:%S") + " PST"
 
 
-FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
+def _parse_issue(issue: dict) -> dict:
+    title_match = ISSUE_TITLE_PATTERN.match(issue["title"])
+    issue_type, title = title_match.groups() if title_match else ("", issue["title"])
+    body = issue.get("body") or ""
+    page_match = ISSUE_PAGE_PATTERN.search(body)
+    page = page_match.group(1).strip() if page_match else ""
+    description_match = ISSUE_DESCRIPTION_PATTERN.search(body)
+    description = description_match.group(1).strip() if description_match else ""
+    return {
+        "state": issue["state"],
+        "issue_type": issue_type,
+        "page": page,
+        "title": title,
+        "description": description,
+        "number": issue["number"],
+        "url": issue["html_url"],
+        "submitted_at": _format_pacific(issue.get("created_at")),
+        "closed_at": _format_pacific(issue.get("closed_at")),
+        "created_at_raw": issue.get("created_at"),
+        "closed_at_raw": issue.get("closed_at"),
+    }
+
+
+@st.cache_data(ttl=60)
+def _all_issues() -> list[dict]:
+    """Every issue on the repo (both states - the State filter below
+    needs Closed available too), PRs excluded (GitHub's issues endpoint
+    returns both - a PR's payload carries its own "pull_request" key,
+    which is what's used to tell them apart), pre-parsed into this form's
+    own Type/Page/Description fields. Cached for 60s so a page rerun
+    doesn't refetch every time - issues don't change that fast outside of
+    right after a fresh submission (see the cache-clear above)."""
+    token = _github_token()
+    headers = {"Accept": "application/vnd.github+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    response = requests.get(
+        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
+        headers=headers,
+        params={"state": "all", "per_page": 100},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
+
+
+def _pacific_date(iso_timestamp: str | None) -> str | None:
+    if not iso_timestamp:
+        return None
+    utc_time = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+    return utc_time.astimezone(PACIFIC_TIMEZONE).strftime("%Y-%m-%d")
+
+
+def _issues_with_pending_merged() -> list[dict] | None:
+    """_all_issues()'s real fetch, with any just-submitted issue
+    (recorded in session_state - see the submit handler above) merged in
+    if GitHub's own list endpoint hasn't caught up to include it yet.
+    Returns None on a fetch failure."""
+    try:
+        issues = _all_issues()
+    except requests.RequestException:
+        return None
+
+    pending_issues = st.session_state.get("feedback_pending_issues", [])
+    if not pending_issues:
+        return issues
+
+    known_numbers = {issue["number"] for issue in issues}
+    still_pending = [issue for issue in pending_issues if issue["number"] not in known_numbers]
+    st.session_state["feedback_pending_issues"] = still_pending
+    return issues + still_pending
+
+
+# ========================================
+# RENDER
+# ========================================
 
 
 def _render_feedback_form() -> None:
@@ -167,77 +282,6 @@ def _render_feedback_form() -> None:
         st.rerun()
 
 
-# Issues filed by this form always have a title of "[{feedback_type}]
-# {description}" and a "**Page:** {page}" line in the body (see
-# _render_feedback_form above) - parsed back out here rather than relying
-# on labels, since "Improvement" and "New Feature" both map to the same
-# "enhancement" label and so can't be told apart from labels alone.
-ISSUE_TITLE_PATTERN = re.compile(r"^\[(.*?)\]\s*(.*)$")
-ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
-ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
-
-
-def _format_pacific(iso_timestamp: str | None) -> str:
-    """GitHub's timestamps are ISO 8601 UTC ("...Z") - converted to
-    Pacific wall-clock time here, but always labeled "PST" per request
-    (not a dynamic PST/PDT label based on whether daylight saving is
-    actually in effect for that date)."""
-    if not iso_timestamp:
-        return "—"
-    utc_time = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    pacific_time = utc_time.astimezone(PACIFIC_TIMEZONE)
-    return pacific_time.strftime("%Y-%m-%d %H:%M:%S") + " PST"
-
-
-def _parse_issue(issue: dict) -> dict:
-    title_match = ISSUE_TITLE_PATTERN.match(issue["title"])
-    issue_type, title = title_match.groups() if title_match else ("", issue["title"])
-    body = issue.get("body") or ""
-    page_match = ISSUE_PAGE_PATTERN.search(body)
-    page = page_match.group(1).strip() if page_match else ""
-    description_match = ISSUE_DESCRIPTION_PATTERN.search(body)
-    description = description_match.group(1).strip() if description_match else ""
-    return {
-        "state": issue["state"],
-        "issue_type": issue_type,
-        "page": page,
-        "title": title,
-        "description": description,
-        "number": issue["number"],
-        "url": issue["html_url"],
-        "submitted_at": _format_pacific(issue.get("created_at")),
-        "closed_at": _format_pacific(issue.get("closed_at")),
-        "created_at_raw": issue.get("created_at"),
-        "closed_at_raw": issue.get("closed_at"),
-    }
-
-
-@st.cache_data(ttl=60)
-def _all_issues() -> list[dict]:
-    """Every issue on the repo (both states - the State filter below
-    needs Closed available too), PRs excluded (GitHub's issues endpoint
-    returns both - a PR's payload carries its own "pull_request" key,
-    which is what's used to tell them apart), pre-parsed into this form's
-    own Type/Page/Description fields. Cached for 60s so a page rerun
-    doesn't refetch every time - issues don't change that fast outside of
-    right after a fresh submission (see the cache-clear above)."""
-    token = _github_token()
-    headers = {"Accept": "application/vnd.github+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    response = requests.get(
-        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
-        headers=headers,
-        params={"state": "all", "per_page": 100},
-        timeout=10,
-    )
-    response.raise_for_status()
-    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
-
-
-ISSUES_PAGE_SIZE = 10
-
-
 def _render_issues_table(issues: list[dict]) -> None:
     st.subheader("Issues")
     if not issues:
@@ -324,19 +368,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     )
 
 
-def _pacific_date(iso_timestamp: str | None) -> str | None:
-    if not iso_timestamp:
-        return None
-    utc_time = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    return utc_time.astimezone(PACIFIC_TIMEZONE).strftime("%Y-%m-%d")
-
-
-OPENED_COLOR = "#2E7D32"
-CLOSED_COLOR = "#1E88E5"
-
-
 def _render_issue_activity_chart(issues: list[dict]) -> None:
-
     opened_dates = [_pacific_date(issue["created_at_raw"]) for issue in issues]
     closed_dates = [_pacific_date(issue["closed_at_raw"]) for issue in issues if issue["closed_at_raw"]]
     if not opened_dates and not closed_dates:
@@ -358,7 +390,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Opened",
         x=all_dates,
         y=opened_values,
-        marker_color=OPENED_COLOR,
+        marker_color=ISSUES_OPENED_COLOR,
         customdata=closed_values,
         hovertemplate="Date: %{x}<br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
@@ -366,7 +398,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Closed",
         x=all_dates,
         y=closed_values,
-        marker_color=CLOSED_COLOR,
+        marker_color=ISSUES_CLOSED_COLOR,
         customdata=opened_values,
         hovertemplate="Date: %{x}<br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
@@ -379,26 +411,6 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         legend_title_text="",
     )
     st.plotly_chart(figure, width="stretch")
-
-
-def _issues_with_pending_merged() -> list[dict] | None:
-    """_all_issues()'s real fetch, with any just-submitted issue
-    (recorded in session_state - see the submit handler above) merged in
-    if GitHub's own list endpoint hasn't caught up to include it yet.
-    Returns None on a fetch failure."""
-    try:
-        issues = _all_issues()
-    except requests.RequestException:
-        return None
-
-    pending_issues = st.session_state.get("feedback_pending_issues", [])
-    if not pending_issues:
-        return issues
-
-    known_numbers = {issue["number"] for issue in issues}
-    still_pending = [issue for issue in pending_issues if issue["number"] not in known_numbers]
-    st.session_state["feedback_pending_issues"] = still_pending
-    return issues + still_pending
 
 
 def render_feedback_page() -> None:

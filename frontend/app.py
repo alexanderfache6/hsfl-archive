@@ -1,4 +1,5 @@
-"""HSFL Archive - Streamlit entrypoint. Pure read-only view over the
+"""
+HSFL Archive - Streamlit entrypoint. Pure read-only view over the
 committed archive/*.json output - no database, no live fetching. See
 execution-plan.md Phase G.
 
@@ -11,6 +12,10 @@ switch, which is why this isn't a single-page st.tabs layout.
 Run locally: streamlit run app.py
 """
 
+# ========================================
+# IMPORTS
+# ========================================
+
 import streamlit as st
 
 from pages_feedback import render_feedback_page
@@ -19,7 +24,9 @@ from pages_history import render_history_page
 from pages_players import render_players_page
 from pages_yearly import render_yearly_page
 
-st.set_page_config(page_title="The Music League", page_icon="🏈", layout="wide")
+# ========================================
+# FUNCTIONS
+# ========================================
 
 
 def render_managers_page() -> None:
@@ -29,6 +36,12 @@ def render_managers_page() -> None:
 def render_drafts_page() -> None:
     st.info("coming soon")
 
+
+# ========================================
+# RENDER
+# ========================================
+
+st.set_page_config(page_title="The Music League", page_icon="🏈", layout="wide")
 
 history_page = st.Page(render_history_page, title="History", url_path="history", default=True)
 yearly_page = st.Page(render_yearly_page, title="Seasons", url_path="yearly")

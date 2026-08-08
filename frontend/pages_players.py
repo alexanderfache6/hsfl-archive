@@ -4,6 +4,10 @@ stints, not one node per week), plus a stacked bar chart summarizing
 starts vs bench per manager. See execution-plan.md Phase G.
 """
 
+# ========================================
+# IMPORTS
+# ========================================
+
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_flow import streamlit_flow
@@ -21,10 +25,33 @@ from data_loader import (
     resolve_manager_name,
 )
 
+# ========================================
+# CONSTANTS
+# ========================================
+
 UNROSTERED_COLOR = "#888888"
 STARTER_COLOR = "#4C78A8"
 BENCH_COLOR = "#B0B0B0"
 STAT_CHART_COLOR = "#6B7280"
+
+NODE_X_SPACING = 260
+
+ZERO_POINT_GAMES_HELP = "Excludes 0-point games, assuming those are injuries/inactives rather than a real scoring outcome that should drag the average down."
+
+UNROSTERED_GAME_COLOR = "#D32F2F"
+
+NFL_GAMES_HELP = (
+    "Real NFL games this player was ELIGIBLE to appear in (that season's actual NFL regular-season length minus 1 bye week, "
+    "or however many fantasy weeks they were actually rostered for if that's higher - e.g. a deep playoff run), summed across "
+    "every season they show up in the archive. Compare against Games (below) to see how many eligible games they went "
+    "completely unrostered for - same count as the red 'Not on a Fantasy Roster' bars on the Fantasy Points per Game chart."
+)
+
+PLAYER_FILTER_WIDGET_BASE_KEYS = ("player_selected_player_id", "player_season_filter")
+
+# ========================================
+# FUNCTIONS
+# ========================================
 
 
 def _build_ownership_stints(timeline: list[dict]) -> list[dict]:
@@ -76,7 +103,47 @@ def _stint_week_range_label(stint: dict) -> str:
     return f"Wk {stint['start_week']}-{stint['end_week']}"
 
 
-NODE_X_SPACING = 260
+def _build_full_game_list(timeline: list[dict], nfl_season_lengths: dict[str, int]) -> list[dict]:
+    """timeline only has an entry for weeks SOME manager rostered this
+    player - this fills in every other NFL-eligible week (that season's
+    real game count minus 1 bye, same assumption as the "NFL Games"
+    metric) as a synthetic {"unrostered": True, "week": N} placeholder, so
+    the chart can show them as a distinct red 0 rather than silently
+    omitting them. Placeholder week numbers are whichever numbers in
+    1..eligible_weeks the real entries DIDN'T use - this is exact when
+    the missing-week count matches placeholder_count (the typical case),
+    but if a player has more gaps than the 1-bye assumption accounts for,
+    only the first placeholder_count of those missing numbers get used
+    (we can't tell which specific gap week is the "true" bye vs a real
+    unrostered week, so this just picks consistently rather than
+    guessing)."""
+    real_by_season_week: dict[tuple[int, int], dict] = {(entry["season"], entry["week"]): entry for entry in timeline}
+    seasons_present = sorted({entry["season"] for entry in timeline})
+
+    full_list = []
+    for season in seasons_present:
+        eligible_weeks = nfl_season_lengths.get(str(season), 0) - 1
+        real_weeks_this_season = sorted(week for (s, week) in real_by_season_week if s == season)
+        # Placeholders fill in whatever's left after the real weeks -
+        # e.g. 14 real weeks out of 15 eligible leaves exactly 1
+        # placeholder.
+        placeholder_count = max(0, eligible_weeks - len(real_weeks_this_season))
+        missing_weeks = sorted(set(range(1, eligible_weeks + 1)) - set(real_weeks_this_season))
+
+        # Merge real and placeholder weeks and sort by week number so
+        # they appear in true chronological order within the season,
+        # rather than all real weeks first followed by all placeholders.
+        season_entries = [real_by_season_week[(season, week)] for week in real_weeks_this_season]
+        season_entries += [{"season": season, "week": week, "unrostered": True} for week in missing_weeks[:placeholder_count]]
+        season_entries.sort(key=lambda entry: entry["week"])
+        full_list.extend(season_entries)
+
+    return full_list
+
+
+# ========================================
+# RENDER
+# ========================================
 
 
 def _render_flow_chart(stints: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], flow_key: str) -> None:
@@ -184,9 +251,6 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     st.plotly_chart(figure, width="stretch")
 
 
-ZERO_POINT_GAMES_HELP = "Excludes 0-point games, assuming those are injuries/inactives rather than a real scoring outcome that should drag the average down."
-
-
 def _render_points_metrics(timeline: list[dict]) -> None:
     # 0-point games (starter or bench) are assumed to be injuries/
     # inactives rather than a real scoring outcome, so both averages
@@ -204,47 +268,6 @@ def _render_points_metrics(timeline: list[dict]) -> None:
     bench_column.metric("Points per Fantasy Bench", f"{points_per_bench:.2f}", help=ZERO_POINT_GAMES_HELP)
     zero_start_column.metric("0-Point Starts", zero_point_starts)
     zero_bench_column.metric("0-Point Bench", zero_point_bench)
-
-
-UNROSTERED_GAME_COLOR = "#D32F2F"
-
-
-def _build_full_game_list(timeline: list[dict], nfl_season_lengths: dict[str, int]) -> list[dict]:
-    """timeline only has an entry for weeks SOME manager rostered this
-    player - this fills in every other NFL-eligible week (that season's
-    real game count minus 1 bye, same assumption as the "NFL Games"
-    metric) as a synthetic {"unrostered": True, "week": N} placeholder, so
-    the chart can show them as a distinct red 0 rather than silently
-    omitting them. Placeholder week numbers are whichever numbers in
-    1..eligible_weeks the real entries DIDN'T use - this is exact when
-    the missing-week count matches placeholder_count (the typical case),
-    but if a player has more gaps than the 1-bye assumption accounts for,
-    only the first placeholder_count of those missing numbers get used
-    (we can't tell which specific gap week is the "true" bye vs a real
-    unrostered week, so this just picks consistently rather than
-    guessing)."""
-    real_by_season_week: dict[tuple[int, int], dict] = {(entry["season"], entry["week"]): entry for entry in timeline}
-    seasons_present = sorted({entry["season"] for entry in timeline})
-
-    full_list = []
-    for season in seasons_present:
-        eligible_weeks = nfl_season_lengths.get(str(season), 0) - 1
-        real_weeks_this_season = sorted(week for (s, week) in real_by_season_week if s == season)
-        # Placeholders fill in whatever's left after the real weeks -
-        # e.g. 14 real weeks out of 15 eligible leaves exactly 1
-        # placeholder.
-        placeholder_count = max(0, eligible_weeks - len(real_weeks_this_season))
-        missing_weeks = sorted(set(range(1, eligible_weeks + 1)) - set(real_weeks_this_season))
-
-        # Merge real and placeholder weeks and sort by week number so
-        # they appear in true chronological order within the season,
-        # rather than all real weeks first followed by all placeholders.
-        season_entries = [real_by_season_week[(season, week)] for week in real_weeks_this_season]
-        season_entries += [{"season": season, "week": week, "unrostered": True} for week in missing_weeks[:placeholder_count]]
-        season_entries.sort(key=lambda entry: entry["week"])
-        full_list.extend(season_entries)
-
-    return full_list
 
 
 def _render_fantasy_points_per_game_chart(
@@ -436,14 +459,6 @@ def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl
     st.plotly_chart(figure, width="stretch")
 
 
-NFL_GAMES_HELP = (
-    "Real NFL games this player was ELIGIBLE to appear in (that season's actual NFL regular-season length minus 1 bye week, "
-    "or however many fantasy weeks they were actually rostered for if that's higher - e.g. a deep playoff run), summed across "
-    "every season they show up in the archive. Compare against Games (below) to see how many eligible games they went "
-    "completely unrostered for - same count as the red 'Not on a Fantasy Roster' bars on the Fantasy Points per Game chart."
-)
-
-
 def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, int]) -> None:
     # "Games" only counts weeks with a player_ownership.json entry - i.e.
     # weeks SOME manager had them rostered. A season this player appears
@@ -470,9 +485,6 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
     bench_column.metric("Bench", bench)
     start_pct_column.metric("Start %", f"{start_pct:.1%}")
     managers_column.metric("Managers", managers)
-
-
-PLAYER_FILTER_WIDGET_BASE_KEYS = ("player_selected_player_id", "player_season_filter")
 
 
 def render_players_page() -> None:
