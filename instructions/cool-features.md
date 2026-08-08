@@ -2,11 +2,13 @@
 - [ ] 
 
 # seasons
+- [ ] schedule tab, kinda similar games view but restricted
 - [x] standings tab
 - [x] breakdown tab
 - [x] coach tab
 - [x] true tab
 - [x] transactions tab
+- [ ] playoff brackets tab, same game view as games
 - [ ] 
 
 # managers

@@ -4,6 +4,7 @@ fetched/parsed/aggregated offline and committed to the repo; the
 frontend is a pure read-only view over those static files).
 """
 
+import base64
 import json
 import sys
 from pathlib import Path
@@ -74,6 +75,44 @@ def load_players_started(year: int) -> dict:
 @st.cache_resource
 def load_transactions(year: int) -> dict:
     return _read_json(PARSED_DIRECTORY / str(year) / "transactions.json")
+
+
+@st.cache_resource
+def load_post_season_stats(year: int) -> dict | None:
+    path = AGGREGATED_DIRECTORY / str(year) / "post_season_stats.json"
+    if not path.exists():
+        return None
+    return _read_json(path)
+
+
+@st.cache_resource
+def _team_logo_paths(year: int) -> dict[str, Path]:
+    """{team_id: local logo image path for this season}, sourced from
+    archive/managers.json's per-manager, per-season logo_path field (a
+    manager's logo can change season to season, so this is keyed by
+    year, not looked up once for all time)."""
+    managers = _read_json(ARCHIVE_DIRECTORY / "managers.json")["managers"]
+    paths = {}
+    for manager in managers:
+        for season_entry in manager["seasons"]:
+            if season_entry["season"] == year and season_entry.get("logo_path"):
+                paths[season_entry["team_id"]] = ARCHIVE_DIRECTORY / season_entry["logo_path"]
+    return paths
+
+
+@st.cache_resource
+def load_team_logo_data_uri(year: int, team_id: str) -> str | None:
+    """A ready-to-embed data: URI for this team's logo, or None if no
+    logo is on file for that season - embedding as base64 (rather than a
+    file:// path or a relative URL) is what lets it drop straight into a
+    raw HTML <img> tag anywhere in the app regardless of how/where
+    Streamlit is serving from."""
+    path = _team_logo_paths(year).get(team_id)
+    if not path or not path.exists():
+        return None
+    mime_type = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
+    encoded = base64.b64encode(path.read_bytes()).decode()
+    return f"data:{mime_type};base64,{encoded}"
 
 
 @st.cache_resource

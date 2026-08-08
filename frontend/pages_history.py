@@ -65,10 +65,10 @@ RECORD_ROW_PAIRS = [
 
 # variant key suffix ("" for the original per-season data keys) -> label.
 STREAK_VARIANTS = {
-    "": "Per Season",
-    "regular_cross_season": "Regular Season (Cross-Season)",
-    "postseason_cross_season": "Postseason (Cross-Season)",
-    "combined_cross_season": "Combined (Cross-Season)",
+    "": "Within Season",
+    "regular_cross_season": "Spans Regular Seasons",
+    "postseason_cross_season": "Spans Postseasons",
+    "combined_cross_season": "Spans Regular and Postseason",
 }
 
 
