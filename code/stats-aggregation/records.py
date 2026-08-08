@@ -19,6 +19,7 @@ def compute_season_records(
     coaching_by_week: dict[int, list[dict]],
     weeks: list[int],
     players_started_rows: list[dict],
+    post_season_stats: dict | None = None,
 ) -> dict:
     highest_weekly_score: list[dict] = []
     lowest_weekly_score: list[dict] = []
@@ -39,6 +40,15 @@ def compute_season_records(
             return {}
         return manager
 
+    # win_streak is a cumulative counter ("W1", "W2", "W3", ...) that
+    # grows every week a streak stays alive, so recording a candidate on
+    # EVERY week it's active would let one real 15-game streak flood the
+    # top-3 list with itself three times over (13, 14, 15) instead of
+    # three actually-different streaks. Only the last week of each
+    # contiguous streak - its peak, right before it resets or changes
+    # type - gets submitted as a candidate.
+    team_weekly_streaks: dict[str, list[tuple[int, str]]] = {}
+
     for week in weeks:
         for row in standings_by_week[week]:
             manager = resolve(row["team_id"], "records.weekly_score")
@@ -46,14 +56,47 @@ def compute_season_records(
             highest_weekly_score = update_top_n_records(highest_weekly_score, row["weekly"]["points_for"], True, context)
             lowest_weekly_score = update_top_n_records(lowest_weekly_score, row["weekly"]["points_for"], False, context)
 
-            streak = row["win_streak"]
-            if streak:
-                streak_type, streak_length = streak[0], int(streak[1:])
-                streak_context = {**context, "streak": streak}
-                if streak_type == "W":
-                    longest_win_streak = update_top_n_records(longest_win_streak, streak_length, True, streak_context)
-                elif streak_type == "L":
-                    longest_losing_streak = update_top_n_records(longest_losing_streak, streak_length, True, streak_context)
+            team_weekly_streaks.setdefault(row["team_id"], []).append((week, row["win_streak"]))
+
+    for team_id, weekly_streaks in team_weekly_streaks.items():
+        manager = resolve(team_id, "records.win_streak")
+        for index, (week, streak) in enumerate(weekly_streaks):
+            if not streak:
+                continue
+            streak_type = streak[0]
+            next_streak = weekly_streaks[index + 1][1] if index + 1 < len(weekly_streaks) else ""
+            is_streak_peak = not next_streak or next_streak[0] != streak_type
+            if not is_streak_peak:
+                continue
+
+            streak_length = int(streak[1:])
+            streak_context = {
+                "week": week,
+                # streak_length already counts consecutive weeks including
+                # the peak week, so the start week is just peak - length + 1
+                # - no separate tracking needed.
+                "start_week": week - streak_length + 1,
+                "manager_id": manager.get("manager_id", ""),
+                "display_name": manager.get("display_name", ""),
+                "streak": streak,
+            }
+            if streak_type == "W":
+                longest_win_streak = update_top_n_records(longest_win_streak, streak_length, True, streak_context)
+            elif streak_type == "L":
+                longest_losing_streak = update_top_n_records(longest_losing_streak, streak_length, True, streak_context)
+
+    # "Season points" means the WHOLE season - regular season plus
+    # whichever postseason bracket a team ended up in - not just the
+    # regular-season cumulative total standings_by_week tracks (weeks
+    # here is regular-season weeks only, via load_regular_season_weeks;
+    # postseason points live separately in post_season_stats, keyed by
+    # bracket, since a team is only ever in one bracket per season).
+    def postseason_points_for(team_id: str) -> float:
+        if not post_season_stats:
+            return 0.0
+        championship_row = post_season_stats.get("championship", {}).get(team_id)
+        consolation_row = post_season_stats.get("consolation", {}).get(team_id)
+        return (championship_row or {}).get("points_for", 0.0) + (consolation_row or {}).get("points_for", 0.0)
 
     if weeks:
         final_week = weeks[-1]
@@ -61,8 +104,9 @@ def compute_season_records(
         for row in standings_by_week[final_week]:
             manager = resolve(row["team_id"], "records.season_points_and_coaching")
             context = {"manager_id": manager.get("manager_id", ""), "display_name": manager.get("display_name", "")}
-            highest_season_points_for = update_top_n_records(highest_season_points_for, row["points_for"], True, context)
-            lowest_season_points_for = update_top_n_records(lowest_season_points_for, row["points_for"], False, context)
+            full_season_points_for = row["points_for"] + postseason_points_for(row["team_id"])
+            highest_season_points_for = update_top_n_records(highest_season_points_for, full_season_points_for, True, context)
+            lowest_season_points_for = update_top_n_records(lowest_season_points_for, full_season_points_for, False, context)
 
             coaching_row = final_coaching.get(row["team_id"])
             if coaching_row:

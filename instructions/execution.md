@@ -554,3 +554,357 @@ generate_progress_html()
     No new bugs. Phase E now covers 2012, 2013, 2014 plus 2024/2025 -
     five seasons folded into the all-time files, still 0 unresolved
     entries and 0 integrity issues.
+
+30. **2015 and 2016 (background agent).** User asked to run 2016-2018;
+    noted that this would leave 2015 ungapped/unfetched with no
+    verification it was unreachable, so - per user confirmation - ran
+    2015 too rather than silently skipping it. Fetched 2015 and 2016
+    concurrently:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2015   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 fetch_season.py --year 2016
+    conda run -n hsfl-archive python3 parse_season.py --year 2015
+    conda run -n hsfl-archive python3 parse_season.py --year 2016
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2015   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2016
+    ```
+    Both fetches clean: all static pages status=200, 8 teams / 16 weeks
+    for both years (630 raw files for 2015, 608 for 2016 - 2015 had 42
+    transactions pages, 2016 had 31, both well below 2013/2014's ~65-67,
+    plausible year-to-year league-activity variance, not an error).
+
+    Parse: 0 `WARNING` lines for either year. Both `draft_type: "snake"`,
+    120 picks/15-per-team exactly even, 0 missing fields, 0 duplicate
+    `player_id`s. Champion detection verified directly against game
+    scores, not just trusted: 2015 `champion_team_id: "2"` (114.92 vs
+    79.2, correct); 2016 `champion_team_id: "2"` (98.48 vs 98.28, correct
+    - a near-tie final, worth double-checking and confirmed right).
+
+    Aggregate: 0 `WARNING` lines for either year.
+
+    **Validation - 0 anomalies for both seasons:** standings (0 None
+    rows), draft (as above), matchup/roster scan (0/64 matchup files,
+    0/128 roster files each), transactions (2015: 988 total/979 non-LM/9
+    LM, 0 missing fields; 2016: 699 total/688 non-LM/11 LM, 0 missing
+    fields), and `post_season_stats.json`'s `final_placements` is a
+    clean 1-8 permutation for both years. No new bugs.
+
+31. **2017 (background agent, continuing 2016-2018 request).** Ran the
+    full pipeline:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2017   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2017
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2017   # from code/stats-aggregation/
+    ```
+    Fetch: all static pages status=200, 8 teams / 16 weeks (628 raw
+    files, 41 transactions pages). Parse: 0 `WARNING` lines,
+    `draft_type: "snake"`, 120 picks/15-per-team even, 0 missing/dup
+    fields. Champion detection verified against scores directly:
+    `champion_team_id: "2"` (75.76 vs 71.32, correct). Aggregate: 0
+    `WARNING` lines.
+
+    **Validation - 0 anomalies:** standings (0 None rows), draft (as
+    above), matchup/roster scan (0/64, 0/128), transactions (936 total,
+    all non-LM, 0 with this season having 0 LM-type rows at all - not an
+    error, just no lineup-change transactions logged that way this
+    year), `final_placements` a clean 1-8 permutation. No new bugs.
+
+32. **2018 (background agent, completing the 2016-2018 request).** Ran
+    the full pipeline:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2018   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2018
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2018   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 all_time.py
+    ```
+    Fetch: all static pages status=200, 8 teams / 16 weeks (618 raw
+    files, 36 transactions pages). Parse: 0 `WARNING` lines,
+    `draft_type: "snake"`, 120 picks/15-per-team even, 0 missing/dup
+    fields. Champion detection verified against scores directly:
+    `champion_team_id: "5"` (102.86 vs 98.28, correct). Aggregate: 0
+    `WARNING` lines.
+
+    **Validation - 0 anomalies:** standings (0 None rows), draft (as
+    above), matchup/roster scan (0/64, 0/128), transactions (842 total,
+    836 non-LM/6 LM, 0 missing fields), `final_placements` a clean 1-8
+    permutation. No new bugs.
+
+    **All-time fold-in (`all_time.py`, run once after 2018):**
+    `seasons=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2024, 2025]` -
+    all 9 seasons parsed so far now folded together. Integrity suite:
+    0 combined-sum mismatches (every manager x every stat, `combined` ==
+    sum of the 3 season-type buckets), 0 head-to-head symmetry issues
+    across every manager pair, `all_time_unresolved.json` empty, and
+    `final_placements` forms a clean 1..N permutation in every one of
+    the 9 seasons (checked all of them again here, not just 2018).
+
+    Phase E status: 2012-2018 plus 2024/2025 all done and validated
+    (2019-2023 remain unfetched). No open bugs from this batch - all
+    fixes from earlier seasons (esp. bug 5's champion-detection fix)
+    continue to generalize cleanly across every additional year tried.
+
+33. **2019 (background agent) - fetch/parse/aggregate, plus a real fix
+    (bug 6).** Ran the full pipeline:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2019   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2019
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2019   # from code/stats-aggregation/
+    ```
+    Fetch: all static pages status=200, **10 teams / 16 weeks** (a new
+    config combo vs the 8-team years just done - 770 raw files, 46
+    transactions pages). Parse: 0 `WARNING` lines, `draft_type: "snake"`,
+    150 picks/15-per-team even, 0 missing/dup fields. Champion detection
+    verified against scores: `champion_team_id: "8"` (97.92 vs 85.52,
+    correct) - this season's title game reverted to the original
+    "Fantasy Super Bowl" label (not "Championship"), confirming both
+    label variants still resolve correctly. Aggregate: 0 `WARNING`
+    lines. Matchup/roster scan (0/78, 0/160) and transactions (1033
+    total, 1029 non-LM/4 LM, 0 missing fields) both clean.
+
+    **Found bug 7 (real gap, now fixed):** `post_season_stats.json`'s
+    `final_placements` initially had only 8 entries for this 10-team
+    league - team_ids 4 and 7 were completely missing. Root cause:
+    `metadata.json.settings.playoff_teams_and_weeks` for 2019 is
+    literally `"Weeks 15 & 16 - 4 teams"` - only the top 4 teams made
+    the championship bracket and only the next 4 made the consolation
+    bracket, so the bottom 2 of 10 teams (team 4 "Duct Tape Crusaders"/
+    Jeremy, 4-10 regular season record; team 7 "Mom I peed the bed
+    again"/Forrest, 5-9 record) never played *any* bracket game. This is
+    exactly the edge case `compute_final_placements()`'s docstring had
+    already flagged as "should be rare/nonexistent... but not guaranteed"
+    - now confirmed to happen for real. Per user direction ("preserve
+    their regular season order"), fixed `code/stats-aggregation/
+    post_season_stats.py`: `compute_final_placements()` now takes an
+    optional `regular_season_final_standings` param (a list of
+    `{team_id, rank, ...}` rows - the last regular-season week's
+    cumulative standings row from `standings.py`) and, after placing
+    every team that did play a bracket game, assigns any leftover teams
+    consecutive placements starting right after the last bracket
+    placement, ordered by regular-season rank (best record among the
+    unplaced teams gets the better remaining placement). `aggregate_season.py`
+    now passes `standings_by_week[weeks[-1]]` into
+    `compute_post_season_stats()` at the call site. Result: 2019's
+    `final_placements` is now a genuine 10-entry, clean 1-10 permutation
+    (team 7 -> 9th, team 4 -> 10th, matching their regular-season order).
+    Full entry added to `bugs.md`.
+
+    **Regression check:** re-ran `aggregate_season.py` for every other
+    season already on disk (2012-2018, 2024, 2025) after the fix - every
+    one still produces a clean 1..N `final_placements` permutation with
+    the *same* team count as before (the new fallback only adds teams
+    that were missing, so seasons where every team already had a bracket
+    game are byte-for-byte unaffected in placement coverage). Re-ran
+    `all_time.py` after the fix:
+    `seasons=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2024, 2025]`
+    - 0 combined-sum mismatches, 0 head-to-head symmetry issues,
+    `all_time_unresolved.json` still empty.
+
+    (Note: a separate background agent was concurrently fetching 2020 in
+    parallel - not touched by this entry, see its own log entry once it
+    finishes.)
+
+34. **2020 - full pipeline (fetch/parse/aggregate/fold-in), clean run.**
+    Ran the full pipeline:
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2020   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2020
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2020   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 all_time.py
+    ```
+    Fetch: all static pages status=200 (cached/idempotent re-run
+    confirmed status=0 on second pass), **10 teams / 16 weeks** (same
+    combo as 2019). 758 raw files: 10 team home pages, 160 roster pages,
+    160 game center pages, 86 transactions pages. (Operational note, not
+    a data issue: an earlier attempt to background the fetch process hit
+    a tool-permission snag and briefly left two fetch processes running
+    concurrently against the same `archive/raw/2020` directory before
+    one was killed - final fetch output was re-verified clean via a
+    subsequent idempotent re-run with no anomalies, so no corruption.)
+
+    Parse: 0 `WARNING` lines. `draft_type: "auction"`, 160 picks, 16 per
+    team (perfectly even across all 10 teams), 0 missing team_id/player_id,
+    0 duplicate player_ids. 78 matchup files, 160 roster files, 1952
+    transactions.
+
+    **Validation - 0 anomalies:** `standings.json` (0 `None` values across
+    10 `final_standings` rows), draft integrity clean (as above),
+    matchup/roster scan clean (0/78 matchups missing score or starters,
+    0/160 rosters with empty starters), transactions clean (1952 total,
+    types {Lineup, LM, Drop, Add, Trade}, 0 rows missing required
+    `player_name`/`message` fields). Champion detection verified against
+    raw scores, not just `champion_team_id`: 2020's title game round is
+    labeled `"Fantasy Super Bowl"` (team 2 172.7 vs team 3 133.92,
+    `winner_team_id: "2"` matches `champion_team_id: "2"` - correct).
+    Bug 5's fix continues to generalize; no repeat of the "Championship"-
+    label edge case this season. `post_season_stats.json`'s
+    `final_placements` forms a clean 1-10 permutation with no gaps or
+    duplicates.
+
+    **All-time fold-in (`all_time.py`):**
+    `seasons=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2024, 2025]`
+    - 2019 (concurrent agent) had already landed by the time this ran, so
+    all 11 seasons parsed so far are folded together in one pass. Integrity
+    suite: 0 combined-sum mismatches (every manager x every stat,
+    `combined` == sum of `regular_season` + `post_season_championship` +
+    `post_season_consolation`), 0 head-to-head symmetry issues across
+    every manager pair (`combined.head_to_head`, checked both directions),
+    `all_time_unresolved.json` empty.
+
+    No new bugs found for 2020 - clean season, no bugs.md entry needed.
+
+35. **2021 - full pipeline (fetch/parse/aggregate/validate/fold-in).**
+    ```bash
+    conda run -n hsfl-archive python3 fetch_season.py --year 2021   # from code/raw-parsing/
+    conda run -n hsfl-archive python3 parse_season.py --year 2021
+    conda run -n hsfl-archive python3 aggregate_season.py --year 2021   # from code/stats-aggregation/
+    conda run -n hsfl-archive python3 all_time.py
+    ```
+    Fetch: all static pages status=200, **10 teams / 17 weeks** (first
+    17-week season since 2024/2025 - this league's playoff/roster window
+    grew from 16 to 17 weeks starting 2021, consistent with the real
+    NFL's 2021 schedule expansion to 18 games). 860 raw files, 71
+    transactions pages. Parse: 0 `WARNING` lines, `draft_type: "auction"`,
+    160 picks/16-per-team exactly even, 0 missing/dup fields. Champion
+    detection verified against scores: `champion_team_id: "3"` (135.6 vs
+    128.06, correct), title round labeled "Fantasy Super Bowl". Aggregate:
+    0 `WARNING` lines (14 regular season weeks, correctly excluding the
+    new 17th week from the regular-season count).
+
+    **Validation - 0 anomalies:** standings (0 None rows), draft (as
+    above), matchup/roster scan (0/83, 0/170), transactions (1615 total,
+    1614 non-LM/1 LM, 0 missing fields), `final_placements` a clean 1-10
+    permutation. **Bug 7's regular-season-rank fallback fired again
+    here** - 2021's `playoff_teams_and_weeks` is also `"Weeks 16 & 17 -
+    4 teams"` (same 4-team-bracket format as 2019), so the bottom 2 of
+    10 teams (team 10 "I'm Cummins", 5-10; team 9 "CummingInCole", 3-12)
+    played no bracket game and got their placements (9th, 10th
+    respectively) from the fallback, correctly preserving their
+    regular-season order (team 10's better record placed it 9th ahead of
+    team 9's worse record at 10th) - confirms the bug 7 fix generalizes
+    beyond the season it was written for.
+
+    **All-time fold-in:**
+    `seasons=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2024, 2025]`
+    - 0 combined-sum mismatches, 0 head-to-head symmetry issues,
+    `all_time_unresolved.json` empty. No new bugs.
+
+36. **2022 - full pipeline (fetch/parse/aggregate/validate/fold-in).**
+    Same commands as entry 35, `--year 2022`. Fetch: all static pages
+    status=200, 10 teams / 17 weeks (898 raw files, 90 transactions
+    pages). Parse: 0 `WARNING` lines, `draft_type: "auction"`, 160
+    picks/16-per-team even, 0 missing/dup fields. This season's playoff
+    bracket final round is labeled `["Fantasy Super Bowl", "3rd Place
+    Game", "5th Place Game"]` - a 6-team combined bracket (up from 2019's
+    4-team) - champion detection verified against scores:
+    `champion_team_id: "5"` (113.4 vs 112.38, correct, a near-tie final).
+    Aggregate: 0 `WARNING` lines.
+
+    **Validation - 0 anomalies:** standings (0 None rows), draft (as
+    above), matchup/roster scan (0/81, 0/170), transactions (1993 total,
+    1981 non-LM/12 LM, 0 missing fields), `final_placements` a clean
+    1-10 permutation (6-team bracket + the remaining 4 teams still all
+    resolved to placements - worth double-checking given bug 7's 2019
+    case, but this year every team's `final_placements` entry came from
+    an actual bracket game, not the regular-season-rank fallback: all 10
+    team_ids appeared directly in a labeled placement game across the
+    championship/consolation brackets' final rounds).
+
+    **All-time fold-in:**
+    `seasons=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2024, 2025]`
+    - 0 combined-sum mismatches, 0 head-to-head symmetry issues,
+    `all_time_unresolved.json` empty. No new bugs.
+
+37. **2023 - full pipeline (fetch/parse/aggregate/validate/fold-in) -
+    Phase E complete, full archive now covers every season 2012-2025.**
+    Same commands as entry 35, `--year 2023`. Fetch: all static pages
+    status=200, 10 teams / 17 weeks (872 raw files, 77 transactions
+    pages). Parse: 0 `WARNING` lines, `draft_type: "auction"`, 160
+    picks/16-per-team even, 0 missing/dup fields. Final round again
+    `["Fantasy Super Bowl", "3rd Place Game", "5th Place Game"]` -
+    champion detection verified: `champion_team_id: "5"` (112.48 vs
+    102.58, correct). Aggregate: 0 `WARNING` lines.
+
+    **Validation - 0 anomalies:** standings (0 None rows), draft (as
+    above), matchup/roster scan (0/81, 0/170), transactions (1662 total,
+    1661 non-LM/1 LM, 0 missing fields), `final_placements` a clean
+    1-10 permutation.
+
+    **Final all-time fold-in (`all_time.py`):**
+    `seasons=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]`
+    - **all 14 seasons of the league's history are now fetched, parsed,
+    aggregated, and folded into the cross-season files.** Integrity
+    suite: 0 combined-sum mismatches, 0 head-to-head symmetry issues, 0
+    entries in `all_time_unresolved.json`, and `final_placements` forms
+    a clean 1..N permutation with the right team count in every single
+    one of the 14 seasons (re-verified all 14 again as part of this run,
+    not just 2023). No new bugs found in this batch (2021-2023) - bug
+    7's regular-season-rank fallback fired again for 2021 (see entry 35;
+    same 4-team-bracket league format as 2019) but not for 2022 or 2023
+    (both had a 6-team bracket covering enough teams that every team_id
+    got a real placement game), confirming the fix generalizes correctly
+    to every format seen so far rather than being a 2019-only patch.
+    Phase E is now complete: every season from 2012 through 2025 has
+    been fetched and validated with 0 outstanding anomalies.
+
+38. **Full-history re-run of all stats aggregations (user-requested,
+    2026-08-07 evening).** With Phase E complete (all 14 seasons parsed),
+    re-ran every aggregation step across the entire archive to make sure
+    everything reflects the final 14-season dataset, not a partial state
+    from mid-crawl:
+    ```bash
+    # from code/stats-aggregation/, once per year 2012-2025:
+    conda run -n hsfl-archive python3 aggregate_season.py --year {year}
+    conda run -n hsfl-archive python3 all_time.py
+    conda run -n hsfl-archive python3 player_ownership.py
+    ```
+    `player_ownership.py` in particular had gone stale - it's a
+    standalone cross-season script (same pattern as `all_time.py`, not
+    invoked by `aggregate_season.py`) that auto-discovers every season
+    under `archive/parsed/` and builds `archive/player_ownership.json`
+    (per-player weekly ownership/starter-bench timeline across all
+    seasons, used by the frontend Players tab per `execution-plan.md`
+    Phase G). Its on-disk file was last written mid-crawl and so didn't
+    include 2015-2023's data. Re-ran it: now correctly reports
+    `seasons=[2012..2023, 2024, 2025]` (all 14) and 860 players tracked
+    total.
+
+    Re-ran `aggregate_season.py` for all 14 years (regenerates
+    `weekly_tables.json`, `players_started.json`, `head_to_head.json`,
+    `post_season_stats.json`, `records.json` per season) - 0 `WARNING`
+    lines across every single year, confirming no regressions from the
+    bug 7 fix or any other change made during today's crawl. Re-ran
+    `all_time.py` last (after every season's aggregate was current) -
+    still `seasons=[2012, 2013, ..., 2023, 2024, 2025]`, 0 combined-sum
+    mismatches, 0 head-to-head symmetry issues, `all_time_unresolved.json`
+    still empty. Confirmed via `execution-plan.md`'s Phase G section that
+    `all_time.py` and `player_ownership.py` are the only two cross-season
+    (as opposed to per-season) aggregation scripts in
+    `code/stats-aggregation/` - nothing else needed a separate full-history
+    re-run beyond what's covered above.
+
+39. **Team logo images downloaded and attached to `managers.json`
+    (user-requested, 2026-08-07 evening).** No new HTML fetches needed -
+    each team's logo `<img>` URL was already sitting in the already-
+    fetched `archive/raw/{year}/team_{id}/team_home.html`
+    (`<a class="teamImg teamId-N"><img src="...">`), confirmed present
+    and consistent across 2012/2019/2024 samples before building
+    anything (some teams that never uploaded a custom logo get a generic
+    NFL placeholder image URL instead, e.g. `.../logos/avatar/240x240/
+    DEF.png` - still a valid downloadable URL, just not custom art).
+
+    New `code/raw-parsing/team_logos.py`: regexes the logo URL out of
+    each season's `team_home.html`, downloads it (idempotent - skips if
+    already on disk, same pattern as the HTML fetchers, 1.5s polite
+    delay between live requests), and writes both `logo_url` and
+    `logo_path` (relative to `archive/`) onto that manager's matching
+    season entry in `archive/managers.json`. Images land in
+    `archive/team_logos/{year}/team_{team_id}.{ext}`.
+
+    Note this script *enriches* the existing `managers.json` rather than
+    rebuilding it from scratch like `managers.py` does - so it must run
+    *after* `managers.py` any time that gets re-run, or the logo fields
+    get wiped by `managers.py`'s full overwrite.
+
+    Ran it once against the full 14-season archive: **122/122 season
+    entries got a logo attached, 0 failures** (`archive/team_logos/` -
+    122 files, ~552KB total).

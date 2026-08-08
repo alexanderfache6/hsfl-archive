@@ -63,10 +63,10 @@ def aggregate_season(year: int) -> None:
     }
     write_json(aggregated_path(year, "head_to_head.json"), head_to_head)
 
-    post_season_stats = compute_post_season_stats(playoffs)
+    post_season_stats = compute_post_season_stats(playoffs, standings_by_week[weeks[-1]])
     write_json(aggregated_path(year, "post_season_stats.json"), {"season": year, **post_season_stats})
 
-    season_records = compute_season_records(manager_by_team_id, standings_by_week, coaching_by_week, weeks, players_started)
+    season_records = compute_season_records(manager_by_team_id, standings_by_week, coaching_by_week, weeks, players_started, post_season_stats)
     write_json(aggregated_path(year, "records.json"), {"season": year, **season_records})
     if season_records["unresolved"]:
         print(f"[{year}] WARNING: {len(season_records['unresolved'])} unresolved team_id -> manager lookups in records.json: {season_records['unresolved']}")

@@ -3,11 +3,11 @@ across every season in the archive. See execution-plan.md Phase G.
 """
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
 from data_loader import (
+    build_manager_color_map,
     build_manager_name_resolver,
     load_all_time_champions,
     load_all_time_manager_stats,
@@ -23,6 +23,12 @@ from data_loader import (
 CHAMPION_COLOR = "#d0b04e"
 RUNNER_UP_COLOR = "#a7a7a7"
 THIRD_PLACE_COLOR = "#9f724b"
+
+def _hex_to_rgba(hex_color: str, alpha: float) -> str:
+    hex_color = hex_color.lstrip("#")
+    red, green, blue = (int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({red}, {green}, {blue}, {alpha})"
+
 
 def _full_table_height(row_count: int) -> int:
     """st.dataframe defaults to a fixed max height with internal
@@ -47,34 +53,61 @@ RECORD_LABELS = {
 }
 
 # Each row pairs a "high" stat (left) with its "low" counterpart (right).
+# The streak row is handled separately (see _render_streak_row) since it
+# has a variant selector instead of being a fixed data key.
 RECORD_ROW_PAIRS = [
     ("highest_weekly_score", "lowest_weekly_score"),
     ("highest_season_points_for", "lowest_season_points_for"),
-    ("longest_win_streak", "longest_losing_streak"),
     ("best_coaching_season", "worst_coaching_season"),
     ("most_players_started_season", "fewest_players_started_season"),
 ]
 
+# variant key suffix ("" for the original per-season data keys) -> label.
+STREAK_VARIANTS = {
+    "": "Per Season",
+    "regular_cross_season": "Regular Season (Cross-Season)",
+    "postseason_cross_season": "Postseason (Cross-Season)",
+    "combined_cross_season": "Combined (Cross-Season)",
+}
 
-def _render_champions_table(champions_data: dict, name_resolver: dict[str, str]) -> None:
-    st.subheader("Champions by Season")
+
+def _render_champions_table(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+    st.subheader("Wall of Champions")
     rows = []
+    champion_manager_ids = []
     for season_entry in sorted(champions_data["champions"], key=lambda c: c["season"], reverse=True):
         top_3 = {row["rank"]: row for row in season_entry["top_3"]}
 
         def name_for(entry: dict) -> str:
             return resolve_manager_name(entry.get("manager_id", ""), name_resolver, entry.get("display_name", ""))
 
+        champion_manager_ids.append(top_3.get(1, {}).get("manager_id", ""))
         rows.append(
             {
                 "Season": season_entry["season"],
-                "Champion": name_for(top_3.get(1, {})),
-                "Runner-Up": name_for(top_3.get(2, {})),
-                "3rd Place": name_for(top_3.get(3, {})),
-                "Last Place": name_for(season_entry["last_place"]),
+                "Champion 🏆": name_for(top_3.get(1, {})),
+                "Runner-Up 🥈": name_for(top_3.get(2, {})),
+                "3rd Place 🥉": name_for(top_3.get(3, {})),
+                "Last Place 🥞": name_for(season_entry["last_place"]),
             }
         )
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", height=_full_table_height(len(rows)))
+    dataframe = pd.DataFrame(rows)
+
+    # Champion column background = the champion's own color (same map used
+    # for the pie chart / flow-chart nodes elsewhere), so a manager's
+    # championship seasons are visually traceable to their color at a
+    # glance. 75% opacity per user request, so the text stays legible.
+    def _highlight_champion_column(column: pd.Series) -> list[str]:
+        if column.name != "Champion 🏆":
+            return [""] * len(column)
+        styles = []
+        for manager_id in champion_manager_ids:
+            hex_color = manager_color_map.get(manager_id, "")
+            styles.append(f"background-color: {_hex_to_rgba(hex_color, 0.75)}" if hex_color else "")
+        return styles
+
+    styled_dataframe = dataframe.style.apply(_highlight_champion_column, axis=0)
+    st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(rows)))
 
 
 def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
@@ -103,7 +136,7 @@ def _years_label(years: list[int], empty_placeholder: str = "😢") -> str:
     return ", ".join(str(year) for year in sorted(years)) if years else empty_placeholder
 
 
-def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str]) -> None:
+def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     placements = _build_manager_placements(champions_data)
     pie_column, bar_column = st.columns(2)
 
@@ -119,6 +152,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str])
         labels = [resolve_manager_name(manager_id, name_resolver) for manager_id, _, _ in champion_managers]
         values = [count for _, count, _ in champion_managers]
         years_text = [_years_label(years) for _, _, years in champion_managers]
+        colors = [manager_color_map.get(manager_id, "#CCCCCC") for manager_id, _, _ in champion_managers]
 
         pie_figure = go.Figure(
             go.Pie(
@@ -127,7 +161,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str])
                 sort=False,  # preserve our own count-then-recency order, not plotly's default value sort
                 rotation=0,  # first slice starts at 12 o'clock
                 direction="clockwise",
-                marker=dict(colors=[px.colors.qualitative.Set3[i % len(px.colors.qualitative.Set3)] for i in range(len(labels))]),
+                marker=dict(colors=colors),
                 textinfo="label+value",
                 customdata=years_text,
                 hovertemplate="%{label}<br>Championships: %{value}<br>Years: %{customdata}<extra></extra>",
@@ -189,7 +223,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str])
             hovertemplate="%{customdata}<extra></extra>",
         )
         bar_figure.update_layout(
-            title="Championship / Runner-Up / 3rd Place by Manager",
+            title="Podiums by Manager",
             barmode="stack",
             hovermode="x unified",
             xaxis_title="Manager",
@@ -203,29 +237,146 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str])
 
 def _record_context_line(entry: dict, name_resolver: dict[str, str]) -> str:
     display_name = resolve_manager_name(entry.get("manager_id", ""), name_resolver, entry.get("display_name", ""))
+
+    if "start_week" in entry:
+        # Streak entries: show the full start->end range, not just the
+        # peak week. start_season defaults to the (single) season for
+        # per-season streaks, which don't carry their own start_season
+        # field since it's always identical to "season" there.
+        start_season = entry.get("start_season", entry["season"])
+        end_season, end_week, start_week = entry["season"], entry["week"], entry["start_week"]
+        if start_season == end_season:
+            week_range = f"Wk {start_week}" if start_week == end_week else f"Wk {start_week}-{end_week}"
+            return f"{display_name} · {end_season} {week_range}"
+        return f"{display_name} · {start_season} Wk{start_week} – {end_season} Wk{end_week}"
+
     parts = [display_name, f"{entry['season']}"]
     if "week" in entry:
         parts.append(f"Wk {entry['week']}")
     return " · ".join(parts)
 
 
-def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, str]) -> None:
+def _go_to_game(entry: dict) -> None:
+    """Jumps to the Games page with Manager 1 (and Week, if this record
+    is week-specific rather than season-long) pre-filled to this record's
+    game, via st.switch_page() - the whole reason app.py uses
+    st.navigation/st.Page instead of st.tabs, since st.tabs has no way to
+    programmatically switch which tab is active. Must be called from the
+    main script body, not a button's on_click callback - st.switch_page()
+    (like st.rerun()) is a no-op/error when called from within a
+    callback, since a callback runs before the script rerun it would
+    need to trigger."""
+    manager_id = entry.get("manager_id", "")
+    # Pre-set every filter WIDGET's own key (not just the applied-filters
+    # result used to query matchups) so the Season/Week/Manager 2/Matchup
+    # Type controls visually reflect the record's filters too, not just
+    # the results below them.
+    st.session_state["games_team1_manager_id"] = manager_id
+    st.session_state["games_season"] = entry["season"]
+    st.session_state["games_week"] = entry.get("week")
+    st.session_state["games_team2_manager_id"] = None
+    st.session_state["games_matchup_type"] = "all"
+    # Bump the same widget-key generation counter Clear Filters uses, so
+    # the Games page mounts brand-new filter widgets that pick up these
+    # values via their first-mount seeding, rather than showing whatever
+    # was left over from a previous visit to that page.
+    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
+    st.session_state["games_applied_filters"] = {
+        "season": entry["season"],
+        "week": entry.get("week"),
+        "team1_manager_id": manager_id,
+        "team2_manager_id": None,
+        "matchup_type": "all",
+    }
+    st.switch_page(st.session_state["_games_page"])
+
+
+RECORD_ROW_COLUMN_RATIOS = [1, 3, 1]  # score | info | button - same ratio every row so all three align vertically
+
+
+def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+    # Both the score and info columns get their OWN identically-sized
+    # flex box (same explicit row_height, align-items:center) rather
+    # than only the info column being wrapped - two separate columns
+    # each just holding a bare, differently-sized <span> stay top-aligned
+    # relative to each other even if one box happens to be taller,
+    # because each column's box height is independently determined by
+    # its own (unwrapped) content, not shared with its neighbor.
+    score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
+    with score_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            unsafe_allow_html=True,
+        )
+    with info_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
+            unsafe_allow_html=True,
+        )
+    button_label = "View Game" if "week" in entry else "View Season"
+    if entry.get("manager_id") and button_column.button(button_label, key=f"record_link_{key}_{ordinal}"):
+        _go_to_game(entry)
+
+
+def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, str], label: str | None = None, widget_key: str | None = None) -> None:
+    # label/widget_key let a caller reuse this same rendering for a
+    # record stored under a different underlying data key than its
+    # displayed title - the streak row's variant selector swaps which
+    # data key backs "Longest Win/Losing Streak" without changing the
+    # title text.
+    label = label or RECORD_LABELS[key]
+    widget_key = widget_key or key
+
+    # Custom label above a label-less metric, since st.metric's built-in
+    # label font is smaller than we want here - still kept clearly
+    # smaller than the metric's own value text (~2.25rem by default).
+    st.markdown(f"<div style='font-size:1.15em; font-weight:600;'>{label}</div>", unsafe_allow_html=True)
+
     if not top_n:
-        st.metric(RECORD_LABELS[key], "-")
+        st.metric(label, "-", label_visibility="collapsed")
         return
 
-    first = top_n[0]
-    st.metric(RECORD_LABELS[key], f"{first['value']:g}")
-    st.caption(_record_context_line(first, name_resolver))
+    # 1st place's score/info render larger than 2nd/3rd's, but every row
+    # shares the same [score, info, button] column ratio so the buttons
+    # (and each column's content) stay vertically aligned across all
+    # three rows regardless of that font-size difference.
+    _render_record_row(widget_key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    for ordinal, entry in zip(("2nd", "3rd"), top_n[1:]):
+        _render_record_row(widget_key, ordinal, entry, name_resolver, row_height="1.6rem", score_size="1.1rem", info_size="0.85rem")
 
-    ordinal_labels = ["2nd", "3rd"]
-    for ordinal_label, entry in zip(ordinal_labels, top_n[1:]):
-        st.caption(f":gray[{ordinal_label}: {entry['value']:g} — {_record_context_line(entry, name_resolver)}]")
+
+def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> None:
+    variant_suffix = st.selectbox(
+        "Streak type",
+        list(STREAK_VARIANTS),
+        format_func=lambda suffix: STREAK_VARIANTS[suffix],
+        key="streak_variant",
+    )
+    win_key = f"longest_win_streak_{variant_suffix}" if variant_suffix else "longest_win_streak"
+    loss_key = f"longest_losing_streak_{variant_suffix}" if variant_suffix else "longest_losing_streak"
+
+    left_column, right_column = st.columns(2)
+    with left_column:
+        _render_record_cell(win_key, records_data.get(win_key) or [], name_resolver, label=RECORD_LABELS["longest_win_streak"])
+    with right_column:
+        _render_record_cell(loss_key, records_data.get(loss_key) or [], name_resolver, label=RECORD_LABELS["longest_losing_streak"])
 
 
 def _render_records(records_data: dict, name_resolver: dict[str, str]) -> None:
     st.subheader("All-Time Records")
-    for high_key, low_key in RECORD_ROW_PAIRS:
+
+    high_key, low_key = RECORD_ROW_PAIRS[0]
+    left_column, right_column = st.columns(2)
+    with left_column:
+        _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
+    with right_column:
+        _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
+
+    _render_streak_row(records_data, name_resolver)
+
+    for high_key, low_key in RECORD_ROW_PAIRS[1:]:
         left_column, right_column = st.columns(2)
         with left_column:
             _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
@@ -257,7 +408,7 @@ MANAGER_STAT_COLUMNS = [
     "Win %",
     "Points For",
     "Points Against",
-    "Career Players Started",
+    "Players Started",
 ]
 
 # Full-length labels for chart titles/axes/dropdown - the table itself
@@ -276,7 +427,7 @@ MANAGER_STAT_FULL_LABELS = {
     "Win %": "Win Percentage",
     "Points For": "Points For",
     "Points Against": "Points Against",
-    "Career Players Started": "Career Players Started",
+    "Players Started": "Players Started",
 }
 
 
@@ -286,6 +437,7 @@ def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: 
         combined = manager["combined"]
         rows.append(
             {
+                "manager_id": manager["manager_id"],
                 "Manager": resolve_manager_name(manager["manager_id"], name_resolver),
                 "Seasons": len(manager["seasons_played"]),
                 "Championships": manager["championships"],
@@ -300,7 +452,7 @@ def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: 
                 "Win %": combined["win_pct"],
                 "Points For": combined["points_for"],
                 "Points Against": combined["points_against"],
-                "Career Players Started": manager["career_players_started_count"],
+                "Players Started": manager["career_players_started_count"],
             }
         )
     return pd.DataFrame(rows).sort_values(["Seasons", "Manager"], ascending=[False, True])
@@ -309,7 +461,7 @@ def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: 
 def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
     st.subheader("Career Manager Standings")
     st.dataframe(
-        dataframe,
+        dataframe.drop(columns=["manager_id"]),
         hide_index=True,
         width="stretch",
         height=_full_table_height(len(dataframe)),
@@ -319,22 +471,97 @@ def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
     )
 
 
-def _render_manager_stat_chart(dataframe: pd.DataFrame) -> None:
-    selected_stat = st.selectbox(
-        "Stat to chart",
-        MANAGER_STAT_COLUMNS,
-        format_func=lambda column: MANAGER_STAT_FULL_LABELS[column],
-        key="manager_stat_chart_selection",
-    )
+# Only these totals make sense divided by a manager's season/game count -
+# the rest (Championships, Win %, Avg Finish, etc) are either already
+# per-season/per-game rates or counts that don't mean anything normalized
+# this way. Per Game deliberately excludes Players Started (unlike Per
+# Season) - a career "players started per game" rate isn't a meaningful
+# stat the way a per-season rate is.
+PER_SEASON_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against", "Players Started"}
+PER_GAME_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against"}
+
+NORMALIZATION_LABELS = {"all_time": "All Time", "per_season": "Per Season", "per_game": "Per Game"}
+NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against (Per Season also covers Players Started)."
+
+
+def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[str, str]) -> None:
+    st.subheader("Stats to Chart")
+    selectbox_column, normalization_column, tooltip_column = st.columns([3, 1, 0.2])
+    with selectbox_column:
+        selected_stat = st.selectbox(
+            "Stat to chart",
+            MANAGER_STAT_COLUMNS,
+            format_func=lambda column: MANAGER_STAT_FULL_LABELS[column],
+            index=0,
+            key="manager_stat_chart_selection",
+            label_visibility="collapsed",
+        )
+        # The widget always has index=0 as a fallback, but a stale
+        # session_state value from a prior rerun (e.g. before a code
+        # change altered MANAGER_STAT_COLUMNS) can otherwise land here as
+        # None and crash the whole page below instead of the chart just
+        # re-rendering.
+        if selected_stat is None:
+            selected_stat = MANAGER_STAT_COLUMNS[0]
+
+    # Available normalization options depend on the selected stat - built
+    # fresh each run rather than disabling individual options, since
+    # st.selectbox has no per-option disabled state.
+    normalization_options = ["all_time"]
+    if selected_stat in PER_SEASON_ELIGIBLE_STATS:
+        normalization_options.append("per_season")
+    if selected_stat in PER_GAME_ELIGIBLE_STATS:
+        normalization_options.append("per_game")
+
+    # A stat switch can make the previously-selected normalization
+    # invalid for the new stat (e.g. switching away from Points For while
+    # Per Game was selected) - reset to "All Time" before the widget is
+    # instantiated rather than letting Streamlit raise on an out-of-range
+    # session_state value.
+    if st.session_state.get("manager_stat_normalization") not in normalization_options:
+        st.session_state["manager_stat_normalization"] = "all_time"
+
+    with normalization_column:
+        normalization = st.selectbox(
+            "Normalization",
+            normalization_options,
+            format_func=lambda value: NORMALIZATION_LABELS[value],
+            key="manager_stat_normalization",
+            label_visibility="collapsed",
+        )
+    with tooltip_column:
+        # st.selectbox's built-in help icon renders next to its LABEL,
+        # which is collapsed here for layout reasons - so it silently
+        # disappears rather than just moving. st.popover gives a proper
+        # native Streamlit icon button (not a raw unicode glyph) that
+        # opens the same explanation on click, placed in its own narrow
+        # column to the dropdown's right.
+        with st.popover("ℹ️", use_container_width=False):
+            st.markdown(NORMALIZATION_HELP)
+
     selected_stat_label = MANAGER_STAT_FULL_LABELS[selected_stat]
 
-    chart_data = dataframe[["Manager", selected_stat]].dropna(subset=[selected_stat]).sort_values(selected_stat, ascending=False)
+    columns = list(dict.fromkeys(["manager_id", "Manager", "Seasons", "W", "L", "T", selected_stat]))
+    chart_data = dataframe[columns].dropna(subset=[selected_stat]).copy()
+    if normalization == "per_season":
+        chart_data[selected_stat] = chart_data[selected_stat] / chart_data["Seasons"]
+        selected_stat_label = f"{selected_stat_label} per Season"
+    elif normalization == "per_game":
+        games_played = chart_data["W"] + chart_data["L"] + chart_data["T"]
+        chart_data[selected_stat] = chart_data[selected_stat] / games_played.replace(0, pd.NA)
+        selected_stat_label = f"{selected_stat_label} per Game"
+    # Lower is better for finish stats (1st place beats 10th), so those
+    # two sort ascending; every other stat sorts descending (higher is
+    # better/more).
+    ascending = selected_stat in ("Avg Reg. Finish", "Avg Post. Finish")
+    chart_data = chart_data.sort_values(selected_stat, ascending=ascending)
+    bar_colors = [manager_color_map.get(manager_id, "#4C78A8") for manager_id in chart_data["manager_id"]]
 
     stat_figure = go.Figure(
         go.Bar(
             x=chart_data["Manager"],
             y=chart_data[selected_stat],
-            marker_color="#4C78A8",
+            marker_color=bar_colors,
             hovertemplate="%{x}<br>" + selected_stat_label + ": %{y}<extra></extra>",
         )
     )
@@ -352,16 +579,17 @@ def render_history_page() -> None:
     manager_stats_data = load_all_time_manager_stats()
     records_data = load_all_time_records()
     name_resolver = build_manager_name_resolver()
+    manager_color_map = build_manager_color_map()
 
     if not champions_data["champions"]:
         st.info("No seasons aggregated yet.")
         return
 
-    _render_champions_table(champions_data, name_resolver)
-    _render_champion_charts(champions_data, name_resolver)
+    _render_champions_table(champions_data, name_resolver, manager_color_map)
+    _render_champion_charts(champions_data, name_resolver, manager_color_map)
     st.divider()
     _render_records(records_data, name_resolver)
     st.divider()
     manager_standings_dataframe = _build_manager_standings_dataframe(manager_stats_data, name_resolver)
     _render_manager_standings_table(manager_standings_dataframe)
-    _render_manager_stat_chart(manager_standings_dataframe)
+    _render_manager_stat_chart(manager_standings_dataframe, manager_color_map)

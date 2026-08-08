@@ -256,3 +256,51 @@ worst in the regular season.
   2024, 2025) folded in so far: 0 combined-sum mismatches, 0 H2H
   symmetry issues, 4 championships total (1 per season, correct), 0
   unresolved lookups.
+
+### 7. [FIXED] `final_placements` silently dropped teams that played no bracket game at all
+`compute_final_placements()` in `code/stats-aggregation/post_season_stats.py`
+only ever assigned a placement to a team that appeared in a labeled
+placement game (e.g. "Fantasy Super Bowl", "3rd Place Game") in either
+bracket's final round. The function's own docstring had already flagged
+this as a real possibility ("A team with no labeled placement game...
+should be rare/nonexistent given the pattern above, but not guaranteed
+for every possible season") - 2019 is the season where it actually
+happened. That season's `metadata.json.settings.playoff_teams_and_weeks`
+is literally `"Weeks 15 & 16 - 4 teams"`: only the top 4 of 10 teams made
+the championship bracket, and only the next 4 made the consolation
+bracket, leaving the bottom 2 teams (team 4 "Duct Tape Crusaders"/
+Jeremy, 4-10 regular season; team 7 "Mom I peed the bed again"/Forrest,
+5-9 regular season) with zero bracket appearances all postseason.
+- **Impact:** `archive/aggregated/2019/post_season_stats.json`'s
+  `final_placements` had only 8 entries for a 10-team league - teams 4
+  and 7 missing entirely. Downstream, `all_time.py`'s
+  `career[...]["_post_season_ranks"]` (which feeds
+  `average_post_season_finish` in `all_time_manager_stats.json`) silently
+  skipped 2019 for whichever managers owned those two teams, understating
+  their sample size for that stat with no error or warning anywhere.
+- **File:** `code/stats-aggregation/post_season_stats.py`
+  (`compute_final_placements`, `compute_post_season_stats`) /
+  `code/stats-aggregation/aggregate_season.py` (call site).
+- **Fix (per explicit user direction - "preserve their regular season
+  order"):** `compute_final_placements()` now takes an optional
+  `regular_season_final_standings` param (a list of `{team_id, rank,
+  ...}` rows, e.g. the last regular-season week's cumulative standings
+  row from `standings.py`). After placing every team that did play a
+  bracket game, any leftover teams get consecutive placements starting
+  right after the last bracket placement, ordered by regular-season rank
+  (the better remaining record gets the better remaining placement) -
+  i.e. their relative order is preserved from the regular season rather
+  than being dropped. `aggregate_season.py` now passes
+  `standings_by_week[weeks[-1]]` into `compute_post_season_stats()`.
+- **Verified 2026-08-07:** 2019's `final_placements` went from 8 entries
+  to a genuine 10-entry, clean 1-10 permutation - team 7 -> 9th
+  (better record of the two unplaced teams), team 4 -> 10th, matching
+  their actual regular-season order exactly. Re-ran `aggregate_season.py`
+  for every other season already on disk (2012-2018, 2024, 2025): every
+  one still produces the *same* placement count and a clean 1..N
+  permutation as before the fix (the new fallback only fires when a team
+  is missing, so seasons where the bracket already covered every team
+  are unaffected). Re-ran `all_time.py` after the fix across
+  `[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2024, 2025]`: 0
+  combined-sum mismatches, 0 head-to-head symmetry issues,
+  `all_time_unresolved.json` still empty.
