@@ -13,6 +13,7 @@ Run locally: streamlit run app.py
 
 import streamlit as st
 
+from pages_feedback import render_feedback_page
 from pages_games import render_games_page
 from pages_history import render_history_page
 from pages_players import render_players_page
@@ -35,6 +36,7 @@ games_page = st.Page(render_games_page, title="Matchups", url_path="games")
 managers_page = st.Page(render_managers_page, title="Managers", url_path="managers")
 drafts_page = st.Page(render_drafts_page, title="Drafts", url_path="drafts")
 players_page = st.Page(render_players_page, title="Players", url_path="players")
+feedback_page = st.Page(render_feedback_page, title="Feedback", url_path="feedback")
 
 # Stashed so other pages (e.g. pages_history.py's record links) can
 # st.switch_page() straight to Matchups without app.py needing to pass
@@ -43,5 +45,5 @@ st.session_state["_games_page"] = games_page
 
 st.title("The Music League")
 
-navigation = st.navigation([history_page, yearly_page, managers_page, players_page, games_page, drafts_page])
+navigation = st.navigation([history_page, yearly_page, managers_page, players_page, games_page, drafts_page, feedback_page])
 navigation.run()
