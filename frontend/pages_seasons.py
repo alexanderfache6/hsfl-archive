@@ -41,6 +41,15 @@ BRACKET_ROW_UNIT_PX = BRACKET_CARD_HEIGHT_PX + BRACKET_CARD_GAP_PX
 BRACKET_HEADER_HEIGHT_PX = 40
 
 TRANSACTIONS_PAGE_SIZE = 10
+# Explicit per-type colors requested by the user (not derived from the
+# shared manager-color map - these represent transaction TYPE, not manager).
+TRANSACTION_TYPE_COLORS = {
+    "Add": "#2E7D32",
+    "Drop": "#C62828",
+    "LM": "#F9A825",
+    "Lineup": "#1E88E5",
+    "Trade": "#6A1B9A",
+}
 
 PODIUM_BLOCK_HEIGHT_PX = {1: 250, 2: 190, 3: 140}
 PODIUM_COLOR = {1: CHAMPION_COLOR, 2: RUNNER_UP_COLOR, 3: THIRD_PLACE_COLOR}
@@ -966,16 +975,19 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         if selected_team and manager_name != selected_team:
             continue
 
-        if transaction["type"] in ("Add", "Drop", "Lineup"):
-            description = f"{transaction['player_name']} ({transaction['from']} → {transaction['to']})"
-        else:
-            description = transaction["player_name"]
+        # "LM" (league message) rows carry no player/from/to at all - just
+        # a free-text message - so Action is that message verbatim. Every
+        # other type (including Trade - both legs of a trade DO have real
+        # from/to team names, same as Add/Drop/Lineup) uses "from to to".
+        action = transaction["message"] if transaction["type"] == "LM" else f"{transaction['from']} to {transaction['to']}"
 
         rows.append(
             {
                 "Manager": manager_name,
+                "Week": transaction["week"] if transaction["week"] is not None else "—",
                 "Transaction": transaction["type"],
-                "Description": description,
+                "Player": transaction["player_name"] or "—",
+                "Action": action,
                 "Date": transaction_datetime.strftime("%b %d, %Y %I:%M%p"),
                 "_sort": transaction_datetime,
             }
@@ -986,6 +998,10 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         return
 
     rows.sort(key=lambda row: row["_sort"], reverse=True)
+    # Captured before "_sort" is stripped below - the chart groups by
+    # calendar day across ALL filtered transactions (pre-pagination), not
+    # just the current page.
+    chart_rows = [{"date": row["_sort"].date(), "type": row["Transaction"]} for row in rows]
     for row in rows:
         del row["_sort"]
 
@@ -1005,9 +1021,9 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     start_index = (page - 1) * TRANSACTIONS_PAGE_SIZE
     page_rows = rows[start_index : start_index + TRANSACTIONS_PAGE_SIZE]
     # st.column_config.Column's width only takes "small"/"medium"/"large"
-    # or a fixed pixel int - no true flex-ratio system - so the requested
-    # 1:1:4:2 proportion is approximated here with pixel widths on a
-    # 100px base unit (100/100/400/200).
+    # or a fixed pixel int - no true flex-ratio system - so widths are
+    # approximated here with fixed pixel values sized to each column's
+    # own typical content.
     st.dataframe(
         pd.DataFrame(page_rows),
         hide_index=True,
@@ -1015,11 +1031,66 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         height=_full_table_height(len(page_rows)),
         column_config={
             "Manager": st.column_config.Column(width=100),
+            "Week": st.column_config.Column(width=70),
             "Transaction": st.column_config.Column(width=100),
-            "Description": st.column_config.Column(width=400),
+            "Player": st.column_config.Column(width=200),
+            "Action": st.column_config.Column(width=300),
             "Date": st.column_config.Column(width=200),
         },
     )
+
+    _render_transactions_metrics(chart_rows)
+    _render_transactions_chart(chart_rows)
+
+
+def _render_transactions_metrics(chart_rows: list[dict]) -> None:
+    st.divider()
+    total_column, add_column, drop_column, lm_column, lineup_column, trade_column = st.columns(6)
+    type_counts = pd.Series([row["type"] for row in chart_rows]).value_counts()
+    total_column.metric("# Transactions", len(chart_rows))
+    add_column.metric("# Add", int(type_counts.get("Add", 0)))
+    drop_column.metric("# Drop", int(type_counts.get("Drop", 0)))
+    lm_column.metric("# LM", int(type_counts.get("LM", 0)))
+    lineup_column.metric("# Lineup", int(type_counts.get("Lineup", 0)))
+    trade_column.metric("# Trade", int(type_counts.get("Trade", 0)))
+    st.divider()
+
+
+def _render_transactions_chart(chart_rows: list[dict]) -> None:
+
+    dataframe = pd.DataFrame(chart_rows)
+    counts = dataframe.groupby(["date", "type"]).size().reset_index(name="count")
+    dates = sorted(counts["date"].unique())
+
+    figure = go.Figure()
+    for transaction_type, color in TRANSACTION_TYPE_COLORS.items():
+        type_counts = counts[counts["type"] == transaction_type]
+        counts_by_date = dict(zip(type_counts["date"], type_counts["count"]))
+        y_values = [counts_by_date.get(date, 0) for date in dates]
+        if not any(y_values):
+            continue
+        figure.add_trace(
+            go.Bar(
+                name=transaction_type,
+                x=dates,
+                y=y_values,
+                marker_color=color,
+                hovertemplate=f"{transaction_type}: %{{y}}<extra></extra>",
+            )
+        )
+
+    figure.update_layout(
+        barmode="stack",
+        xaxis_title="Date",
+        yaxis_title="Transaction Count",
+        # nticks caps the y-axis at ~10 gridlines regardless of the max
+        # stacked count - plotly still snaps to "nice" integer steps.
+        yaxis=dict(tickmode="auto", nticks=10, tick0=0),
+        legend_title_text="Type",
+        hovermode="x unified",
+        hoverlabel=dict(namelength=-1),
+    )
+    st.plotly_chart(figure, width="stretch")
 
 
 def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:

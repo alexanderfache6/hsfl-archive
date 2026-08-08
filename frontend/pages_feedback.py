@@ -30,7 +30,7 @@ GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
 FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
-REAL_PAGES = ["History", "Seasons", "Matchups", "Managers", "Players", "Drafts"]
+REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
 TITLE_MAX_CHARS = 50
 DESCRIPTION_MAX_CHARS = 400
 
