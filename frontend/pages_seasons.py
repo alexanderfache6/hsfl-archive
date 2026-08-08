@@ -19,6 +19,7 @@ from data_loader import (
     contrasting_text_color,
     discover_seasons,
     load_matchups,
+    load_metadata,
     load_playoffs,
     load_post_season_stats,
     load_team_logo_data_uri,
@@ -1397,6 +1398,71 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                     _render_schedule_record(standings_by_team.get(away["team_id"]), align="right")
 
 
+def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> None:
+    """A straightforward render of that season's own metadata.json - one
+    table per section (Settings, Scoring Rules, Draft Info, Teams),
+    rather than any computed/derived stat - this is meant as a raw
+    reference view of the league's actual configuration that season."""
+    metadata = load_metadata(season)
+    st.subheader(metadata.get("league_name", ""))
+    st.caption(f"League ID: {metadata.get('league_id', '')} · Commissioner: {metadata.get('commissioner', '')}")
+    league_id = metadata.get("league_id", "")
+    st.link_button("View 'NFL.com League History' Site", f"https://fantasy.nfl.com/league/{league_id}/history/{season}/standings")
+
+    # Each section is its own collapsible expander, and the EXPANDER
+    # itself (not just the table inside it) sits in the left half of a
+    # 2-column row (the right column is just empty space) - "width=
+    # 'stretch'" on the table then fills that half rather than the full
+    # page.
+    settings = metadata.get("settings", {})
+
+    settings_column, _ = st.columns(2)
+    with settings_column, st.expander("League Settings", expanded=True):
+        # Value is stringified - these settings mix ints (num_teams) with
+        # plain text (trade_deadline, etc), and a mixed-type column
+        # doesn't serialize to Arrow cleanly (Streamlit papers over it
+        # with a console warning either way, but a plain string column
+        # avoids that entirely). roster_settings is its own nested dict
+        # (slot -> count), not a flat setting - broken out into its own
+        # section below rather than shown here.
+        # Value is stringified - these settings mix ints (num_teams) with
+        # plain text (trade_deadline, etc), and a mixed-type column
+        # doesn't serialize to Arrow cleanly otherwise.
+        flat_settings = [
+            {"Setting": key.replace("_", " ").title(), "Value": str(value)} for key, value in settings.items() if key != "roster_settings"
+        ]
+        st.dataframe(pd.DataFrame(flat_settings), hide_index=True, width="stretch", height=_full_table_height(len(flat_settings)))
+
+    draft_column, _ = st.columns(2)
+    with draft_column, st.expander("Draft Info", expanded=True):
+        draft_rows = [{"Setting": key.replace("_", " ").title(), "Value": value} for key, value in metadata.get("draft_info", {}).items()]
+        st.dataframe(pd.DataFrame(draft_rows), hide_index=True, width="stretch", height=_full_table_height(len(draft_rows)))
+
+    teams_column, _ = st.columns(2)
+    with teams_column, st.expander("Teams", expanded=True):
+        team_rows = []
+        for team in metadata.get("teams", []):
+            manager_name = resolve_manager_name(team.get("manager_id", ""), name_resolver, team.get("manager_display_name", ""))
+            team_rows.append({"Team ID": team.get("team_id", ""), "Team Name": team.get("team_name", ""), "Manager": manager_name})
+        # Team ID is a string ("9", "2", ...) - sorted by its int value so
+        # ascending order is true numeric order (1, 2, ... 10), not
+        # lexicographic ("1", "10", "2", ...).
+        team_rows.sort(key=lambda row: int(row["Team ID"]))
+        st.dataframe(pd.DataFrame(team_rows), hide_index=True, width="stretch", height=_full_table_height(len(team_rows)))
+
+    roster_settings = settings.get("roster_settings", {})
+    if roster_settings:
+        roster_column, _ = st.columns(2)
+        with roster_column, st.expander("Roster Settings", expanded=True):
+            roster_rows = [{"Slot": slot, "Count": count} for slot, count in roster_settings.items()]
+            st.dataframe(pd.DataFrame(roster_rows), hide_index=True, width="stretch", height=_full_table_height(len(roster_rows)))
+
+    scoring_column, _ = st.columns(2)
+    with scoring_column, st.expander("Scoring Rules", expanded=True):
+        scoring_rows = [{"Rule": rule, "Value": value} for rule, value in metadata.get("scoring_rules", {}).items()]
+        st.dataframe(pd.DataFrame(scoring_rows), hide_index=True, width="stretch", height=_full_table_height(len(scoring_rows)))
+
+
 def render_seasons_page() -> None:
     seasons = discover_seasons()
     if not seasons:
@@ -1411,8 +1477,8 @@ def render_seasons_page() -> None:
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
 
-    season_summary_tab, schedule_tab, regular_season_tab, post_season_tab = st.tabs(
-        ["Season Summary", "Schedule", "Regular Season", "Post Season"]
+    season_summary_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
+        ["Season Summary", "Schedule", "Regular Season", "Post Season", "Season Settings"]
     )
 
     with season_summary_tab:
@@ -1458,3 +1524,6 @@ def render_seasons_page() -> None:
             _render_playoffs_tab(selected_season, name_resolver, manager_color_map)
         with final_standings_tab:
             _render_final_standings_table(selected_season, name_resolver)
+
+    with season_settings_tab:
+        _render_season_settings_tab(selected_season, name_resolver)
