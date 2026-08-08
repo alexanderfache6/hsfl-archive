@@ -40,6 +40,10 @@ BRACKET_CARD_GAP_PX = 40
 BRACKET_ROW_UNIT_PX = BRACKET_CARD_HEIGHT_PX + BRACKET_CARD_GAP_PX
 BRACKET_HEADER_HEIGHT_PX = 40
 
+# Every selectable stat for the Standings tab's chart - same "Stat to
+# chart" selectbox pattern as pages_history.py's MANAGER_STAT_COLUMNS.
+STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Streak", "Points For", "Points Against", "Point Difference"]
+
 TRANSACTIONS_PAGE_SIZE = 10
 # Explicit per-type colors requested by the user (not derived from the
 # shared manager-color map - these represent transaction TYPE, not manager).
@@ -433,6 +437,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
                 "Streak": int(row["win_streak"][1:]) * (1 if row["win_streak"][0] == "W" else -1) if row["win_streak"] else 0,
                 "Points For": row["points_for"],
                 "Points Against": row["points_against"],
+                "Point Difference": row["points_for"] - row["points_against"],
             }
         )
     dataframe = pd.DataFrame(rows).sort_values("Rank")
@@ -461,16 +466,54 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
             "Streak": st.column_config.NumberColumn(format="%+d"),
             "Points For": st.column_config.NumberColumn(format="%.2f"),
             "Points Against": st.column_config.NumberColumn(format="%.2f"),
+            "Point Difference": st.column_config.NumberColumn(format="%+.2f"),
         },
     )
 
 
+def _standings_stat_value(row: dict, stat: str) -> float | int:
+    if stat == "Rank":
+        return row["rank"]
+    if stat == "Wins":
+        return row["wins"]
+    if stat == "Losses":
+        return row["losses"]
+    if stat == "Win %":
+        return round(row["win_pct"] * 100, 1)
+    if stat == "Streak":
+        streak = row["win_streak"]
+        return int(streak[1:]) * (1 if streak[0] == "W" else -1) if streak else 0
+    if stat == "Points For":
+        return round(row["points_for"], 2)
+    if stat == "Points Against":
+        return round(row["points_against"], 2)
+    return round(row["points_for"] - row["points_against"], 2)  # "Point Difference"
+
+
+def _standings_stat_display(value: float | int, stat: str) -> str:
+    if stat == "Win %":
+        return f"{value:.1f}%"
+    if stat == "Streak":
+        return f"{value:+d}"
+    if stat == "Point Difference":
+        return f"{value:+.2f}"
+    if stat in ("Points For", "Points Against"):
+        return f"{value:.2f}"
+    return str(value)
+
+
 def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
-    """Cumulative win % per manager, one line per manager in their own
-    color, week 1 through the current week."""
+    """One line per manager, in their own color, week 1 through the
+    current week - the selected stat's own value at each week, which for
+    every option here (Rank/Wins/Losses/Win %/Points For/Points Against
+    are all running totals as of that week; Streak/Rank are already
+    point-in-time as of that week) is already the season's cumulative
+    picture, same as pages_history.py's "Stat to chart" selector."""
     weekly_tables = load_weekly_tables(season)["weeks"]
     if not weekly_tables:
         return
+
+    selected_stat = st.selectbox("Stat to chart", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]
@@ -479,28 +522,29 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
     for team_id, info in team_info.items():
         manager_id = info.get("manager_id", "")
         manager_name = resolve_manager_name(manager_id, name_resolver, info.get("display_name", ""))
-        percentages = []
+        values = []
         custom_data = []
         for week_table in weekly_tables:
             row = next((r for r in week_table["standings"] if r["team_id"] == team_id), None)
             if row is None:
-                percentages.append(None)
+                values.append(None)
                 custom_data.append([manager_name, "—", "—", "—"])
                 continue
-            percentages.append(round(row["win_pct"] * 100, 1))
+            stat_value = _standings_stat_value(row, selected_stat)
+            values.append(stat_value)
             custom_data.append(
                 [
                     manager_name,
                     f"{row['wins']}-{row['losses']}-{row['ties']}",
                     row["weekly"]["result"],
-                    f"{row['win_pct'] * 100:.1f}%",
+                    _standings_stat_display(stat_value, selected_stat),
                 ]
             )
 
         figure.add_trace(
             go.Scatter(
                 x=weeks,
-                y=percentages,
+                y=values,
                 mode="lines",
                 name=manager_name,
                 line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
@@ -509,7 +553,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                     "Manager: %{customdata[0]}<br>"
                     "W-L-T: %{customdata[1]}<br>"
                     "Week Result: %{customdata[2]}<br>"
-                    "Cumulative Win %: %{customdata[3]}"
+                    f"Cumulative {selected_stat}: " + "%{customdata[3]}"
                     "<extra></extra>"
                 ),
             )
@@ -517,8 +561,12 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
 
     figure.update_layout(
         xaxis_title="Week",
-        yaxis_title="Cumulative Win %",
+        yaxis_title=f"Cumulative {selected_stat}",
         xaxis=dict(tickmode="linear", dtick=1),
+        # Rank is lower-is-better - reverse so the top of the chart
+        # visually matches "doing well", consistent with the Rank column
+        # itself (1 = best).
+        yaxis=dict(autorange="reversed") if selected_stat == "Rank" else dict(),
         legend_title_text="Manager",
         height=450,
     )
@@ -1319,6 +1367,8 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
     as the podium/Final Standings tab, but every team, with W-L-T/Win
     %/Points For/Points Against all summing the regular season with
     whichever post-season bracket (if any) that team played in."""
+    st.subheader("End of Postseason Standings")
+
     weekly_tables = load_weekly_tables(season)["weeks"]
     if not weekly_tables:
         st.info("No standings available for this season yet.")
@@ -1590,7 +1640,7 @@ def render_seasons_page() -> None:
             _render_transactions_table(selected_season, name_resolver)
 
     with post_season_tab:
-        bracket_tab, final_standings_tab = st.tabs(["Bracket", "Final Standings"])
+        bracket_tab, final_standings_tab = st.tabs(["Bracket", "Bracket Standings"])
         with bracket_tab:
             _render_playoffs_tab(selected_season, name_resolver, manager_color_map)
         with final_standings_tab:
