@@ -1,4 +1,4 @@
-"""Yearly tab - weekly stat tables/charts and season aggregates for a
+"""Seasons tab - weekly stat tables/charts and season aggregates for a
 single selected season. See execution-plan.md Phase G.
 """
 
@@ -115,7 +115,13 @@ def _bracket_highlight_style(team_id: str, winner_team_id: str, team_info: dict[
 
 
 def _bracket_game_card_html(
-    game: dict, top_px: float, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], round_label: str
+    game: dict,
+    top_px: float,
+    team_info: dict[str, dict],
+    name_resolver: dict[str, str],
+    manager_color_map: dict[str, str],
+    round_label: str,
+    path_team_id: str,
 ) -> str:
     """Reusable single-game card - one call site per bracket (Championship,
     Consolation), used for every round. Byes render as a single
@@ -125,8 +131,14 @@ def _bracket_game_card_html(
     pixel the connector math also uses, so lines tie to the true card
     center). round_label is the DISPLAY label (see
     _bracket_display_round_label) - not always game["round_label"]
-    verbatim, since some rounds need one synthesized."""
+    verbatim, since some rounds need one synthesized. path_team_id is that
+    bracket's eventual winner (champion_team_id / consolation_winner_
+    team_id) - every game they played in (not just the ones they won)
+    gets a light gray card background, tracing their whole route through
+    the bracket at a glance."""
     winner_team_id = _bracket_effective_winner(game)
+    on_winning_path = bool(path_team_id) and path_team_id in (game["team_id_home"], game["team_id_away"])
+    card_background = "background:#F0F0F0; " if on_winning_path else ""
 
     lines_html = []
     if round_label:
@@ -170,7 +182,7 @@ def _bracket_game_card_html(
 
     return (
         f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; '
-        f'border:2px solid black; border-radius:8px; padding:10px; '
+        f'{card_background}border:2px solid black; border-radius:8px; padding:10px; '
         f'height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
     )
 
@@ -915,7 +927,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
             sorted(set(manager_name_by_id.values())),
             index=None,
             placeholder="Any",
-            key="yearly_transactions_team",
+            key="seasons_transactions_team",
         )
     with type_column:
         selected_type = st.selectbox(
@@ -923,7 +935,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
             transaction_types,
             index=None,
             placeholder="Any",
-            key="yearly_transactions_type",
+            key="seasons_transactions_type",
         )
     with date_column:
         selected_range = st.date_input(
@@ -931,7 +943,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
             value=(min_date, max_date),
             min_value=min_date,
             max_value=max_date,
-            key="yearly_transactions_date_range",
+            key="seasons_transactions_date_range",
         )
 
     # st.date_input returns a single date while the user has only picked
@@ -980,13 +992,13 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # A filter change can shrink total_pages below whatever page the user
     # was previously on - st.number_input errors if its existing
     # session_state value exceeds the new max_value, so clamp first.
-    if st.session_state.get("yearly_transactions_page", 1) > total_pages:
-        st.session_state["yearly_transactions_page"] = 1
+    if st.session_state.get("seasons_transactions_page", 1) > total_pages:
+        st.session_state["seasons_transactions_page"] = 1
     # page_column was created up front alongside the other filters (same
     # st.columns row) so Page visually sits on their right, even though
     # its max_value can only be computed after those filters are applied.
     with page_column:
-        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1, key="yearly_transactions_page")
+        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
     st.caption(f"Page {page} of {total_pages} ({len(rows)} transactions)")
 
     start_index = (page - 1) * TRANSACTIONS_PAGE_SIZE
@@ -1032,7 +1044,9 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
     st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{"".join(segments)}</div>', unsafe_allow_html=True)
 
 
-def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], is_consolation: bool) -> None:
+def _render_bracket(
+    bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], is_consolation: bool, path_team_id: str
+) -> None:
     rounds = bracket.get("rounds", [])
     if not any(round_entry["matchups"] for round_entry in rounds):
         st.info("No bracket data available for this season yet.")
@@ -1076,6 +1090,7 @@ def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: di
                     name_resolver,
                     manager_color_map,
                     _bracket_display_round_label(game, round_order, max_round_order, is_consolation),
+                    path_team_id,
                 )
                 for game, row in games_with_rows
             )
@@ -1098,11 +1113,19 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
         return
 
     team_info = team_id_to_manager_map(season)
+    championship_bracket = playoffs.get("championship_bracket", {})
+    consolation_bracket = playoffs.get("consolation_bracket", {})
     championship_tab, consolation_tab = st.tabs(["Championship", "Consolation"])
     with championship_tab:
-        _render_bracket(playoffs.get("championship_bracket", {}), team_info, name_resolver, manager_color_map, is_consolation=False)
+        _render_bracket(
+            championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
+            path_team_id=championship_bracket.get("champion_team_id", ""),
+        )
     with consolation_tab:
-        _render_bracket(playoffs.get("consolation_bracket", {}), team_info, name_resolver, manager_color_map, is_consolation=True)
+        _render_bracket(
+            consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
+            path_team_id=consolation_bracket.get("consolation_winner_team_id", ""),
+        )
 
 
 def _render_final_standings_table(season: int, name_resolver: dict[str, str]) -> None:
@@ -1374,7 +1397,7 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                     _render_schedule_record(standings_by_team.get(away["team_id"]), align="right")
 
 
-def render_yearly_page() -> None:
+def render_seasons_page() -> None:
     seasons = discover_seasons()
     if not seasons:
         st.info("No seasons aggregated yet.")
@@ -1383,7 +1406,7 @@ def render_yearly_page() -> None:
     # Single mandatory season (not an "Any" filter like Players/Games -
     # this whole tab is inherently scoped to one season at a time),
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Season", seasons, index=len(seasons) - 1, key="yearly_season")
+    selected_season = st.selectbox("Season", seasons, index=len(seasons) - 1, key="seasons_season")
 
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()

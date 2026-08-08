@@ -22,7 +22,7 @@ from pages_feedback import render_feedback_page
 from pages_games import render_games_page
 from pages_history import render_history_page
 from pages_players import render_players_page
-from pages_yearly import render_yearly_page
+from pages_seasons import render_seasons_page
 
 # ========================================
 # FUNCTIONS
@@ -44,7 +44,7 @@ def render_drafts_page() -> None:
 st.set_page_config(page_title="The Music League", page_icon="🏈", layout="wide")
 
 history_page = st.Page(render_history_page, title="History", url_path="history", default=True)
-yearly_page = st.Page(render_yearly_page, title="Seasons", url_path="yearly")
+seasons_page = st.Page(render_seasons_page, title="Seasons", url_path="seasons")
 # managers_page = st.Page(render_managers_page, title="Managers", url_path="managers")
 players_page = st.Page(render_players_page, title="Players", url_path="players")
 games_page = st.Page(render_games_page, title="Matchups", url_path="games")
@@ -58,5 +58,5 @@ st.session_state["_games_page"] = games_page
 
 st.title("The Music League")
 
-navigation = st.navigation([history_page, yearly_page, players_page, games_page, feedback_page])
+navigation = st.navigation([history_page, seasons_page, players_page, games_page, feedback_page])
 navigation.run()

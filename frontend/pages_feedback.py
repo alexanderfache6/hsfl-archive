@@ -299,7 +299,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     # Same searchable-selectbox pattern as the Players tab's player
     # search - typing narrows the list via Streamlit's own built-in
     # substring matching in the dropdown. Page counter shares this row,
-    # to its right - same layout as the Yearly page's Transactions table.
+    # to its right - same layout as the Seasons page's Transactions table.
     search_column, page_counter_column = st.columns([3, 1])
     with search_column:
         title_options = sorted({issue["title"] for issue in issues})
@@ -336,7 +336,7 @@ def _render_issues_table(issues: list[dict]) -> None:
 
     rows.sort(key=lambda row: row["Issue #"], reverse=True)
 
-    # Same pagination pattern as the Yearly page's Transactions table - a
+    # Same pagination pattern as the Seasons page's Transactions table - a
     # filter change can shrink total_pages below whatever page was
     # previously selected, so that's clamped back to page 1 before the
     # widget mounts rather than letting st.number_input raise on an

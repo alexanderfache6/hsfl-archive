@@ -1,6 +1,6 @@
 """Per-season record-book superlatives (highest/lowest weekly score,
 season points, streaks, coaching, players started) - scoped to just one
-season, so the Yearly UI page can show that season's own records.
+season, so the Seasons UI page can show that season's own records.
 Written by aggregate_season.py to archive/aggregated/{year}/records.json;
 combined across years by all_time.py into the all-time version. See
 execution-plan.md Phase G.

@@ -256,7 +256,7 @@ def _go_to_game(entry: dict) -> None:
 def _best_worst_finish_by_manager() -> dict[str, tuple[int, int]]:
     """{manager_id: (best final rank, worst final rank)} - the FINAL
     (post-season) standings rank each season, i.e.
-    post_season_stats.json's final_placements (same source as the Yearly
+    post_season_stats.json's final_placements (same source as the Seasons
     page's Final Standings tab), not the regular-season standings rank."""
     finishes: dict[str, list[int]] = {}
     for year in discover_seasons():
