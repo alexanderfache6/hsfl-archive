@@ -10,6 +10,7 @@
 - [x] true tab
 - [x] transactions tab
 - [x] create schedule tab for each week
+- [ ] playoff hunt tab - what each team needs to make playoffs and to secure 1st round byes (record then points for)
 - [ ] 
 
 # managers
@@ -21,6 +22,8 @@
 - [ ] highlight missing depth
 - [ ] highlight bye weeks and projected depth
 - [ ] every where team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc
+- [ ] per week - starters, bench, injuried (NFL), optimal, bye, got injured (NFL)
+- [ ] manager stats, web chart vs other managers, custom stats, etc
 - [ ] 
 
 # players
@@ -40,4 +43,11 @@
 - [ ] adp
 - [ ] adp/price compared to that season's stats
 - [ ] nfl team stats
+- [ ] draft value over years, see chart of all positions (ie WR) who is best value
+- [ ] full order, final rosters, most expensive auction stuff. across all drafts average pick, average cost
+- [ ] 
+
+
+# feedback
+- [ ] form does not clear after submitting
 - [ ] 

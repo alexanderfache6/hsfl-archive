@@ -23,11 +23,11 @@ st.set_page_config(page_title="The Music League", page_icon="🏈", layout="wide
 
 
 def render_managers_page() -> None:
-    st.info("Coming soon - manager stats, web chart vs other managers, custom stats, etc.")
+    st.info("coming soon")
 
 
 def render_drafts_page() -> None:
-    st.info("Coming soon - draft results per season (full order, final rosters, most expensive auction stuff. across all drafts average pick, average cost).")
+    st.info("coming soon")
 
 
 history_page = st.Page(render_history_page, title="History", url_path="history", default=True)

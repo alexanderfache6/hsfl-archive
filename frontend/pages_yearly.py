@@ -26,7 +26,7 @@ from data_loader import (
 from pages_history import CHAMPION_COLOR, RUNNER_UP_COLOR, THIRD_PLACE_COLOR
 
 BRACKET_NEUTRAL_COLOR = "#888888"
-BRACKET_CARD_HEIGHT_PX = 120
+BRACKET_CARD_HEIGHT_PX = 190
 BRACKET_CARD_GAP_PX = 40
 BRACKET_ROW_UNIT_PX = BRACKET_CARD_HEIGHT_PX + BRACKET_CARD_GAP_PX
 BRACKET_HEADER_HEIGHT_PX = 40
@@ -712,21 +712,36 @@ def _bracket_team_label(team_id: str, seed: int | None, team_info: dict[str, dic
     return f"{seed_text}{team_name} ({manager_name})"
 
 
-def _bracket_game_card_html(game: dict, top_px: float, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> str:
+def _bracket_highlight_style(team_id: str, winner_team_id: str, team_info: dict[str, dict], manager_color_map: dict[str, str]) -> str:
+    """Background-color + contrasting text-color for the winning side's
+    name/score lines - same manager-color-highlight convention as the
+    Matchups page's own matchup cards - empty string (no highlight) for
+    the losing side."""
+    if team_id != winner_team_id:
+        return ""
+    manager_id = team_info.get(team_id, {}).get("manager_id", "")
+    background_color = manager_color_map.get(manager_id, BRACKET_NEUTRAL_COLOR)
+    text_color = contrasting_text_color(background_color)
+    return f"background-color:{background_color}; color:{text_color}; border-radius:4px;"
+
+
+def _bracket_game_card_html(
+    game: dict, top_px: float, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], round_label: str
+) -> str:
     """Reusable single-game card - one call site per bracket (Championship,
     Consolation), used for every round. Byes render as a single
     auto-advancing team with no opponent line. Returns an absolutely
     positioned HTML div (not an st.container - no invisible spacer
     containers needed to push it to the right row; its "top" is the exact
     pixel the connector math also uses, so lines tie to the true card
-    center)."""
+    center). round_label is the DISPLAY label (see
+    _bracket_display_round_label) - not always game["round_label"]
+    verbatim, since some rounds need one synthesized."""
     winner_team_id = _bracket_effective_winner(game)
-    winner_info = team_info.get(winner_team_id, {})
-    border_color = manager_color_map.get(winner_info.get("manager_id", ""), BRACKET_NEUTRAL_COLOR) if winner_team_id else BRACKET_NEUTRAL_COLOR
 
     lines_html = []
-    if game["round_label"]:
-        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(game["round_label"])}</div>')
+    if round_label:
+        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
 
     # "Only one side present" (not the is_bye flag, which some brackets
     # leave False on a loser's "continues on" slot with an empty
@@ -736,23 +751,37 @@ def _bracket_game_card_html(game: dict, top_px: float, team_info: dict[str, dict
         lone_team_id = game["team_id_home"] or game["team_id_away"]
         lone_seed = game["seed_home"] or game["seed_away"]
         lone_label = html.escape(_bracket_team_label(lone_team_id, lone_seed, team_info, name_resolver))
-        lines_html.append(f'<div><strong>{lone_label}</strong></div>')
-        lines_html.append('<div style="opacity:0.7; font-style:italic;">Bye</div>')
+        lone_highlight = _bracket_highlight_style(lone_team_id, winner_team_id, team_info, manager_color_map)
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><strong>{lone_label}</strong></div>')
+        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.7; font-style:italic;">Bye</div>')
     else:
         home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
         away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
         home_html = f"<strong>{home_label}</strong>" if game["team_id_home"] == winner_team_id else home_label
         away_html = f"<strong>{away_label}</strong>" if game["team_id_away"] == winner_team_id else away_label
-        score_home = f"{game['score_home']:.2f}" if game["score_home"] is not None else "—"
-        score_away = f"{game['score_away']:.2f}" if game["score_away"] is not None else "—"
-        # Row 1 = team 1, row 2 = the score, row 3 = team 2, per request.
-        lines_html.append(f"<div>{home_html}</div>")
-        lines_html.append(f'<div style="opacity:0.8;">{score_home} — {score_away}</div>')
-        lines_html.append(f"<div>{away_html}</div>")
+        score_home_text = f"{game['score_home']:.2f}" if game["score_home"] is not None else "—"
+        score_away_text = f"{game['score_away']:.2f}" if game["score_away"] is not None else "—"
+        score_home_html = f"<strong>{score_home_text}</strong>" if game["team_id_home"] == winner_team_id else score_home_text
+        score_away_html = f"<strong>{score_away_text}</strong>" if game["team_id_away"] == winner_team_id else score_away_text
+        home_highlight = _bracket_highlight_style(game["team_id_home"], winner_team_id, team_info, manager_color_map)
+        away_highlight = _bracket_highlight_style(game["team_id_away"], winner_team_id, team_info, manager_color_map)
+        # Row 1 = round label (above), row 2 = team 1 name, row 3 = team 1
+        # score, row 4 = "vs", row 5 = team 2 score, row 6 = team 2 name.
+        # A winning side's name+score are ONE outer div (one continuous
+        # highlighted box spanning both lines), not two separately
+        # highlighted divs - the inner name/score lines carry no
+        # background of their own, just the outer wrapper.
+        lines_html.append(
+            f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>'
+        )
+        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.6;">vs</div>')
+        lines_html.append(
+            f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>'
+        )
 
     return (
         f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; '
-        f'border:3px solid {border_color}; border-radius:8px; padding:10px; '
+        f'border:2px solid black; border-radius:8px; padding:10px; '
         f'height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
     )
 
@@ -859,13 +888,12 @@ def _layout_bracket_rounds(
     return rounds_with_rows, connectors
 
 
-def _render_bracket_connectors(connectors: list, canvas_height: int, team_info: dict, manager_color_map: dict) -> None:
+def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
     card_center = BRACKET_CARD_HEIGHT_PX / 2
+    color = "black"  # matches the cards' own black outline, per request
 
     segments = []
     for from_round, from_row, to_round, to_row, team_id in connectors:
-        info = team_info.get(team_id, {})
-        color = manager_color_map.get(info.get("manager_id", ""), BRACKET_NEUTRAL_COLOR)
         from_y = from_row * BRACKET_ROW_UNIT_PX + card_center
         to_y = to_row * BRACKET_ROW_UNIT_PX + card_center
         top, bottom = min(from_y, to_y), max(from_y, to_y)
@@ -883,13 +911,28 @@ def _render_bracket_connectors(connectors: list, canvas_height: int, team_info: 
     st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{"".join(segments)}</div>', unsafe_allow_html=True)
 
 
-def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+def _bracket_display_round_label(game: dict, round_order: int, max_round_order: int, is_consolation: bool) -> str:
+    """The raw round_label (e.g. "Semifinal", "7th Place Game") when the
+    data has one - but the consolation bracket's OWN semifinal-equivalent
+    round often comes through with an empty round_label (only its later
+    placement-game rounds, like "7th Place Game", are labeled), so that
+    empty case is synthesized as "Consolation Semifinal" specifically for
+    the second-to-last round of the consolation bracket."""
+    if game["round_label"]:
+        return game["round_label"]
+    if is_consolation and round_order == max_round_order - 1:
+        return "Consolation Semifinal"
+    return ""
+
+
+def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], is_consolation: bool) -> None:
     rounds = bracket.get("rounds", [])
     if not any(round_entry["matchups"] for round_entry in rounds):
         st.info("No bracket data available for this season yet.")
         return
 
     rounds_with_rows, connectors = _layout_bracket_rounds(rounds)
+    max_round_order = max(round_order for round_order, _, _ in rounds_with_rows)
 
     # One shared coordinate system for every round AND every connector
     # column in this bracket (not just each adjacent pair) - guarantees a
@@ -919,7 +962,15 @@ def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: di
             # All of this round's cards as one absolutely positioned
             # canvas - no invisible st.container spacers between them.
             cards_html = "".join(
-                _bracket_game_card_html(game, row * BRACKET_ROW_UNIT_PX, team_info, name_resolver, manager_color_map) for game, row in games_with_rows
+                _bracket_game_card_html(
+                    game,
+                    row * BRACKET_ROW_UNIT_PX,
+                    team_info,
+                    name_resolver,
+                    manager_color_map,
+                    _bracket_display_round_label(game, round_order, max_round_order, is_consolation),
+                )
+                for game, row in games_with_rows
             )
             st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{cards_html}</div>', unsafe_allow_html=True)
         column_index += 1
@@ -929,7 +980,7 @@ def _render_bracket(bracket: dict, team_info: dict[str, dict], name_resolver: di
             round_connectors = [c for c in connectors if c[0] == round_order and c[2] == next_round_order]
             with columns[column_index]:
                 st.markdown(f'<div style="height:{BRACKET_HEADER_HEIGHT_PX}px;"></div>', unsafe_allow_html=True)
-                _render_bracket_connectors(round_connectors, canvas_height, team_info, manager_color_map)
+                _render_bracket_connectors(round_connectors, canvas_height)
             column_index += 1
 
 
@@ -942,9 +993,9 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
     team_info = team_id_to_manager_map(season)
     championship_tab, consolation_tab = st.tabs(["Championship", "Consolation"])
     with championship_tab:
-        _render_bracket(playoffs.get("championship_bracket", {}), team_info, name_resolver, manager_color_map)
+        _render_bracket(playoffs.get("championship_bracket", {}), team_info, name_resolver, manager_color_map, is_consolation=False)
     with consolation_tab:
-        _render_bracket(playoffs.get("consolation_bracket", {}), team_info, name_resolver, manager_color_map)
+        _render_bracket(playoffs.get("consolation_bracket", {}), team_info, name_resolver, manager_color_map, is_consolation=True)
 
 
 def _championship_bye_team_ids(season: int) -> set[str]:
