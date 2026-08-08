@@ -10,7 +10,6 @@
 - [x] true tab
 - [x] transactions tab
 - [x] create schedule tab for each week
-- [ ] playoff hunt tab - what each team needs to make playoffs and to secure 1st round byes (record then points for)
 - [ ] 
 
 # managers

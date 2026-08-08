@@ -32,10 +32,10 @@ def render_drafts_page() -> None:
 
 history_page = st.Page(render_history_page, title="History", url_path="history", default=True)
 yearly_page = st.Page(render_yearly_page, title="Seasons", url_path="yearly")
-games_page = st.Page(render_games_page, title="Matchups", url_path="games")
-managers_page = st.Page(render_managers_page, title="Managers", url_path="managers")
-drafts_page = st.Page(render_drafts_page, title="Drafts", url_path="drafts")
+# managers_page = st.Page(render_managers_page, title="Managers", url_path="managers")
 players_page = st.Page(render_players_page, title="Players", url_path="players")
+games_page = st.Page(render_games_page, title="Matchups", url_path="games")
+# drafts_page = st.Page(render_drafts_page, title="Drafts", url_path="drafts")
 feedback_page = st.Page(render_feedback_page, title="Feedback", url_path="feedback")
 
 # Stashed so other pages (e.g. pages_history.py's record links) can
@@ -45,5 +45,5 @@ st.session_state["_games_page"] = games_page
 
 st.title("The Music League")
 
-navigation = st.navigation([history_page, yearly_page, managers_page, players_page, games_page, drafts_page, feedback_page])
+navigation = st.navigation([history_page, yearly_page, players_page, games_page, feedback_page])
 navigation.run()

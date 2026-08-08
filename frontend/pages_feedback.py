@@ -6,6 +6,7 @@ execution-plan.md Phase G.
 """
 
 import re
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -60,15 +61,6 @@ FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title",
 def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
 
-    # A successful submit resets the form on the SAME rerun it triggers
-    # (see the bottom of this function) - the success message can't be
-    # shown before that rerun (it would just be wiped by it), so it's
-    # stashed in session_state and displayed here instead, one rerun
-    # later.
-    if "feedback_last_submitted" in st.session_state:
-        submitted = st.session_state.pop("feedback_last_submitted")
-        st.success(f"Issue [#{submitted['number']}]({submitted['url']}) submitted.")
-
     viewer_email = _viewer_email()
     if viewer_email:
         st.caption(f"Submitting as {viewer_email}")
@@ -121,6 +113,19 @@ def _render_feedback_form() -> None:
         if st.button("Clear Feedback"):
             _reset_form_fields()
             st.rerun()
+
+    # A successful submit resets the form on the SAME rerun it triggers
+    # (below) - the success message can't be shown before that rerun (it
+    # would just be wiped by it), so it's stashed in session_state and
+    # displayed here instead, one rerun later. Cleared after 3 seconds -
+    # this blocks the script for that long, but only on the one rerun
+    # right after a submit, not on every normal rerun.
+    if "feedback_last_submitted" in st.session_state:
+        submitted = st.session_state.pop("feedback_last_submitted")
+        message_placeholder = st.empty()
+        message_placeholder.success(f"Issue [#{submitted['number']}]({submitted['url']}) submitted.")
+        time.sleep(3)
+        message_placeholder.empty()
 
     if submit_clicked:
         if not _github_token():
@@ -230,6 +235,9 @@ def _all_issues() -> list[dict]:
     return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
 
 
+ISSUES_PAGE_SIZE = 10
+
+
 def _render_issues_table(issues: list[dict]) -> None:
     st.subheader("Issues")
     if not issues:
@@ -246,11 +254,14 @@ def _render_issues_table(issues: list[dict]) -> None:
 
     # Same searchable-selectbox pattern as the Players tab's player
     # search - typing narrows the list via Streamlit's own built-in
-    # substring matching in the dropdown.
-    title_options = sorted({issue["title"] for issue in issues})
-    searched_title = st.selectbox(
-        "Search titles", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
-    )
+    # substring matching in the dropdown. Page counter shares this row,
+    # to its right - same layout as the Yearly page's Transactions table.
+    search_column, page_counter_column = st.columns([3, 1])
+    with search_column:
+        title_options = sorted({issue["title"] for issue in issues})
+        searched_title = st.selectbox(
+            "Search titles", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
+        )
 
     rows = []
     for issue in issues:
@@ -279,7 +290,24 @@ def _render_issues_table(issues: list[dict]) -> None:
         st.info("No issues match these filters.")
         return
 
-    dataframe = pd.DataFrame(rows).sort_values("Issue #", ascending=False)
+    rows.sort(key=lambda row: row["Issue #"], reverse=True)
+
+    # Same pagination pattern as the Yearly page's Transactions table - a
+    # filter change can shrink total_pages below whatever page was
+    # previously selected, so that's clamped back to page 1 before the
+    # widget mounts rather than letting st.number_input raise on an
+    # out-of-range session_state value.
+    total_pages = -(-len(rows) // ISSUES_PAGE_SIZE)
+    if st.session_state.get("feedback_issues_page", 1) > total_pages:
+        st.session_state["feedback_issues_page"] = 1
+    with page_counter_column:
+        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1, key="feedback_issues_page")
+    st.caption(f"Page {page} of {total_pages} ({len(rows)} issues)")
+
+    start_index = (page - 1) * ISSUES_PAGE_SIZE
+    page_rows = rows[start_index : start_index + ISSUES_PAGE_SIZE]
+
+    dataframe = pd.DataFrame(page_rows)
     # LinkColumn's display_text can only be a fixed string or a regex
     # capturing a substring of the URL itself - "Issue #{n}" mixes in
     # literal text alongside the number, which needs a real per-cell
@@ -321,10 +349,11 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
     closed_values = [int(closed_counts.get(date, 0)) for date in all_dates]
 
     figure = go.Figure()
-    # Only the Opened trace carries a hovertemplate (with the Closed
-    # trace's value riding along as customdata) - the Closed trace itself
-    # is hoverinfo="skip" - so hovering either bar in a day's group shows
-    # ONE combined tooltip for that date instead of two separate ones.
+    # Both traces carry the SAME combined Date/Opened/Closed tooltip for a
+    # given day - each just reaches its own value via %{y} and the OTHER
+    # series' value via customdata, so hovering either bar (not just
+    # Opened, which is all hoverinfo="skip" on Closed used to allow)
+    # shows identical, complete info for that date.
     figure.add_bar(
         name="Opened",
         x=all_dates,
@@ -333,7 +362,14 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         customdata=closed_values,
         hovertemplate="Date: %{x}<br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
-    figure.add_bar(name="Closed", x=all_dates, y=closed_values, marker_color=CLOSED_COLOR, hoverinfo="skip")
+    figure.add_bar(
+        name="Closed",
+        x=all_dates,
+        y=closed_values,
+        marker_color=CLOSED_COLOR,
+        customdata=opened_values,
+        hovertemplate="Date: %{x}<br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
+    )
     figure.update_layout(
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
