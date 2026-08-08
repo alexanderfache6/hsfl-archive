@@ -17,6 +17,8 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data_loader import (
+    CHART_XAXIS_MAX_TICKS,
+    CHART_YAXIS_MAX_TICKS,
     FLEX_ELIGIBLE_POSITIONS,
     build_manager_color_map,
     build_manager_name_resolver,
@@ -409,9 +411,8 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         tick_angle = 0
     else:
         # Single season: keep the per-week labels, thinned to at most
-        # MAX_TICK_LABELS so they don't overlap.
-        MAX_TICK_LABELS = 20
-        tick_step = max(1, -(-len(x_positions) // MAX_TICK_LABELS))
+        # CHART_XAXIS_MAX_TICKS so they don't overlap.
+        tick_step = max(1, -(-len(x_positions) // CHART_XAXIS_MAX_TICKS))
         tick_positions = x_positions[::tick_step]
         tick_text = x_labels[::tick_step]
         tick_angle = 0
@@ -423,6 +424,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         title="Point Differential",
         xaxis=dict(title="Season / Week", tickangle=tick_angle, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
         yaxis_title="Point Differential",
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
         margin=dict(t=40, b=0, l=0, r=0),
     )
 

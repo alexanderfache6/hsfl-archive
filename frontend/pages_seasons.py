@@ -14,6 +14,8 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data_loader import (
+    CHART_XAXIS_MAX_TICKS,
+    CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
     contrasting_text_color,
@@ -578,11 +580,11 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
     figure.update_layout(
         xaxis_title="Week",
         yaxis_title=f"Cumulative {selected_stat}",
-        xaxis=dict(tickmode="linear", dtick=1),
+        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
         # Rank is lower-is-better - reverse so the top of the chart
         # visually matches "doing well", consistent with the Rank column
         # itself (1 = best).
-        yaxis=dict(autorange="reversed") if selected_stat == "Rank" else dict(),
+        yaxis=dict(autorange="reversed", nticks=CHART_YAXIS_MAX_TICKS) if selected_stat == "Rank" else dict(nticks=CHART_YAXIS_MAX_TICKS),
         legend_title_text="Manager",
         height=450,
     )
@@ -715,7 +717,8 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
     figure.update_layout(
         xaxis_title="Week",
         yaxis_title="Overall Breakdown %",
-        xaxis=dict(tickmode="linear", dtick=1),
+        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
         legend_title_text="Manager",
         height=450,
     )
@@ -828,7 +831,8 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
     figure.update_layout(
         xaxis_title="Week",
         yaxis_title="Cumulative Coaching Difference",
-        xaxis=dict(tickmode="linear", dtick=1),
+        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
         legend_title_text="Manager",
         height=450,
     )
@@ -895,8 +899,8 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
     figure.update_layout(
         xaxis_title="Week",
         yaxis_title="True Ranking Score",
-        xaxis=dict(tickmode="linear", dtick=1),
-        yaxis=dict(range=[0, 40]),
+        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
+        yaxis=dict(range=[0, 40], nticks=CHART_YAXIS_MAX_TICKS),
         legend_title_text="Manager",
         height=450,
     )
@@ -1149,7 +1153,10 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
         yaxis_title="Transaction Count",
         # nticks caps the y-axis at ~10 gridlines regardless of the max
         # stacked count - plotly still snaps to "nice" integer steps.
-        yaxis=dict(tickmode="auto", nticks=10, tick0=0),
+        yaxis=dict(tickmode="auto", nticks=CHART_YAXIS_MAX_TICKS, tick0=0),
+        # Same cap on the date axis - a season with many transaction
+        # dates would otherwise show one label per date.
+        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
         legend_title_text="Type",
         hovermode="x unified",
         hoverlabel=dict(namelength=-1),

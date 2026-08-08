@@ -12,6 +12,8 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data_loader import (
+    CHART_XAXIS_MAX_TICKS,
+    CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
     discover_seasons,
@@ -509,8 +511,9 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             barmode="stack",
             hovermode="x unified",
             xaxis_title="Manager",
+            xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
             yaxis_title="Count",
-            yaxis=dict(dtick=1, tickformat="d"),  # counts are integers - no fractional ticks
+            yaxis=dict(tickformat="d", nticks=CHART_YAXIS_MAX_TICKS),  # counts are integers - no fractional ticks
             legend=dict(traceorder="reversed"),  # keep legend reading Champion/Runner-Up/3rd Place despite reversed trace order above
             margin=dict(t=40, b=0, l=0, r=0),
         )
@@ -712,7 +715,9 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
     stat_figure.update_layout(
         title=f"{selected_stat_label} by Manager",
         xaxis_title="Manager",
+        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
         yaxis_title=selected_stat_label,
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
         margin=dict(t=40, b=0, l=0, r=0),
     )
     st.plotly_chart(stat_figure, width="stretch")

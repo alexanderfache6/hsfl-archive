@@ -116,6 +116,13 @@ POINTS_ALLOWED_TOP_TIER = "Points Allowed 35+"
 ROSTER_SETTINGS_KEY_TO_SLOT = {"FLEX": "W/R", "Defensive Back": "DB"}
 NON_STARTING_ROSTER_SETTINGS_KEYS = {"BENCH", "RESERVE"}
 
+# Shared across every Plotly chart in the app - caps how many gridlines/
+# tick labels can appear on an axis before Plotly starts thinning them,
+# so a chart with lots of data points (many weeks, many transaction
+# dates, etc) never clogs up with overlapping labels.
+CHART_YAXIS_MAX_TICKS = 10
+CHART_XAXIS_MAX_TICKS = 20
+
 # ========================================
 # FUNCTIONS
 # ========================================

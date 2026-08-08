@@ -16,6 +16,8 @@ from streamlit_flow.layouts import ManualLayout
 from streamlit_flow.state import StreamlitFlowState
 
 from data_loader import (
+    CHART_XAXIS_MAX_TICKS,
+    CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
     load_nfl_season_lengths,
@@ -37,6 +39,14 @@ STAT_CHART_COLOR = "#6B7280"
 NODE_X_SPACING = 260
 
 ZERO_POINT_GAMES_HELP = "Excludes 0-point games, assuming those are injuries/inactives rather than a real scoring outcome that should drag the average down."
+
+# Yardage stats (stat_id_labels.json's "Pass/Rush/Rec Yds") can run into
+# the hundreds in a single game, so the shared nticks cap alone gives a
+# sensible axis. Every other per-game stat (TDs, Int, Fum, 2PT, Sacks,
+# etc) is a small whole-number count where that same auto-scaling can
+# land on a fractional dtick (e.g. 0.5) - those get a forced
+# integer-only axis instead.
+YARDAGE_STAT_LABELS = {"Pass Yds", "Rush Yds", "Rec Yds"}
 
 UNROSTERED_GAME_COLOR = "#D32F2F"
 
@@ -231,11 +241,11 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     # color regardless of manager.
     starter_colors = [manager_color_map.get(row["manager_id"], STARTER_COLOR) for row in rows]
 
-    # At most 10 y-axis ticks - skip the rest rather than letting a
-    # dtick=1 axis grow a tick per game for high-usage players.
-    MAX_Y_TICKS = 10
+    # At most CHART_YAXIS_MAX_TICKS y-axis ticks - skip the rest rather
+    # than letting a dtick=1 axis grow a tick per game for high-usage
+    # players.
     max_stack_total = max((row["starts"] + row["bench"] for row in rows), default=0)
-    y_dtick = max(1, -(-max_stack_total // MAX_Y_TICKS))
+    y_dtick = max(1, -(-max_stack_total // CHART_YAXIS_MAX_TICKS))
 
     figure = go.Figure()
     figure.add_bar(name="Bench", x=names, y=[row["bench"] for row in rows], marker_color=BENCH_COLOR, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>")
@@ -244,6 +254,7 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
         title="Starts vs Bench by Manager",
         barmode="stack",
         xaxis_title="Manager",
+        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
         yaxis_title="Games",
         yaxis=dict(dtick=y_dtick, tickformat="d"),
         margin=dict(t=40, b=0, l=0, r=0),
@@ -358,6 +369,7 @@ def _render_fantasy_points_per_game_chart(
         title="Fantasy Points per Game",
         xaxis=dict(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
         yaxis_title="Points",
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
         legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.6)", bordercolor="#888888", borderwidth=1),
         margin=dict(t=40, b=0, l=0, r=0),
     )
@@ -424,6 +436,13 @@ def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl
     tick_positions = [sum(positions) / len(positions) for positions in positions_by_season.values()]
     tick_text = [str(season) for season in positions_by_season]
 
+    if stat_label in YARDAGE_STAT_LABELS:
+        y_axis_config = dict(nticks=CHART_YAXIS_MAX_TICKS)
+    else:
+        max_value = max(values, default=0)
+        y_dtick = max(1, -(-int(max_value) // CHART_YAXIS_MAX_TICKS))
+        y_axis_config = dict(dtick=y_dtick, tickformat="d")
+
     figure = go.Figure(
         go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False)
     )
@@ -433,6 +452,7 @@ def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl
         title=f"{stat_label} per Game",
         xaxis=dict(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
         yaxis_title=stat_label,
+        yaxis=y_axis_config,
         legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.6)", bordercolor="#888888", borderwidth=1),
         margin=dict(t=40, b=0, l=0, r=0),
     )

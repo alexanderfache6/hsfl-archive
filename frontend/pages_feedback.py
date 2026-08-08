@@ -20,6 +20,8 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
+from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
+
 # ========================================
 # CONSTANTS
 # ========================================
@@ -321,11 +323,11 @@ def _render_issues_table(issues: list[dict]) -> None:
             {
                 "Issue #": issue["number"],
                 "State": issue["state"].capitalize(),
-                "Issue Type": issue["issue_type"],
+                "Type": issue["issue_type"],
                 "Page": issue["page"],
                 "Title": issue["title"],
-                "Submitted": issue["submitted_at"],
-                "Closed": issue["closed_at"],
+                "Submission Date": issue["submitted_at"],
+                "Closed Date": issue["closed_at"],
                 "URL": issue["url"],
             }
         )
@@ -406,8 +408,8 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",
-        xaxis=dict(type="category"),  # plain "yyyy-mm-dd" tick labels, no time-of-day
-        yaxis=dict(dtick=1),
+        xaxis=dict(type="category", nticks=CHART_XAXIS_MAX_TICKS),  # plain "yyyy-mm-dd" tick labels, no time-of-day
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
         legend_title_text="",
     )
     st.plotly_chart(figure, width="stretch")
