@@ -10,7 +10,6 @@
 - [x] true tab
 - [x] transactions tab
 - [x] create schedule tab for each week
-- [ ] playoff brackets tab, same game view as games
 - [ ] 
 
 # managers
@@ -27,7 +26,6 @@
 # players
 - [x] below fantasy points per game chart show stats per game
 - [x] show all weeks as 0 if player not on fantasy roster across full nfl season
-- [ ] show % fantasy points from touchdowns/etc
 - [x] filter player stats per season
 - [ ] see percentiles across all players
 - [ ] 
