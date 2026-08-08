@@ -1,5 +1,5 @@
 # history
-- [ ] add spreadsheet table stats views
+- [x] add spreadsheet table stats views
 - [ ] 
 
 # seasons
@@ -9,8 +9,9 @@
 - [x] coach tab
 - [x] true tab
 - [x] transactions tab
-- [ ] playoff brackets tab, same game view as games
 - [x] create schedule tab for each week
+- [ ] playoff brackets tab, same game view as games
+- [ ] 
 
 # managers
 - [ ] records and stats vs all other managers, filter all time or year
@@ -21,6 +22,7 @@
 - [ ] highlight missing depth
 - [ ] highlight bye weeks and projected depth
 - [ ] every where team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc
+- [ ] 
 
 # players
 - [x] below fantasy points per game chart show stats per game
@@ -30,7 +32,7 @@
 - [ ] see percentiles across all players
 - [ ] 
 
-# games
+# matchups
 - [x] fix defenses not having (TEAM)
 - [x] once manager 1 selected, remove seasons they didn't participate in
 - [ ] receptions fantasy stat not added in modal

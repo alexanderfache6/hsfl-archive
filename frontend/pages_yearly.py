@@ -1297,7 +1297,7 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                 with team1_highlight_column:
                     _render_schedule_highlight(home, name_resolver, manager_color_map, align="left")
                 with button_column:
-                    if st.button("View Game", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
+                    if st.button("View Matchup", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
                         _go_to_game_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
                 with team2_highlight_column:
                     _render_schedule_highlight(away, name_resolver, manager_color_map, align="right")

@@ -1,4 +1,4 @@
-"""Games tab - filter matchups by season/week/manager/matchup-type and
+"""Matchups tab - filter matchups by season/week/manager/matchup-type and
 page through them as box-score cards. Manager 1 is the "main" manager
 the aggregate win/loss stat is computed against: with only Manager 1
 set, that's their record across every opponent; with both set, it's

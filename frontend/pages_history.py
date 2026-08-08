@@ -9,10 +9,13 @@ import streamlit as st
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
+    discover_seasons,
     load_all_time_champions,
     load_all_time_manager_stats,
     load_all_time_records,
+    load_post_season_stats,
     resolve_manager_name,
+    team_id_to_manager_map,
 )
 
 # Standard real-world medal colors - not a generated categorical palette,
@@ -70,6 +73,61 @@ STREAK_VARIANTS = {
     "postseason_cross_season": "Spans Postseasons",
     "combined_cross_season": "Spans Regular and Postseason",
 }
+
+
+ORDINAL_WORDS = [
+    "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+    "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
+]
+
+
+def _ordinal_word(n: int) -> str:
+    if n < len(ORDINAL_WORDS):
+        return ORDINAL_WORDS[n]
+    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[str, str]) -> None:
+    seasons_sorted = sorted(champions_data["champions"], key=lambda season_entry: season_entry["season"])
+    first_year = seasons_sorted[0]["season"]
+    season_count = len(seasons_sorted)
+
+    # top_3 rows aren't guaranteed to be in rank order, so filter by
+    # rank == 1 rather than indexing [0]. Walking seasons in chronological
+    # order lets the same pass double as each manager's running
+    # championship tally, used below for the reigning champion's ordinal.
+    championship_count_by_manager: dict[str, int] = {}
+    reigning_champion_entry = None
+    for season_entry in seasons_sorted:
+        champion_row = next((row for row in season_entry["top_3"] if row["rank"] == 1), None)
+        if not champion_row:
+            continue
+        manager_id = champion_row.get("manager_id", "")
+        championship_count_by_manager[manager_id] = championship_count_by_manager.get(manager_id, 0) + 1
+        reigning_champion_entry = (manager_id, champion_row, championship_count_by_manager[manager_id])
+
+    champion_count = len(championship_count_by_manager)
+
+    
+
+    if not championship_count_by_manager:
+        return
+
+    most_winning_manager_id = max(championship_count_by_manager, key=lambda manager_id: championship_count_by_manager[manager_id])
+    most_wins = championship_count_by_manager[most_winning_manager_id]
+    most_winning_manager_name = resolve_manager_name(most_winning_manager_id, name_resolver, "")
+
+    reigning_manager_id, reigning_champion_row, reigning_ordinal = reigning_champion_entry
+    reigning_manager_name = resolve_manager_name(
+        reigning_manager_id, name_resolver, reigning_champion_row.get("display_name", "")
+    )
+
+    st.markdown(
+        f"The Music League began in {first_year} and has run for {season_count} successive seasons, featuring {champion_count} champions. "
+        f"The most winning manager is {most_winning_manager_name} with {most_wins} championships. "
+        f"The reigning champion is {reigning_manager_name} who won their {_ordinal_word(reigning_ordinal)} championship."    
+    )
 
 
 def _render_champions_table(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -293,7 +351,7 @@ def _go_to_game(entry: dict) -> None:
 
 
 # score | info | button - wide enough for the button column to fit
-# "View Game"/"View Season" on one line without wrapping (each record row
+# "View Matchup"/"View Season" on one line without wrapping (each record row
 # is itself in a half-width column, so this column only gets ~1/10 of
 # the page width) - same ratio every row so all three still align
 # vertically.
@@ -321,7 +379,7 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
             f"<span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
             unsafe_allow_html=True,
         )
-    button_label = "View Game" if "week" in entry else "View Season"
+    button_label = "View Matchup" if "week" in entry else "View Season"
     if entry.get("manager_id") and button_column.button(button_label, key=f"record_link_{key}_{ordinal}", use_container_width=True):
         _go_to_game(entry)
 
@@ -412,7 +470,10 @@ MANAGER_STAT_COLUMNS = [
     "Championships",
     "Runner-Ups",
     "3rd Place",
+    "Podiums",
     "Last Place",
+    "Best Finish",
+    "Worst Finish",
     "Avg Reg. Finish",
     "Avg Post. Finish",
     "W",
@@ -427,11 +488,14 @@ MANAGER_STAT_COLUMNS = [
 # Full-length labels for chart titles/axes/dropdown - the table itself
 # keeps the compact column headers above (space is tighter there).
 MANAGER_STAT_FULL_LABELS = {
-    "Seasons": "Seasons Played",
-    "Championships": "Championships",
-    "Runner-Ups": "Runner-Up Finishes",
-    "3rd Place": "3rd Place Finishes",
-    "Last Place": "Last Place Finishes",
+    "Seasons": "# Seasons Played",
+    "Championships": "# Championships",
+    "Runner-Ups": "# Runner-Up Finishes",
+    "3rd Place": "# 3rd Place Finishes",
+    "Podiums": "# Podium Finishes",
+    "Last Place": "# Last Place Finishes",
+    "Best Finish": "Best Finish",
+    "Worst Finish": "Worst Finish",
     "Avg Reg. Finish": "Average Regular Season Finish",
     "Avg Post. Finish": "Average Postseason Finish",
     "W": "Wins",
@@ -444,10 +508,30 @@ MANAGER_STAT_FULL_LABELS = {
 }
 
 
+def _best_worst_finish_by_manager() -> dict[str, tuple[int, int]]:
+    """{manager_id: (best final rank, worst final rank)} - the FINAL
+    (post-season) standings rank each season, i.e.
+    post_season_stats.json's final_placements (same source as the Yearly
+    page's Final Standings tab), not the regular-season standings rank."""
+    finishes: dict[str, list[int]] = {}
+    for year in discover_seasons():
+        post_season_stats = load_post_season_stats(year)
+        if not post_season_stats:
+            continue
+        team_info = team_id_to_manager_map(year)
+        for team_id, rank in post_season_stats["final_placements"].items():
+            manager_id = team_info.get(team_id, {}).get("manager_id", "")
+            if manager_id:
+                finishes.setdefault(manager_id, []).append(rank)
+    return {manager_id: (min(ranks), max(ranks)) for manager_id, ranks in finishes.items()}
+
+
 def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: dict[str, str]) -> pd.DataFrame:
+    best_worst_finish = _best_worst_finish_by_manager()
     rows = []
     for manager in manager_stats_data["managers"]:
         combined = manager["combined"]
+        best_finish, worst_finish = best_worst_finish.get(manager["manager_id"], (None, None))
         rows.append(
             {
                 "manager_id": manager["manager_id"],
@@ -456,7 +540,10 @@ def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: 
                 "Championships": manager["championships"],
                 "Runner-Ups": manager["runner_ups"],
                 "3rd Place": manager["third_place_finishes"],
+                "Podiums": manager["championships"] + manager["runner_ups"] + manager["third_place_finishes"],
                 "Last Place": manager["last_place_finishes"],
+                "Best Finish": best_finish,
+                "Worst Finish": worst_finish,
                 "Avg Reg. Finish": manager["average_regular_season_finish"],
                 "Avg Post. Finish": manager["average_post_season_finish"],
                 "W": combined["wins"],
@@ -479,7 +566,8 @@ def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
         width="stretch",
         height=_full_table_height(len(dataframe)),
         column_config={
-            column: st.column_config.NumberColumn(format=fmt) for column, fmt in MANAGER_STAT_COLUMN_FORMATS.items()
+            "Manager": st.column_config.Column(pinned=True),
+            **{column: st.column_config.NumberColumn(format=fmt) for column, fmt in MANAGER_STAT_COLUMN_FORMATS.items()},
         },
     )
 
@@ -566,7 +654,7 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
     # Lower is better for finish stats (1st place beats 10th), so those
     # two sort ascending; every other stat sorts descending (higher is
     # better/more).
-    ascending = selected_stat in ("Avg Reg. Finish", "Avg Post. Finish")
+    ascending = selected_stat in ("Avg Reg. Finish", "Avg Post. Finish", "Best Finish", "Worst Finish")
     chart_data = chart_data.sort_values(selected_stat, ascending=ascending)
     bar_colors = [manager_color_map.get(manager_id, "#4C78A8") for manager_id in chart_data["manager_id"]]
 
@@ -598,6 +686,7 @@ def render_history_page() -> None:
         st.info("No seasons aggregated yet.")
         return
 
+    _render_season_summary_paragraph(champions_data, name_resolver)
     _render_champions_table(champions_data, name_resolver, manager_color_map)
     _render_champion_charts(champions_data, name_resolver, manager_color_map)
     _render_records(records_data, name_resolver)
