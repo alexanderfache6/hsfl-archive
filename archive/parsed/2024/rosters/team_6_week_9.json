@@ -1,0 +1,225 @@
+{
+  "season": 2024,
+  "team_id": "6",
+  "week": 9,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2561036",
+      "player_name": "Sam Darnold",
+      "position": "QB",
+      "nfl_team": "SEA",
+      "opp": "LAR",
+      "points": 19.0,
+      "stats": {
+        "stat_5": "290",
+        "stat_6": "3",
+        "stat_7": "2",
+        "stat_14": "14",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@NYJ",
+      "points": 16.6,
+      "stats": {
+        "stat_14": "106",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "MIA",
+      "points": 9.4,
+      "stats": {
+        "stat_14": "44",
+        "stat_21": "25"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "IND",
+      "points": 18.08,
+      "stats": {
+        "stat_21": "137"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566292",
+      "player_name": "Jaylen Waddle",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "@BUF",
+      "points": 6.6,
+      "stats": {
+        "stat_21": "-4",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2568312",
+      "player_name": "Cade Otton",
+      "position": "TE",
+      "nfl_team": "TB",
+      "opp": "@KC",
+      "points": 17.7,
+      "stats": {
+        "stat_21": "77",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2572351",
+      "player_name": "Tyrone Tracy Jr.",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "WAS",
+      "points": 7.4,
+      "stats": {
+        "stat_14": "66",
+        "stat_21": "3"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2571759",
+      "player_name": "Jake Bates",
+      "position": "K",
+      "nfl_team": "DET",
+      "opp": "@GB",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_36": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100032",
+      "player_name": "Washington Commanders",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@NYG",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "22",
+        "stat_45": "2",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2563722",
+      "player_name": "Joe Burrow",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "LV",
+      "points": 29.14,
+      "stats": {
+        "stat_5": "251",
+        "stat_6": "5",
+        "stat_7": "1",
+        "stat_14": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "LAC",
+      "points": 4.0,
+      "stats": {
+        "stat_14": "39",
+        "stat_21": "-4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "@KC",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "DEN",
+      "points": 24.6,
+      "stats": {
+        "stat_21": "86",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562378",
+      "player_name": "T.J. Hockenson",
+      "position": "TE",
+      "nfl_team": "MIN",
+      "opp": "IND",
+      "points": 4.2,
+      "stats": {
+        "stat_21": "27"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2566127",
+      "player_name": "Nico Collins",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@NYJ",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2550545",
+      "player_name": "Chris Boswell",
+      "position": "K",
+      "nfl_team": "PIT",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100011",
+      "player_name": "Green Bay Packers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "DET",
+      "points": 2.0,
+      "stats": {
+        "stat_54": "18",
+        "stat_45": "1"
+      }
+    }
+  ]
+}

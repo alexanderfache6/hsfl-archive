@@ -1,0 +1,221 @@
+{
+  "season": 2022,
+  "team_id": "3",
+  "week": 2,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "@NO",
+      "points": 9.4,
+      "stats": {
+        "stat_5": "190",
+        "stat_6": "1",
+        "stat_14": "-2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564148",
+      "player_name": "Jonathan Taylor",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "@JAX",
+      "points": 6.8,
+      "stats": {
+        "stat_14": "54",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566448",
+      "player_name": "Najee Harris",
+      "position": "RB",
+      "nfl_team": "PIT",
+      "opp": "NE",
+      "points": 11.4,
+      "stats": {
+        "stat_14": "49",
+        "stat_21": "40"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2558846",
+      "player_name": "Mike Williams",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "@KC",
+      "points": 21.3,
+      "stats": {
+        "stat_21": "113",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562712",
+      "player_name": "Hunter Renfrow",
+      "position": "WR",
+      "nfl_team": "LV",
+      "opp": "ARI",
+      "points": 7.4,
+      "stats": {
+        "stat_21": "59",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2562681",
+      "player_name": "Dawson Knox",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "TEN",
+      "points": 6.1,
+      "stats": {
+        "stat_21": "41"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2563986",
+      "player_name": "AJ Dillon",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "CHI",
+      "points": 9.2,
+      "stats": {
+        "stat_14": "61",
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2559205",
+      "player_name": "Younghoe Koo",
+      "position": "K",
+      "nfl_team": "ATL",
+      "opp": "@LAR",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_36": "1",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "TEN",
+      "points": 20.0,
+      "stats": {
+        "stat_54": "7",
+        "stat_45": "2",
+        "stat_46": "2",
+        "stat_47": "2",
+        "stat_50": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2560835",
+      "player_name": "Rashaad Penny",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "MIN",
+      "points": 1.5,
+      "stats": {
+        "stat_14": "15"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555259",
+      "player_name": "Carson Wentz",
+      "position": "QB",
+      "nfl_team": "WAS",
+      "opp": "@DET",
+      "points": 27.78,
+      "stats": {
+        "stat_5": "337",
+        "stat_6": "3",
+        "stat_7": "1",
+        "stat_14": "23",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557917",
+      "player_name": "Kareem Hunt",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "NYJ",
+      "points": 8.4,
+      "stats": {
+        "stat_14": "58",
+        "stat_21": "16"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "CIN",
+      "points": 17.8,
+      "stats": {
+        "stat_14": "43",
+        "stat_15": "1",
+        "stat_21": "55"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "NYJ",
+      "points": 20.6,
+      "stats": {
+        "stat_21": "101",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560747",
+      "player_name": "Hayden Hurst",
+      "position": "TE",
+      "nfl_team": "CAR",
+      "opp": "@NYG",
+      "points": 4.9,
+      "stats": {
+        "stat_21": "24"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "SEA",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

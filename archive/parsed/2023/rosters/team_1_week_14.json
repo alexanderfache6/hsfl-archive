@@ -1,0 +1,219 @@
+{
+  "season": 2023,
+  "team_id": "1",
+  "week": 14,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2569819",
+      "player_name": "C.J. Stroud",
+      "position": "QB",
+      "nfl_team": "HOU",
+      "opp": "@NYJ",
+      "points": 3.64,
+      "stats": {
+        "stat_5": "91"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566157",
+      "player_name": "Travis Etienne",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "@CLE",
+      "points": 15.2,
+      "stats": {
+        "stat_14": "35",
+        "stat_15": "1",
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2569558",
+      "player_name": "Bijan Robinson",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "TB",
+      "points": 17.3,
+      "stats": {
+        "stat_14": "34",
+        "stat_15": "1",
+        "stat_21": "54"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560888",
+      "player_name": "Courtland Sutton",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "@LAC",
+      "points": 13.7,
+      "stats": {
+        "stat_21": "62",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566127",
+      "player_name": "Nico Collins",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@NYJ",
+      "points": 1.8,
+      "stats": {
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2567496",
+      "player_name": "Jake Ferguson",
+      "position": "TE",
+      "nfl_team": "DAL",
+      "opp": "PHI",
+      "points": 9.7,
+      "stats": {
+        "stat_21": "72"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2570428",
+      "player_name": "Keaton Mitchell",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "LAR",
+      "points": 6.7,
+      "stats": {
+        "stat_14": "54",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2571750",
+      "player_name": "Brandon Aubrey",
+      "position": "K",
+      "nfl_team": "DAL",
+      "opp": "PHI",
+      "points": 21.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "1",
+        "stat_39": "3"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100021",
+      "player_name": "New England Patriots",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@PIT",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "18",
+        "stat_45": "2",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "@KC",
+      "points": 22.6,
+      "stats": {
+        "stat_14": "58",
+        "stat_21": "83",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562734",
+      "player_name": "Devin Singletary",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "GB",
+      "points": 12.5,
+      "stats": {
+        "stat_14": "65",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "@NO",
+      "points": 13.2,
+      "stats": {
+        "stat_21": "57",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557898",
+      "player_name": "Cooper Kupp",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "@BAL",
+      "points": 21.5,
+      "stats": {
+        "stat_21": "115",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "HOU",
+      "points": 15.6,
+      "stats": {
+        "stat_21": "108",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567283",
+      "player_name": "Isaiah Likely",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "LAR",
+      "points": 16.8,
+      "stats": {
+        "stat_21": "83",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100001",
+      "player_name": "Atlanta Falcons",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "TB",
+      "points": 1.0,
+      "stats": {
+        "stat_54": "27",
+        "stat_45": "1"
+      }
+    }
+  ]
+}

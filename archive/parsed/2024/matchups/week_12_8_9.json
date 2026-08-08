@@ -1,0 +1,434 @@
+{
+  "season": 2024,
+  "week": 12,
+  "matchup_id": "2024_w12_8_9",
+  "home": {
+    "team_id": "8",
+    "score": 133.88,
+    "starters": [
+      {
+        "slot": "QB",
+        "player_id": "2560757",
+        "player_name": "L. Jackson",
+        "position": "QB",
+        "nfl_team": "BAL",
+        "opp": "@LAC",
+        "points": 22.58,
+        "stats": {
+          "stat_5": "177",
+          "stat_6": "2",
+          "stat_14": "15",
+          "stat_15": "1"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2560968",
+        "player_name": "S. Barkley",
+        "position": "RB",
+        "nfl_team": "PHI",
+        "opp": "@LAR",
+        "points": 44.2,
+        "stats": {
+          "stat_14": "255",
+          "stat_15": "2",
+          "stat_21": "47"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2562502",
+        "player_name": "D. Montgomery",
+        "position": "RB",
+        "nfl_team": "DET",
+        "opp": "@IND",
+        "points": 16.8,
+        "stats": {
+          "stat_14": "37",
+          "stat_15": "1",
+          "stat_21": "36"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2570341",
+        "player_name": "J. Smith-Njigba",
+        "position": "WR",
+        "nfl_team": "SEA",
+        "opp": "ARI",
+        "points": 16.7,
+        "stats": {
+          "stat_21": "77",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2572216",
+        "player_name": "J. Whittington",
+        "position": "WR",
+        "nfl_team": "LAR",
+        "opp": "PHI",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "TE",
+        "player_id": "2558266",
+        "player_name": "G. Kittle",
+        "position": "TE",
+        "nfl_team": "SF",
+        "opp": "@GB",
+        "points": 17.2,
+        "stats": {
+          "stat_21": "82",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "W/R",
+        "player_id": "2559169",
+        "player_name": "A. Ekeler",
+        "position": "RB",
+        "nfl_team": "WAS",
+        "opp": "DAL",
+        "points": 3.4,
+        "stats": {
+          "stat_14": "22",
+          "stat_21": "2"
+        }
+      },
+      {
+        "slot": "K",
+        "player_id": "2536340",
+        "player_name": "J. Tucker",
+        "position": "K",
+        "nfl_team": "BAL",
+        "opp": "@LAC",
+        "points": 6.0,
+        "stats": {
+          "stat_33": "3",
+          "stat_38": "1"
+        }
+      },
+      {
+        "slot": "DEF",
+        "player_id": "100010",
+        "player_name": "Lions",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "@IND",
+        "points": 7.0,
+        "stats": {
+          "stat_54": "6"
+        }
+      }
+    ],
+    "bench": [
+      {
+        "slot": "BN",
+        "player_id": "2543495",
+        "player_name": "D. Adams",
+        "position": "WR",
+        "nfl_team": "LAR",
+        "opp": "PHI",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2558063",
+        "player_name": "D. Watson",
+        "position": "QB",
+        "nfl_team": "CLE",
+        "opp": "PIT",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2566409",
+        "player_name": "D. Smith",
+        "position": "WR",
+        "nfl_team": "PHI",
+        "opp": "@LAR",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2569642",
+        "player_name": "C. Brown",
+        "position": "RB",
+        "nfl_team": "CIN",
+        "opp": "Bye",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2569912",
+        "player_name": "B. Strange",
+        "position": "TE",
+        "nfl_team": "JAX",
+        "opp": "Bye",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2570335",
+        "player_name": "Z. Charbonnet",
+        "position": "RB",
+        "nfl_team": "SEA",
+        "opp": "ARI",
+        "points": 2.2,
+        "stats": {
+          "stat_14": "22"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "100029",
+        "player_name": "49ers",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "@GB",
+        "points": -2.0,
+        "stats": {
+          "stat_54": "38",
+          "stat_45": "2"
+        }
+      },
+      {
+        "slot": "RES",
+        "player_id": "2562379",
+        "player_name": "M. Brown",
+        "position": "WR",
+        "nfl_team": "KC",
+        "opp": "@CAR",
+        "points": 0.0,
+        "stats": {}
+      }
+    ]
+  },
+  "away": {
+    "team_id": "9",
+    "score": 95.96,
+    "starters": [
+      {
+        "slot": "QB",
+        "player_id": "2560800",
+        "player_name": "B. Mayfield",
+        "position": "QB",
+        "nfl_team": "TB",
+        "opp": "@NYG",
+        "points": 20.66,
+        "stats": {
+          "stat_5": "294",
+          "stat_14": "29",
+          "stat_15": "1",
+          "stat_30": "1"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2556075",
+        "player_name": "D. Henry",
+        "position": "RB",
+        "nfl_team": "BAL",
+        "opp": "@LAC",
+        "points": 14.0,
+        "stats": {
+          "stat_14": "140"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2567862",
+        "player_name": "K. Williams",
+        "position": "RB",
+        "nfl_team": "LAR",
+        "opp": "PHI",
+        "points": 11.2,
+        "stats": {
+          "stat_14": "72",
+          "stat_15": "1",
+          "stat_30": "1"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2562238",
+        "player_name": "A. Brown",
+        "position": "WR",
+        "nfl_team": "PHI",
+        "opp": "@LAR",
+        "points": 19.9,
+        "stats": {
+          "stat_21": "109",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2572477",
+        "player_name": "L. McConkey",
+        "position": "WR",
+        "nfl_team": "LAC",
+        "opp": "BAL",
+        "points": 11.3,
+        "stats": {
+          "stat_21": "83"
+        }
+      },
+      {
+        "slot": "TE",
+        "player_id": "2560995",
+        "player_name": "D. Goedert",
+        "position": "TE",
+        "nfl_team": "PHI",
+        "opp": "@LAR",
+        "points": 3.9,
+        "stats": {
+          "stat_21": "19"
+        }
+      },
+      {
+        "slot": "W/R",
+        "player_id": "2552430",
+        "player_name": "T. Lockett",
+        "position": "WR",
+        "nfl_team": "TEN",
+        "opp": "@HOU",
+        "points": 3.0,
+        "stats": {
+          "stat_21": "20"
+        }
+      },
+      {
+        "slot": "K",
+        "player_id": "2562729",
+        "player_name": "A. Seibert",
+        "position": "K",
+        "nfl_team": "WAS",
+        "opp": "DAL",
+        "points": 8.0,
+        "stats": {
+          "stat_34": "2",
+          "stat_38": "1",
+          "stat_39": "1",
+          "stat_44": "1"
+        }
+      },
+      {
+        "slot": "DEF",
+        "player_id": "100005",
+        "player_name": "Bears",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "MIN",
+        "points": 4.0,
+        "stats": {
+          "stat_54": "30",
+          "stat_45": "3",
+          "stat_47": "1"
+        }
+      }
+    ],
+    "bench": [
+      {
+        "slot": "BN",
+        "player_id": "2558125",
+        "player_name": "P. Mahomes",
+        "position": "QB",
+        "nfl_team": "KC",
+        "opp": "@CAR",
+        "points": 28.76,
+        "stats": {
+          "stat_5": "269",
+          "stat_6": "3",
+          "stat_14": "60"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2563707",
+        "player_name": "D. Mooney",
+        "position": "WR",
+        "nfl_team": "ATL",
+        "opp": "Bye",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2565830",
+        "player_name": "K. Pitts",
+        "position": "TE",
+        "nfl_team": "ATL",
+        "opp": "Bye",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2565836",
+        "player_name": "R. Bateman",
+        "position": "WR",
+        "nfl_team": "BAL",
+        "opp": "@LAC",
+        "points": 11.3,
+        "stats": {
+          "stat_21": "43",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2571883",
+        "player_name": "J. Brooks",
+        "position": "RB",
+        "nfl_team": "CAR",
+        "opp": "KC",
+        "points": 0.7,
+        "stats": {
+          "stat_14": "7"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2559205",
+        "player_name": "Y. Koo",
+        "position": "K",
+        "nfl_team": "ATL",
+        "opp": "Bye",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "100028",
+        "player_name": "Chargers",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "BAL",
+        "points": 0.0,
+        "stats": {
+          "stat_54": "30",
+          "stat_45": "1"
+        }
+      },
+      {
+        "slot": "RES",
+        "player_id": "2558245",
+        "player_name": "H. Butker",
+        "position": "K",
+        "nfl_team": "KC",
+        "opp": "@CAR",
+        "points": 0.0,
+        "stats": {}
+      }
+    ]
+  }
+}

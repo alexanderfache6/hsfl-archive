@@ -1,0 +1,218 @@
+{
+  "season": 2020,
+  "team_id": "10",
+  "week": 10,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2532975",
+      "player_name": "Russell Wilson",
+      "position": "QB",
+      "nfl_team": "SEA",
+      "opp": "@LAR",
+      "points": 9.92,
+      "stats": {
+        "stat_5": "248",
+        "stat_7": "2",
+        "stat_14": "60",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2560711",
+      "player_name": "Chase Edmonds",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "BUF",
+      "points": 9.2,
+      "stats": {
+        "stat_14": "56",
+        "stat_21": "21"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2560770",
+      "player_name": "Ronald Jones",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "@CAR",
+      "points": 24.3,
+      "stats": {
+        "stat_14": "192",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "@CAR",
+      "points": 16.7,
+      "stats": {
+        "stat_21": "77",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2559153",
+      "player_name": "Keelan Cole",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@GB",
+      "points": 13.2,
+      "stats": {
+        "stat_21": "47",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560994",
+      "player_name": "Mike Gesicki",
+      "position": "TE",
+      "nfl_team": "MIA",
+      "opp": "LAC",
+      "points": 5.0,
+      "stats": {
+        "stat_21": "40"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2552382",
+      "player_name": "Malcolm Brown",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "SEA",
+      "points": 18.1,
+      "stats": {
+        "stat_14": "33",
+        "stat_15": "2",
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560993",
+      "player_name": "Daniel Carlson",
+      "position": "K",
+      "nfl_team": "LV",
+      "opp": "DEN",
+      "points": 15.0,
+      "stats": {
+        "stat_33": "4",
+        "stat_36": "2",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100031",
+      "player_name": "Tampa Bay Buccaneers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CAR",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "3",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2555230",
+      "player_name": "Kenyan Drake",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "BUF",
+      "points": 9.4,
+      "stats": {
+        "stat_14": "100",
+        "stat_30": "1",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "LA",
+      "opp": "SEA",
+      "points": 10.48,
+      "stats": {
+        "stat_5": "302",
+        "stat_14": "4",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557898",
+      "player_name": "Cooper Kupp",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "SEA",
+      "points": 7.5,
+      "stats": {
+        "stat_21": "50"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540258",
+      "player_name": "Travis Kelce",
+      "position": "TE",
+      "nfl_team": "KC",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2553728",
+      "player_name": "Raheem Mostert",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "@NO",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561153",
+      "player_name": "Jason Sanders",
+      "position": "K",
+      "nfl_team": "MIA",
+      "opp": "LAC",
+      "points": 13.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_37": "1",
+        "stat_38": "1",
+        "stat_39": "1",
+        "stat_43": "1"
+      }
+    }
+  ]
+}

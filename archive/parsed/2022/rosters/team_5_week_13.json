@@ -1,0 +1,225 @@
+{
+  "season": 2022,
+  "team_id": "5",
+  "week": 13,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560757",
+      "player_name": "Lamar Jackson",
+      "position": "QB",
+      "nfl_team": "BAL",
+      "opp": "DEN",
+      "points": 1.34,
+      "stats": {
+        "stat_5": "11",
+        "stat_14": "9"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "MIA",
+      "points": 24.6,
+      "stats": {
+        "stat_14": "66",
+        "stat_21": "80",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562377",
+      "player_name": "Josh Jacobs",
+      "position": "RB",
+      "nfl_team": "LV",
+      "opp": "LAC",
+      "points": 20.0,
+      "stats": {
+        "stat_14": "144",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2565941",
+      "player_name": "Ja'Marr Chase",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "KC",
+      "points": 13.2,
+      "stats": {
+        "stat_21": "97"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566292",
+      "player_name": "Jaylen Waddle",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "@SF",
+      "points": 1.4,
+      "stats": {
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2566442",
+      "player_name": "Pat Freiermuth",
+      "position": "TE",
+      "nfl_team": "PIT",
+      "opp": "@ATL",
+      "points": 9.1,
+      "stats": {
+        "stat_21": "76"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560781",
+      "player_name": "Christian Kirk",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@DET",
+      "points": 13.4,
+      "stats": {
+        "stat_21": "104"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2558245",
+      "player_name": "Harrison Butker",
+      "position": "K",
+      "nfl_team": "KC",
+      "opp": "@CIN",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_36": "1",
+        "stat_44": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100025",
+      "player_name": "Philadelphia Eagles",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "TEN",
+      "points": 10.0,
+      "stats": {
+        "stat_54": "10",
+        "stat_45": "6"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "IND",
+      "points": 16.8,
+      "stats": {
+        "stat_5": "170",
+        "stat_6": "3",
+        "stat_7": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567685",
+      "player_name": "Dameon Pierce",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "CLE",
+      "points": 11.0,
+      "stats": {
+        "stat_14": "73",
+        "stat_21": "22"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568348",
+      "player_name": "Brian Robinson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "@NYG",
+      "points": 12.1,
+      "stats": {
+        "stat_14": "96",
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "NO",
+      "points": 7.9,
+      "stats": {
+        "stat_21": "59"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563803",
+      "player_name": "Donovan Peoples-Jones",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "@HOU",
+      "points": 5.9,
+      "stats": {
+        "stat_21": "44"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "@MIN",
+      "points": 20.2,
+      "stats": {
+        "stat_21": "162"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2552408",
+      "player_name": "Darren Waller",
+      "position": "TE",
+      "nfl_team": "NYG",
+      "opp": "WAS",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100012",
+      "player_name": "Tennessee Titans",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@PHI",
+      "points": -2.0,
+      "stats": {
+        "stat_54": "35",
+        "stat_45": "2"
+      }
+    }
+  ]
+}

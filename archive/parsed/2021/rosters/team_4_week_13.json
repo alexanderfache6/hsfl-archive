@@ -1,0 +1,227 @@
+{
+  "season": 2021,
+  "team_id": "4",
+  "week": 13,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558125",
+      "player_name": "Patrick Mahomes",
+      "position": "QB",
+      "nfl_team": "KC",
+      "opp": "DEN",
+      "points": 12.56,
+      "stats": {
+        "stat_5": "184",
+        "stat_7": "1",
+        "stat_14": "12",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2555430",
+      "player_name": "Alex Collins",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "SF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562270",
+      "player_name": "Myles Gaskin",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "NYG",
+      "points": 5.9,
+      "stats": {
+        "stat_14": "44",
+        "stat_21": "5"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563707",
+      "player_name": "Darnell Mooney",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "ARI",
+      "points": 5.2,
+      "stats": {
+        "stat_21": "27"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566409",
+      "player_name": "DeVonta Smith",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@NYJ",
+      "points": 2.5,
+      "stats": {
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2562378",
+      "player_name": "T.J. Hockenson",
+      "position": "TE",
+      "nfl_team": "DET",
+      "opp": "MIN",
+      "points": 12.9,
+      "stats": {
+        "stat_21": "49",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "@CHI",
+      "points": 10.2,
+      "stats": {
+        "stat_21": "32",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560993",
+      "player_name": "Daniel Carlson",
+      "position": "K",
+      "nfl_team": "LV",
+      "opp": "WAS",
+      "points": 11.0,
+      "stats": {
+        "stat_37": "2",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100026",
+      "player_name": "Arizona Cardinals",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CHI",
+      "points": 11.0,
+      "stats": {
+        "stat_54": "22",
+        "stat_45": "3",
+        "stat_46": "4"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2553439",
+      "player_name": "Mike Davis",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "TB",
+      "points": 14.9,
+      "stats": {
+        "stat_14": "32",
+        "stat_15": "1",
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "MIN",
+      "points": 19.94,
+      "stats": {
+        "stat_5": "296",
+        "stat_6": "3",
+        "stat_7": "1",
+        "stat_14": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@NO",
+      "points": 14.4,
+      "stats": {
+        "stat_14": "71",
+        "stat_15": "1",
+        "stat_21": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "MIN",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "LAC",
+      "points": 24.3,
+      "stats": {
+        "stat_21": "138",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566376",
+      "player_name": "Kadarius Toney",
+      "position": "WR",
+      "nfl_team": "NYG",
+      "opp": "@MIA",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561027",
+      "player_name": "Tyler Conklin",
+      "position": "TE",
+      "nfl_team": "NYJ",
+      "opp": "PHI",
+      "points": 9.1,
+      "stats": {
+        "stat_21": "56"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2562502",
+      "player_name": "David Montgomery",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "ARI",
+      "points": 26.1,
+      "stats": {
+        "stat_14": "90",
+        "stat_15": "1",
+        "stat_21": "51"
+      }
+    }
+  ]
+}

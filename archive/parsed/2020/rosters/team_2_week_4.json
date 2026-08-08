@@ -1,0 +1,219 @@
+{
+  "season": 2020,
+  "team_id": "2",
+  "week": 4,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "@LV",
+      "points": 25.42,
+      "stats": {
+        "stat_5": "288",
+        "stat_6": "2",
+        "stat_14": "-1",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2555224",
+      "player_name": "Ezekiel Elliott",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "CLE",
+      "points": 16.5,
+      "stats": {
+        "stat_14": "54",
+        "stat_30": "1",
+        "stat_21": "71",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564223",
+      "player_name": "James Robinson",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "@CIN",
+      "points": 12.7,
+      "stats": {
+        "stat_14": "75",
+        "stat_21": "32"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552430",
+      "player_name": "Tyler Lockett",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "@MIA",
+      "points": 4.9,
+      "stats": {
+        "stat_21": "39"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552608",
+      "player_name": "Stefon Diggs",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "@LV",
+      "points": 14.5,
+      "stats": {
+        "stat_21": "115"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2552408",
+      "player_name": "Darren Waller",
+      "position": "TE",
+      "nfl_team": "LV",
+      "opp": "BUF",
+      "points": 11.3,
+      "stats": {
+        "stat_21": "88",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2564271",
+      "player_name": "Clyde Edwards-Helaire",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "NE",
+      "points": 10.6,
+      "stats": {
+        "stat_14": "64",
+        "stat_21": "27"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2507232",
+      "player_name": "Mason Crosby",
+      "position": "K",
+      "nfl_team": "GB",
+      "opp": "ATL",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_34": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100014",
+      "player_name": "Indianapolis Colts",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CHI",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "11",
+        "stat_45": "1",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2539265",
+      "player_name": "Rex Burkhead",
+      "position": "RB",
+      "nfl_team": "NE",
+      "opp": "@KC",
+      "points": 5.5,
+      "stats": {
+        "stat_14": "45",
+        "stat_21": "5"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2556370",
+      "player_name": "Michael Thomas",
+      "position": "WR",
+      "nfl_team": "NO",
+      "opp": "@DET",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543496",
+      "player_name": "Odell Beckham Jr.",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "@DAL",
+      "points": 35.9,
+      "stats": {
+        "stat_21": "81",
+        "stat_22": "2",
+        "stat_14": "73",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563896",
+      "player_name": "Jerry Jeudy",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "@NYJ",
+      "points": 13.1,
+      "stats": {
+        "stat_21": "61",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "CLE",
+      "points": 22.7,
+      "stats": {
+        "stat_21": "79",
+        "stat_22": "2",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100021",
+      "player_name": "New England Patriots",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@KC",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "20",
+        "stat_45": "1",
+        "stat_47": "1"
+      }
+    }
+  ]
+}

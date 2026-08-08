@@ -1,0 +1,227 @@
+{
+  "season": 2020,
+  "team_id": "1",
+  "week": 15,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "@ATL",
+      "points": 23.4,
+      "stats": {
+        "stat_5": "390",
+        "stat_6": "2",
+        "stat_14": "-2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557991",
+      "player_name": "Dalvin Cook",
+      "position": "RB",
+      "nfl_team": "MIN",
+      "opp": "CHI",
+      "points": 24.4,
+      "stats": {
+        "stat_14": "132",
+        "stat_15": "1",
+        "stat_21": "27"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "@NYG",
+      "points": 13.6,
+      "stats": {
+        "stat_14": "50",
+        "stat_15": "1",
+        "stat_21": "16"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2555468",
+      "player_name": "Rashard Higgins",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "@NYG",
+      "points": 9.6,
+      "stats": {
+        "stat_21": "76"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2556214",
+      "player_name": "Tyreek Hill",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@NO",
+      "points": 14.4,
+      "stats": {
+        "stat_21": "53",
+        "stat_22": "1",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560995",
+      "player_name": "Dallas Goedert",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@ARI",
+      "points": 5.9,
+      "stats": {
+        "stat_21": "39"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2564319",
+      "player_name": "Cam Akers",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "NYJ",
+      "points": 6.7,
+      "stats": {
+        "stat_14": "63",
+        "stat_21": "-1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2539227",
+      "player_name": "Dustin Hopkins",
+      "position": "K",
+      "nfl_team": "WAS",
+      "opp": "SEA",
+      "points": 3.0,
+      "stats": {
+        "stat_34": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100008",
+      "player_name": "Dallas Cowboys",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "SF",
+      "points": 15.0,
+      "stats": {
+        "stat_54": "33",
+        "stat_45": "2",
+        "stat_46": "2",
+        "stat_47": "2",
+        "stat_53": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2506581",
+      "player_name": "Ryan Fitzpatrick",
+      "position": "QB",
+      "nfl_team": "MIA",
+      "opp": "NE",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552475",
+      "player_name": "Todd Gurley",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "TB",
+      "points": 2.4,
+      "stats": {
+        "stat_14": "-1",
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563548",
+      "player_name": "J.K. Dobbins",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "JAX",
+      "points": 16.6,
+      "stats": {
+        "stat_14": "64",
+        "stat_15": "1",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560787",
+      "player_name": "Allen Lazard",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "CAR",
+      "points": 8.1,
+      "stats": {
+        "stat_21": "56"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558985",
+      "player_name": "Tim Patrick",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "BUF",
+      "points": 2.9,
+      "stats": {
+        "stat_21": "14"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540158",
+      "player_name": "Zach Ertz",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@ARI",
+      "points": 7.9,
+      "stats": {
+        "stat_21": "69"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2555346",
+      "player_name": "Will Fuller",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@IND",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100032",
+      "player_name": "Washington Football Team",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "SEA",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "20",
+        "stat_46": "1"
+      }
+    }
+  ]
+}

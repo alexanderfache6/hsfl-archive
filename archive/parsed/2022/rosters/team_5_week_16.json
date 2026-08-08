@@ -1,0 +1,218 @@
+{
+  "season": 2022,
+  "team_id": "5",
+  "week": 16,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "@CAR",
+      "points": 25.7,
+      "stats": {
+        "stat_5": "355",
+        "stat_6": "3",
+        "stat_14": "15",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "WAS",
+      "points": 12.8,
+      "stats": {
+        "stat_14": "46",
+        "stat_15": "1",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562377",
+      "player_name": "Josh Jacobs",
+      "position": "RB",
+      "nfl_team": "LV",
+      "opp": "@PIT",
+      "points": 5.5,
+      "stats": {
+        "stat_14": "44",
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2565941",
+      "player_name": "Ja'Marr Chase",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@NE",
+      "points": 9.9,
+      "stats": {
+        "stat_21": "79",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "JAX",
+      "points": 3.0,
+      "stats": {
+        "stat_21": "30",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2552408",
+      "player_name": "Darren Waller",
+      "position": "TE",
+      "nfl_team": "NYG",
+      "opp": "@MIN",
+      "points": 7.8,
+      "stats": {
+        "stat_21": "58"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2566292",
+      "player_name": "Jaylen Waddle",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "GB",
+      "points": 22.8,
+      "stats": {
+        "stat_21": "143",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2558245",
+      "player_name": "Harrison Butker",
+      "position": "K",
+      "nfl_team": "KC",
+      "opp": "SEA",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100025",
+      "player_name": "Philadelphia Eagles",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@DAL",
+      "points": 10.0,
+      "stats": {
+        "stat_54": "40",
+        "stat_45": "6",
+        "stat_46": "1",
+        "stat_50": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2560757",
+      "player_name": "Lamar Jackson",
+      "position": "QB",
+      "nfl_team": "BAL",
+      "opp": "ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "PHI",
+      "points": 27.98,
+      "stats": {
+        "stat_5": "347",
+        "stat_6": "3",
+        "stat_7": "1",
+        "stat_14": "41"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568348",
+      "player_name": "Brian Robinson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "@SF",
+      "points": 5.8,
+      "stats": {
+        "stat_14": "58"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "@ARI",
+      "points": 4.4,
+      "stats": {
+        "stat_21": "29"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560781",
+      "player_name": "Christian Kirk",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@NYJ",
+      "points": 4.1,
+      "stats": {
+        "stat_21": "22",
+        "stat_14": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566442",
+      "player_name": "Pat Freiermuth",
+      "position": "TE",
+      "nfl_team": "PIT",
+      "opp": "LV",
+      "points": 10.1,
+      "stats": {
+        "stat_21": "66"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100012",
+      "player_name": "Tennessee Titans",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "HOU",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "19",
+        "stat_45": "1",
+        "stat_46": "1"
+      }
+    }
+  ]
+}

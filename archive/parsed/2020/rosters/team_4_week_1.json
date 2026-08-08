@@ -1,0 +1,217 @@
+{
+  "season": 2020,
+  "team_id": "4",
+  "week": 1,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2562382",
+      "player_name": "Kyler Murray",
+      "position": "QB",
+      "nfl_team": "ARI",
+      "opp": "@SF",
+      "points": 26.3,
+      "stats": {
+        "stat_5": "230",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "91",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2560968",
+      "player_name": "Saquon Barkley",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "PIT",
+      "points": 9.6,
+      "stats": {
+        "stat_14": "6",
+        "stat_21": "60"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562722",
+      "player_name": "Miles Sanders",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "WR",
+      "player_id": "2558052",
+      "player_name": "Kenny Golladay",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "CHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560813",
+      "player_name": "D.J. Moore",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "LV",
+      "points": 7.4,
+      "stats": {
+        "stat_21": "54"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560995",
+      "player_name": "Dallas Goedert",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 20.1,
+      "stats": {
+        "stat_21": "101",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2552469",
+      "player_name": "Melvin Gordon",
+      "position": "RB",
+      "nfl_team": "DEN",
+      "opp": "TEN",
+      "points": 14.1,
+      "stats": {
+        "stat_14": "78",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2553112",
+      "player_name": "Jason Myers",
+      "position": "K",
+      "nfl_team": "SEA",
+      "opp": "@ATL",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "5",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "TEN",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "16",
+        "stat_45": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2562574",
+      "player_name": "Darrell Henderson",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "DAL",
+      "points": 0.6,
+      "stats": {
+        "stat_14": "6"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2532820",
+      "player_name": "Kirk Cousins",
+      "position": "QB",
+      "nfl_team": "MIN",
+      "opp": "GB",
+      "points": 21.76,
+      "stats": {
+        "stat_5": "259",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "34",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563548",
+      "player_name": "J.K. Dobbins",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "CLE",
+      "points": 14.2,
+      "stats": {
+        "stat_14": "22",
+        "stat_15": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "CHI",
+      "points": 9.8,
+      "stats": {
+        "stat_14": "8",
+        "stat_15": "1",
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560810",
+      "player_name": "Anthony Miller",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "@DET",
+      "points": 15.6,
+      "stats": {
+        "stat_21": "76",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564850",
+      "player_name": "Jalen Reagor",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 6.0,
+      "stats": {
+        "stat_21": "55"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "CLE",
+      "points": 20.3,
+      "stats": {
+        "stat_21": "58",
+        "stat_22": "2"
+      }
+    }
+  ]
+}

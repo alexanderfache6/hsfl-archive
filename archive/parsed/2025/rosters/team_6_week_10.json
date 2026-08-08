@@ -1,0 +1,220 @@
+{
+  "season": 2025,
+  "team_id": "6",
+  "week": 10,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2562299",
+      "player_name": "Daniel Jones",
+      "position": "QB",
+      "nfl_team": "IND",
+      "opp": "ATL",
+      "points": 17.5,
+      "stats": {
+        "stat_5": "255",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "53",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2565295",
+      "player_name": "Rico Dowdle",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "NO",
+      "points": 13.8,
+      "stats": {
+        "stat_14": "53",
+        "stat_15": "1",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "@MIA",
+      "points": 8.2,
+      "stats": {
+        "stat_14": "53",
+        "stat_30": "1",
+        "stat_21": "24"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560888",
+      "player_name": "Courtland Sutton",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "LV",
+      "points": 3.9,
+      "stats": {
+        "stat_21": "24"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "BAL",
+      "points": 5.7,
+      "stats": {
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2569594",
+      "player_name": "Dalton Kincaid",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "@MIA",
+      "points": 4.7,
+      "stats": {
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2567637",
+      "player_name": "Christian Watson",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "PHI",
+      "points": 5.5,
+      "stats": {
+        "stat_21": "45"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2572273",
+      "player_name": "Will Reichard",
+      "position": "K",
+      "nfl_team": "MIN",
+      "opp": "BAL",
+      "points": 7.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_38": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "LV",
+      "points": 14.0,
+      "stats": {
+        "stat_54": "7",
+        "stat_45": "6",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "382",
+      "player_name": "Joe Flacco",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568036",
+      "player_name": "Bam Knight",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "@SEA",
+      "points": 3.8,
+      "stats": {
+        "stat_14": "28",
+        "stat_21": "5"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562721",
+      "player_name": "Deebo Samuel Sr.",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "DET",
+      "points": 10.9,
+      "stats": {
+        "stat_21": "29",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "@MIN",
+      "points": 8.9,
+      "stats": {
+        "stat_21": "14",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2571750",
+      "player_name": "Brandon Aubrey",
+      "position": "K",
+      "nfl_team": "DAL",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100021",
+      "player_name": "New England Patriots",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@TB",
+      "points": 2.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "2"
+      }
+    }
+  ]
+}

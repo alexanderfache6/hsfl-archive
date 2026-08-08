@@ -1,0 +1,204 @@
+{
+  "season": 2022,
+  "team_id": "4",
+  "week": 11,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558125",
+      "player_name": "Patrick Mahomes",
+      "position": "QB",
+      "nfl_team": "KC",
+      "opp": "@LAC",
+      "points": 29.46,
+      "stats": {
+        "stat_5": "329",
+        "stat_6": "3",
+        "stat_14": "23"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2560968",
+      "player_name": "Saquon Barkley",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "DET",
+      "points": 4.5,
+      "stats": {
+        "stat_14": "22",
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566343",
+      "player_name": "Rhamondre Stevenson",
+      "position": "RB",
+      "nfl_team": "NE",
+      "opp": "NYJ",
+      "points": 11.2,
+      "stats": {
+        "stat_14": "26",
+        "stat_21": "56"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562489",
+      "player_name": "Terry McLaurin",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "@HOU",
+      "points": 7.6,
+      "stats": {
+        "stat_21": "55",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564970",
+      "player_name": "Chase Claypool",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "@ATL",
+      "points": 2.1,
+      "stats": {
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2565830",
+      "player_name": "Kyle Pitts",
+      "position": "TE",
+      "nfl_team": "ATL",
+      "opp": "CHI",
+      "points": 5.8,
+      "stats": {
+        "stat_21": "43"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2557994",
+      "player_name": "D'Onta Foreman",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "@ATL",
+      "points": 2.4,
+      "stats": {
+        "stat_14": "24"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2561534",
+      "player_name": "Greg Joseph",
+      "position": "K",
+      "nfl_team": "MIN",
+      "opp": "DAL",
+      "points": 3.0,
+      "stats": {
+        "stat_36": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100014",
+      "player_name": "Indianapolis Colts",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "PHI",
+      "points": 8.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "3",
+        "stat_47": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2557978",
+      "player_name": "James Conner",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "SF",
+      "points": 12.4,
+      "stats": {
+        "stat_14": "42",
+        "stat_15": "1",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566157",
+      "player_name": "Travis Etienne",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568282",
+      "player_name": "Kenneth Walker III",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562495",
+      "player_name": "Parris Campbell",
+      "position": "WR",
+      "nfl_team": "NYG",
+      "opp": "DET",
+      "points": 9.2,
+      "stats": {
+        "stat_21": "67"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543498",
+      "player_name": "Brandin Cooks",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@MIN",
+      "points": 8.5,
+      "stats": {
+        "stat_21": "70"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566409",
+      "player_name": "DeVonta Smith",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@IND",
+      "points": 10.8,
+      "stats": {
+        "stat_21": "78"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2553112",
+      "player_name": "Jason Myers",
+      "position": "K",
+      "nfl_team": "SEA",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

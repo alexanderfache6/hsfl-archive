@@ -1,0 +1,217 @@
+{
+  "season": 2022,
+  "team_id": "7",
+  "week": 15,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2532820",
+      "player_name": "Kirk Cousins",
+      "position": "QB",
+      "nfl_team": "MIN",
+      "opp": "IND",
+      "points": 32.4,
+      "stats": {
+        "stat_5": "460",
+        "stat_6": "4",
+        "stat_7": "2",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2558019",
+      "player_name": "Alvin Kamara",
+      "position": "RB",
+      "nfl_team": "NO",
+      "opp": "ATL",
+      "points": 11.4,
+      "stats": {
+        "stat_14": "91",
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2563548",
+      "player_name": "J.K. Dobbins",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "@CLE",
+      "points": 13.3,
+      "stats": {
+        "stat_14": "125",
+        "stat_21": "3"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2556214",
+      "player_name": "Tyreek Hill",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "@BUF",
+      "points": 17.4,
+      "stats": {
+        "stat_21": "69",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2567637",
+      "player_name": "Christian Watson",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "LAR",
+      "points": 6.6,
+      "stats": {
+        "stat_21": "46"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2555364",
+      "player_name": "Tyler Higbee",
+      "position": "TE",
+      "nfl_team": "LA",
+      "opp": "@GB",
+      "points": 10.7,
+      "stats": {
+        "stat_21": "27",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@TB",
+      "points": 13.8,
+      "stats": {
+        "stat_21": "33",
+        "stat_22": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2506264",
+      "player_name": "Robbie Gould",
+      "position": "K",
+      "nfl_team": "SF",
+      "opp": "@SEA",
+      "points": 3.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100028",
+      "player_name": "Los Angeles Chargers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "TEN",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "14",
+        "stat_45": "4",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2541161",
+      "player_name": "Latavius Murray",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "MIA",
+      "points": 20.7,
+      "stats": {
+        "stat_14": "130",
+        "stat_15": "1",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555230",
+      "player_name": "Kenyan Drake",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "@CLE",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564499",
+      "player_name": "Tua Tagovailoa",
+      "position": "QB",
+      "nfl_team": "MIA",
+      "opp": "@BUF",
+      "points": 18.06,
+      "stats": {
+        "stat_5": "234",
+        "stat_6": "2",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561324",
+      "player_name": "Gus Edwards",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "@CLE",
+      "points": 5.5,
+      "stats": {
+        "stat_14": "55"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565093",
+      "player_name": "Brandon Aiyuk",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "@SEA",
+      "points": 2.9,
+      "stats": {
+        "stat_21": "19"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540145",
+      "player_name": "Cordarrelle Patterson",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "@NO",
+      "points": 11.7,
+      "stats": {
+        "stat_14": "52",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558066",
+      "player_name": "Curtis Samuel",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "NYG",
+      "points": 6.0,
+      "stats": {
+        "stat_21": "44",
+        "stat_14": "1"
+      }
+    }
+  ]
+}

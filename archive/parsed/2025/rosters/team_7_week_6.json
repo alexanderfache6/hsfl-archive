@@ -1,0 +1,221 @@
+{
+  "season": 2025,
+  "team_id": "7",
+  "week": 6,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564007",
+      "player_name": "Jordan Love",
+      "position": "QB",
+      "nfl_team": "GB",
+      "opp": "CIN",
+      "points": 14.96,
+      "stats": {
+        "stat_5": "259",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "26"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2568030",
+      "player_name": "Breece Hall",
+      "position": "RB",
+      "nfl_team": "NYJ",
+      "opp": "DEN",
+      "points": 7.9,
+      "stats": {
+        "stat_14": "59"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2568493",
+      "player_name": "Jaylen Warren",
+      "position": "RB",
+      "nfl_team": "PIT",
+      "opp": "CLE",
+      "points": 7.3,
+      "stats": {
+        "stat_14": "52",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566409",
+      "player_name": "DeVonta Smith",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@NYG",
+      "points": 6.9,
+      "stats": {
+        "stat_21": "49"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2570026",
+      "player_name": "Puka Nacua",
+      "position": "WR",
+      "nfl_team": "LAR",
+      "opp": "@BAL",
+      "points": 3.8,
+      "stats": {
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2569726",
+      "player_name": "Sam LaPorta",
+      "position": "TE",
+      "nfl_team": "DET",
+      "opp": "@KC",
+      "points": 14.0,
+      "stats": {
+        "stat_21": "55",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "@WAS",
+      "points": 24.5,
+      "stats": {
+        "stat_14": "108",
+        "stat_21": "67",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560842",
+      "player_name": "Eddy Pineiro",
+      "position": "K",
+      "nfl_team": "SF",
+      "opp": "@TB",
+      "points": 17.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_36": "1",
+        "stat_38": "1",
+        "stat_39": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@ATL",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "24",
+        "stat_45": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2561036",
+      "player_name": "Sam Darnold",
+      "position": "QB",
+      "nfl_team": "SEA",
+      "opp": "@JAX",
+      "points": 20.0,
+      "stats": {
+        "stat_5": "295",
+        "stat_6": "2",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560757",
+      "player_name": "Lamar Jackson",
+      "position": "QB",
+      "nfl_team": "BAL",
+      "opp": "LAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558105",
+      "player_name": "Chris Godwin Jr.",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "SF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557898",
+      "player_name": "Cooper Kupp",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "@JAX",
+      "points": 11.0,
+      "stats": {
+        "stat_21": "40",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567250",
+      "player_name": "Drake London",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "BUF",
+      "points": 26.8,
+      "stats": {
+        "stat_21": "158",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "LAR",
+      "points": 4.6,
+      "stats": {
+        "stat_21": "24",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2561153",
+      "player_name": "Jason Sanders",
+      "position": "K",
+      "nfl_team": "MIA",
+      "opp": "LAC",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

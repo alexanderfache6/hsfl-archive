@@ -1,0 +1,219 @@
+{
+  "season": 2024,
+  "team_id": "1",
+  "week": 9,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564007",
+      "player_name": "Jordan Love",
+      "position": "QB",
+      "nfl_team": "GB",
+      "opp": "DET",
+      "points": 14.92,
+      "stats": {
+        "stat_5": "273",
+        "stat_7": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562377",
+      "player_name": "Josh Jacobs",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "DET",
+      "points": 11.8,
+      "stats": {
+        "stat_14": "95",
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2569558",
+      "player_name": "Bijan Robinson",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "DAL",
+      "points": 20.0,
+      "stats": {
+        "stat_14": "86",
+        "stat_21": "59"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "HOU",
+      "points": 25.5,
+      "stats": {
+        "stat_21": "90",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2572411",
+      "player_name": "Marvin Harrison Jr.",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "CHI",
+      "points": 2.4,
+      "stats": {
+        "stat_21": "34",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "DEN",
+      "points": 3.6,
+      "stats": {
+        "stat_21": "26"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2572162",
+      "player_name": "Brian Thomas Jr.",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@PHI",
+      "points": 5.2,
+      "stats": {
+        "stat_21": "22",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2556521",
+      "player_name": "Ka'imi Fairbairn",
+      "position": "K",
+      "nfl_team": "HOU",
+      "opp": "@NYJ",
+      "points": 9.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_36": "1",
+        "stat_39": "1",
+        "stat_41": "1",
+        "stat_44": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100022",
+      "player_name": "New Orleans Saints",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CAR",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "1",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2571913",
+      "player_name": "Caleb Williams",
+      "position": "QB",
+      "nfl_team": "CHI",
+      "opp": "@ARI",
+      "points": 9.18,
+      "stats": {
+        "stat_5": "217",
+        "stat_14": "5"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565295",
+      "player_name": "Rico Dowdle",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "NO",
+      "points": 19.2,
+      "stats": {
+        "stat_14": "75",
+        "stat_21": "32",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572546",
+      "player_name": "Bucky Irving",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "@KC",
+      "points": 4.9,
+      "stats": {
+        "stat_14": "24",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567586",
+      "player_name": "Romeo Doubs",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "DET",
+      "points": 4.8,
+      "stats": {
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560854",
+      "player_name": "Calvin Ridley",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "NE",
+      "points": 9.8,
+      "stats": {
+        "stat_21": "73"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567334",
+      "player_name": "Khalil Shakir",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "MIA",
+      "points": 8.0,
+      "stats": {
+        "stat_21": "50"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569768",
+      "player_name": "Tucker Kraft",
+      "position": "TE",
+      "nfl_team": "GB",
+      "opp": "DET",
+      "points": 5.6,
+      "stats": {
+        "stat_21": "34",
+        "stat_14": "2"
+      }
+    }
+  ]
+}

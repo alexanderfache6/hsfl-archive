@@ -1,0 +1,217 @@
+{
+  "season": 2025,
+  "team_id": "2",
+  "week": 4,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2571913",
+      "player_name": "Caleb Williams",
+      "position": "QB",
+      "nfl_team": "CHI",
+      "opp": "@LV",
+      "points": 15.78,
+      "stats": {
+        "stat_5": "212",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "13"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2563548",
+      "player_name": "J.K. Dobbins",
+      "position": "RB",
+      "nfl_team": "DEN",
+      "opp": "CIN",
+      "points": 11.0,
+      "stats": {
+        "stat_14": "101",
+        "stat_21": "4"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567862",
+      "player_name": "Kyren Williams",
+      "position": "RB",
+      "nfl_team": "LAR",
+      "opp": "IND",
+      "points": 8.9,
+      "stats": {
+        "stat_14": "77",
+        "stat_30": "1",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562492",
+      "player_name": "Jakobi Meyers",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@SF",
+      "points": 5.0,
+      "stats": {
+        "stat_21": "30"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2572477",
+      "player_name": "Ladd McConkey",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "@NYG",
+      "points": 1.6,
+      "stats": {
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2567496",
+      "player_name": "Jake Ferguson",
+      "position": "TE",
+      "nfl_team": "DAL",
+      "opp": "GB",
+      "points": 13.5,
+      "stats": {
+        "stat_21": "40",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2572405",
+      "player_name": "Trey Benson",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "SEA",
+      "points": 9.9,
+      "stats": {
+        "stat_14": "35",
+        "stat_21": "19"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2563203",
+      "player_name": "Chase McLaughlin",
+      "position": "K",
+      "nfl_team": "TB",
+      "opp": "PHI",
+      "points": 15.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_38": "1",
+        "stat_39": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100030",
+      "player_name": "Seattle Seahawks",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@ARI",
+      "points": 11.0,
+      "stats": {
+        "stat_54": "20",
+        "stat_45": "6",
+        "stat_46": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2574419",
+      "player_name": "Jaxson Dart",
+      "position": "QB",
+      "nfl_team": "NYG",
+      "opp": "LAC",
+      "points": 19.84,
+      "stats": {
+        "stat_5": "111",
+        "stat_6": "1",
+        "stat_14": "54",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569642",
+      "player_name": "Chase Brown",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "@DEN",
+      "points": 8.6,
+      "stats": {
+        "stat_14": "40",
+        "stat_21": "31"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558019",
+      "player_name": "Alvin Kamara",
+      "position": "RB",
+      "nfl_team": "NO",
+      "opp": "@BUF",
+      "points": 9.2,
+      "stats": {
+        "stat_14": "70",
+        "stat_21": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@DEN",
+      "points": 4.7,
+      "stats": {
+        "stat_21": "32"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565114",
+      "player_name": "Jauan Jennings",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "JAX",
+      "points": 5.4,
+      "stats": {
+        "stat_21": "24",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "GB",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568012",
+      "player_name": "Wan'Dale Robinson",
+      "position": "WR",
+      "nfl_team": "NYG",
+      "opp": "LAC",
+      "points": 2.9,
+      "stats": {
+        "stat_21": "14"
+      }
+    }
+  ]
+}

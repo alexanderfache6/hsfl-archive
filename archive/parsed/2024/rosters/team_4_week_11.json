@@ -1,0 +1,217 @@
+{
+  "season": 2024,
+  "team_id": "4",
+  "week": 11,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2532975",
+      "player_name": "Russell Wilson",
+      "position": "QB",
+      "nfl_team": "NYG",
+      "opp": "Bye",
+      "points": 6.3,
+      "stats": {
+        "stat_5": "205",
+        "stat_7": "1",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564148",
+      "player_name": "Jonathan Taylor",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "@NYJ",
+      "points": 6.5,
+      "stats": {
+        "stat_14": "57",
+        "stat_21": "3"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566448",
+      "player_name": "Najee Harris",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "CIN",
+      "points": 11.3,
+      "stats": {
+        "stat_14": "63",
+        "stat_21": "30"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562685",
+      "player_name": "DK Metcalf",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "BAL",
+      "points": 10.5,
+      "stats": {
+        "stat_21": "70"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2565114",
+      "player_name": "Jauan Jennings",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "SEA",
+      "points": 20.1,
+      "stats": {
+        "stat_21": "91",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2558207",
+      "player_name": "Jonnu Smith",
+      "position": "TE",
+      "nfl_team": "MIA",
+      "opp": "LV",
+      "points": 25.1,
+      "stats": {
+        "stat_21": "101",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560888",
+      "player_name": "Courtland Sutton",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "ATL",
+      "points": 11.3,
+      "stats": {
+        "stat_21": "78"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2570308",
+      "player_name": "Jake Moody",
+      "position": "K",
+      "nfl_team": "SF",
+      "opp": "SEA",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100022",
+      "player_name": "New Orleans Saints",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CLE",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "14",
+        "stat_45": "3"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2562382",
+      "player_name": "Kyler Murray",
+      "position": "QB",
+      "nfl_team": "ARI",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566049",
+      "player_name": "Javonte Williams",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "HOU",
+      "points": 16.7,
+      "stats": {
+        "stat_14": "59",
+        "stat_15": "1",
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2571859",
+      "player_name": "Keon Coleman",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "KC",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569813",
+      "player_name": "Tank Dell",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@DAL",
+      "points": 7.8,
+      "stats": {
+        "stat_21": "54",
+        "stat_14": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562492",
+      "player_name": "Jakobi Meyers",
+      "position": "WR",
+      "nfl_team": "LV",
+      "opp": "@MIA",
+      "points": 6.8,
+      "stats": {
+        "stat_21": "28",
+        "stat_14": "20"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569681",
+      "player_name": "Cedric Tillman",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "@NO",
+      "points": 6.2,
+      "stats": {
+        "stat_21": "47"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568117",
+      "player_name": "Trey McBride",
+      "position": "TE",
+      "nfl_team": "ARI",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2567808",
+      "player_name": "Isiah Pacheco",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "@BUF",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

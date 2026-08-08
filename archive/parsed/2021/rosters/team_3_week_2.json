@@ -1,0 +1,219 @@
+{
+  "season": 2021,
+  "team_id": "3",
+  "week": 2,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "@MIA",
+      "points": 16.66,
+      "stats": {
+        "stat_5": "179",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "35"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564148",
+      "player_name": "Jonathan Taylor",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "LAR",
+      "points": 5.8,
+      "stats": {
+        "stat_14": "51",
+        "stat_21": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564271",
+      "player_name": "Clyde Edwards-Helaire",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "@BAL",
+      "points": 2.6,
+      "stats": {
+        "stat_14": "46",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552430",
+      "player_name": "Tyler Lockett",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "TEN",
+      "points": 27.8,
+      "stats": {
+        "stat_21": "178",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562685",
+      "player_name": "DK Metcalf",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "TEN",
+      "points": 8.3,
+      "stats": {
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "KC",
+      "points": 8.2,
+      "stats": {
+        "stat_21": "57"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2562574",
+      "player_name": "Darrell Henderson",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "@IND",
+      "points": 15.7,
+      "stats": {
+        "stat_14": "53",
+        "stat_15": "1",
+        "stat_21": "29"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2536340",
+      "player_name": "Justin Tucker",
+      "position": "K",
+      "nfl_team": "BAL",
+      "opp": "KC",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100017",
+      "player_name": "Los Angeles Rams",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@IND",
+      "points": 8.0,
+      "stats": {
+        "stat_54": "18",
+        "stat_45": "3",
+        "stat_46": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2553318",
+      "player_name": "James O'Shaughnessy",
+      "position": "TE",
+      "nfl_team": "CHI",
+      "opp": "CIN",
+      "points": 2.9,
+      "stats": {
+        "stat_21": "24"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563722",
+      "player_name": "Joe Burrow",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "@CHI",
+      "points": 10.28,
+      "stats": {
+        "stat_5": "207",
+        "stat_6": "2",
+        "stat_7": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560711",
+      "player_name": "Chase Edmonds",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "BUF",
+      "points": 10.0,
+      "stats": {
+        "stat_14": "46",
+        "stat_21": "29"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565093",
+      "player_name": "Brandon Aiyuk",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "@PHI",
+      "points": 1.1,
+      "stats": {
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543509",
+      "player_name": "Allen Robinson",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "@IND",
+      "points": 9.4,
+      "stats": {
+        "stat_21": "24",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558149",
+      "player_name": "JuJu Smith-Schuster",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@BAL",
+      "points": 13.4,
+      "stats": {
+        "stat_21": "41",
+        "stat_14": "3",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "89802",
+      "player_name": "Ryan Succop",
+      "position": "K",
+      "nfl_team": "TB",
+      "opp": "ATL",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "6",
+        "stat_34": "1"
+      }
+    }
+  ]
+}

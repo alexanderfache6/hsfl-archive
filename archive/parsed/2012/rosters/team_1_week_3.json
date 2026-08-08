@@ -1,0 +1,236 @@
+{
+  "season": 2012,
+  "team_id": "1",
+  "week": 3,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2495455",
+      "player_name": "Cam Newton",
+      "position": "QB",
+      "nfl_team": "CAR",
+      "opp": "NYG",
+      "points": 10.28,
+      "stats": {
+        "stat_5": "242",
+        "stat_7": "3",
+        "stat_14": "6",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "79555",
+      "player_name": "Arian Foster",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@DEN",
+      "points": 16.8,
+      "stats": {
+        "stat_14": "105",
+        "stat_21": "3",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "79607",
+      "player_name": "LeSean McCoy",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@ARI",
+      "points": 7.8,
+      "stats": {
+        "stat_14": "70",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2495450",
+      "player_name": "A.J. Green",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@WAS",
+      "points": 25.4,
+      "stats": {
+        "stat_21": "183",
+        "stat_22": "1",
+        "stat_14": "11"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2495801",
+      "player_name": "Miles Austin",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "TB",
+      "points": 10.7,
+      "stats": {
+        "stat_21": "107"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2505299",
+      "player_name": "Antonio Gates",
+      "position": "TE",
+      "nfl_team": "LAC",
+      "opp": "ATL",
+      "points": 2.2,
+      "stats": {
+        "stat_21": "22"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "497278",
+      "player_name": "Dez Bryant",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "TB",
+      "points": 6.2,
+      "stats": {
+        "stat_21": "62"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2495893",
+      "player_name": "Brandon Marshall",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "LAR",
+      "points": 7.1,
+      "stats": {
+        "stat_21": "71"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2495259",
+      "player_name": "Dan Bailey",
+      "position": "K",
+      "nfl_team": "DAL",
+      "opp": "TB",
+      "points": 10.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_36": "2",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100013",
+      "player_name": "Houston Texans",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@DEN",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "3",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "284",
+      "player_name": "Darren McFadden",
+      "position": "RB",
+      "nfl_team": "LV",
+      "opp": "PIT",
+      "points": 17.5,
+      "stats": {
+        "stat_14": "113",
+        "stat_15": "1",
+        "stat_21": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "497328",
+      "player_name": "Demaryius Thomas",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "HOU",
+      "points": 1.4,
+      "stats": {
+        "stat_21": "34",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495438",
+      "player_name": "Kyle Rudolph",
+      "position": "TE",
+      "nfl_team": "MIN",
+      "opp": "SF",
+      "points": 15.6,
+      "stats": {
+        "stat_21": "36",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495454",
+      "player_name": "Julio Jones",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "@LAC",
+      "points": 12.7,
+      "stats": {
+        "stat_21": "67",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2506106",
+      "player_name": "Larry Fitzgerald",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "PHI",
+      "points": 17.4,
+      "stats": {
+        "stat_21": "114",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2507790",
+      "player_name": "Andre Brown",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "@CAR",
+      "points": 25.0,
+      "stats": {
+        "stat_14": "113",
+        "stat_15": "2",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "79860",
+      "player_name": "Matthew Stafford",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "@TEN",
+      "points": 18.32,
+      "stats": {
+        "stat_5": "278",
+        "stat_6": "1",
+        "stat_14": "12",
+        "stat_32": "1"
+      }
+    }
+  ]
+}

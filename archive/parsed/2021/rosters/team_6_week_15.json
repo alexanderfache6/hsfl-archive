@@ -1,0 +1,227 @@
+{
+  "season": 2021,
+  "team_id": "6",
+  "week": 15,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "@NYG",
+      "points": 12.58,
+      "stats": {
+        "stat_5": "217",
+        "stat_6": "1",
+        "stat_14": "-1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557973",
+      "player_name": "Leonard Fournette",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "NO",
+      "points": 10.2,
+      "stats": {
+        "stat_14": "34",
+        "stat_21": "33"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2558116",
+      "player_name": "Aaron Jones",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "@BAL",
+      "points": 14.0,
+      "stats": {
+        "stat_14": "58",
+        "stat_21": "12",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "LV",
+      "points": 1.8,
+      "stats": {
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562721",
+      "player_name": "Deebo Samuel",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "ATL",
+      "points": 16.9,
+      "stats": {
+        "stat_21": "60",
+        "stat_14": "29",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2562383",
+      "player_name": "Noah Fant",
+      "position": "TE",
+      "nfl_team": "SEA",
+      "opp": "@LAR",
+      "points": 8.2,
+      "stats": {
+        "stat_21": "57"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "@CHI",
+      "points": 12.7,
+      "stats": {
+        "stat_21": "47",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2561534",
+      "player_name": "Greg Joseph",
+      "position": "K",
+      "nfl_team": "MIN",
+      "opp": "@CHI",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100029",
+      "player_name": "San Francisco 49ers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "ATL",
+      "points": 9.0,
+      "stats": {
+        "stat_54": "13",
+        "stat_45": "3",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2562377",
+      "player_name": "Josh Jacobs",
+      "position": "RB",
+      "nfl_team": "LV",
+      "opp": "@CLE",
+      "points": 10.9,
+      "stats": {
+        "stat_14": "52",
+        "stat_21": "42"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565093",
+      "player_name": "Brandon Aiyuk",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "ATL",
+      "points": 4.1,
+      "stats": {
+        "stat_21": "36"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560735",
+      "player_name": "Michael Gallup",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@NYG",
+      "points": 4.7,
+      "stats": {
+        "stat_21": "32"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565830",
+      "player_name": "Kyle Pitts",
+      "position": "TE",
+      "nfl_team": "ATL",
+      "opp": "@SF",
+      "points": 9.7,
+      "stats": {
+        "stat_21": "77"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2556370",
+      "player_name": "Michael Thomas",
+      "position": "WR",
+      "nfl_team": "NO",
+      "opp": "@TB",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "89802",
+      "player_name": "Ryan Succop",
+      "position": "K",
+      "nfl_team": "TB",
+      "opp": "NO",
+      "points": 0.0,
+      "stats": {
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CIN",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "15",
+        "stat_45": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100020",
+      "player_name": "Minnesota Vikings",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CHI",
+      "points": 15.0,
+      "stats": {
+        "stat_54": "9",
+        "stat_45": "3",
+        "stat_47": "3"
+      }
+    }
+  ]
+}

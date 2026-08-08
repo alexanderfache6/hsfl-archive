@@ -1,0 +1,218 @@
+{
+  "season": 2021,
+  "team_id": "8",
+  "week": 4,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2506363",
+      "player_name": "Aaron Rodgers",
+      "position": "QB",
+      "nfl_team": "GB",
+      "opp": "PIT",
+      "points": 24.12,
+      "stats": {
+        "stat_5": "248",
+        "stat_6": "2",
+        "stat_14": "2",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "JAX",
+      "points": 13.2,
+      "stats": {
+        "stat_14": "67",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2558865",
+      "player_name": "Chris Carson",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "@SF",
+      "points": 3.6,
+      "stats": {
+        "stat_14": "30",
+        "stat_21": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "497322",
+      "player_name": "Emmanuel Sanders",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "HOU",
+      "points": 12.6,
+      "stats": {
+        "stat_21": "74",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543498",
+      "player_name": "Brandin Cooks",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@BUF",
+      "points": 7.2,
+      "stats": {
+        "stat_21": "47"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2543767",
+      "player_name": "Logan Thomas",
+      "position": "TE",
+      "nfl_team": "WAS",
+      "opp": "@ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2559169",
+      "player_name": "Austin Ekeler",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "LV",
+      "points": 28.0,
+      "stats": {
+        "stat_14": "117",
+        "stat_15": "1",
+        "stat_21": "28",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2507232",
+      "player_name": "Mason Crosby",
+      "position": "K",
+      "nfl_team": "GB",
+      "opp": "PIT",
+      "points": 9.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_36": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100031",
+      "player_name": "Tampa Bay Buccaneers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@NE",
+      "points": 9.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "4",
+        "stat_46": "1",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "71265",
+      "player_name": "Jared Cook",
+      "position": "TE",
+      "nfl_team": "LAC",
+      "opp": "LV",
+      "points": 16.0,
+      "stats": {
+        "stat_21": "70",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "@NE",
+      "points": 11.06,
+      "stats": {
+        "stat_5": "269",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552469",
+      "player_name": "Melvin Gordon",
+      "position": "RB",
+      "nfl_team": "DEN",
+      "opp": "BAL",
+      "points": 7.7,
+      "stats": {
+        "stat_14": "56",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552033",
+      "player_name": "Jameis Winston",
+      "position": "QB",
+      "nfl_team": "NO",
+      "opp": "NYG",
+      "points": 13.04,
+      "stats": {
+        "stat_5": "226",
+        "stat_6": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "@GB",
+      "points": 19.7,
+      "stats": {
+        "stat_21": "92",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2562729",
+      "player_name": "Austin Seibert",
+      "position": "K",
+      "nfl_team": "DET",
+      "opp": "@CHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100011",
+      "player_name": "Green Bay Packers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "PIT",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "2",
+        "stat_46": "1",
+        "stat_47": "1"
+      }
+    }
+  ]
+}

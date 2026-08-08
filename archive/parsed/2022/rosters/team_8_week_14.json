@@ -1,0 +1,218 @@
+{
+  "season": 2022,
+  "team_id": "8",
+  "week": 14,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "@SF",
+      "points": 10.12,
+      "stats": {
+        "stat_5": "253",
+        "stat_6": "1",
+        "stat_7": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "CLE",
+      "points": 11.6,
+      "stats": {
+        "stat_14": "96",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562722",
+      "player_name": "Miles Sanders",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@SEA",
+      "points": 28.0,
+      "stats": {
+        "stat_14": "144",
+        "stat_15": "2",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552430",
+      "player_name": "Tyler Lockett",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "CAR",
+      "points": 14.5,
+      "stats": {
+        "stat_21": "60",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560907",
+      "player_name": "Marquez Valdes-Scantling",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@DEN",
+      "points": 2.5,
+      "stats": {
+        "stat_21": "20"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "@PIT",
+      "points": 2.7,
+      "stats": {
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2558204",
+      "player_name": "Jamaal Williams",
+      "position": "RB",
+      "nfl_team": "NO",
+      "opp": "Bye",
+      "points": 3.7,
+      "stats": {
+        "stat_14": "37"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2533444",
+      "player_name": "Randy Bullock",
+      "position": "K",
+      "nfl_team": "TEN",
+      "opp": "JAX",
+      "points": 2.0,
+      "stats": {
+        "stat_33": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100021",
+      "player_name": "New England Patriots",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@ARI",
+      "points": 20.0,
+      "stats": {
+        "stat_54": "13",
+        "stat_45": "6",
+        "stat_46": "1",
+        "stat_47": "1",
+        "stat_50": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2552466",
+      "player_name": "Marcus Mariota",
+      "position": "QB",
+      "nfl_team": "PHI",
+      "opp": "@NYG",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2506363",
+      "player_name": "Aaron Rodgers",
+      "position": "QB",
+      "nfl_team": "NYJ",
+      "opp": "@BUF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565276",
+      "player_name": "Antonio Gibson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562492",
+      "player_name": "Jakobi Meyers",
+      "position": "WR",
+      "nfl_team": "LV",
+      "opp": "@LAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557986",
+      "player_name": "David Njoku",
+      "position": "TE",
+      "nfl_team": "CLE",
+      "opp": "@CIN",
+      "points": 15.2,
+      "stats": {
+        "stat_21": "59",
+        "stat_22": "1",
+        "stat_14": "-2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560965",
+      "player_name": "Mike Badgley",
+      "position": "K",
+      "nfl_team": "DET",
+      "opp": "MIN",
+      "points": 10.0,
+      "stats": {
+        "stat_33": "4",
+        "stat_38": "2",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2550545",
+      "player_name": "Chris Boswell",
+      "position": "K",
+      "nfl_team": "PIT",
+      "opp": "BAL",
+      "points": 2.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100011",
+      "player_name": "Green Bay Packers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

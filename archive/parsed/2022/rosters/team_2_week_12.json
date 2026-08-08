@@ -1,0 +1,221 @@
+{
+  "season": 2022,
+  "team_id": "2",
+  "week": 12,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564832",
+      "player_name": "Jalen Hurts",
+      "position": "QB",
+      "nfl_team": "PHI",
+      "opp": "GB",
+      "points": 29.82,
+      "stats": {
+        "stat_5": "153",
+        "stat_6": "2",
+        "stat_14": "157"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "TB",
+      "points": 19.7,
+      "stats": {
+        "stat_14": "116",
+        "stat_15": "1",
+        "stat_21": "16"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562502",
+      "player_name": "David Montgomery",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "BUF",
+      "points": 12.8,
+      "stats": {
+        "stat_14": "79",
+        "stat_21": "34"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552608",
+      "player_name": "Stefon Diggs",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "@DET",
+      "points": 17.7,
+      "stats": {
+        "stat_21": "77",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "NYG",
+      "points": 14.7,
+      "stats": {
+        "stat_21": "106",
+        "stat_14": "11"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560866",
+      "player_name": "Dalton Schultz",
+      "position": "TE",
+      "nfl_team": "HOU",
+      "opp": "@MIA",
+      "points": 17.1,
+      "stats": {
+        "stat_21": "31",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2566538",
+      "player_name": "Elijah Mitchell",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "NO",
+      "points": 5.3,
+      "stats": {
+        "stat_14": "35",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560993",
+      "player_name": "Daniel Carlson",
+      "position": "K",
+      "nfl_team": "LV",
+      "opp": "@SEA",
+      "points": 10.0,
+      "stats": {
+        "stat_33": "4",
+        "stat_36": "1",
+        "stat_37": "1",
+        "stat_44": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CAR",
+      "points": 2.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2557973",
+      "player_name": "Leonard Fournette",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "@CLE",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566163",
+      "player_name": "Trevor Lawrence",
+      "position": "QB",
+      "nfl_team": "JAX",
+      "opp": "BAL",
+      "points": 24.94,
+      "stats": {
+        "stat_5": "321",
+        "stat_6": "3",
+        "stat_14": "1",
+        "stat_30": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567862",
+      "player_name": "Kyren Williams",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "@KC",
+      "points": 7.5,
+      "stats": {
+        "stat_14": "35",
+        "stat_21": "25"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543496",
+      "player_name": "Odell Beckham Jr.",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "@JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567643",
+      "player_name": "Treylon Burks",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "CIN",
+      "points": 17.0,
+      "stats": {
+        "stat_21": "70"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563896",
+      "player_name": "Jerry Jeudy",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "@CAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566433",
+      "player_name": "Rondale Moore",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "LAC",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2560995",
+      "player_name": "Dallas Goedert",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "GB",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

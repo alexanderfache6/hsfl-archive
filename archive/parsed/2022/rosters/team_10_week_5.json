@@ -1,0 +1,217 @@
+{
+  "season": 2022,
+  "team_id": "10",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2562382",
+      "player_name": "Kyler Murray",
+      "position": "QB",
+      "nfl_team": "ARI",
+      "opp": "PHI",
+      "points": 16.2,
+      "stats": {
+        "stat_5": "250",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "42"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2555224",
+      "player_name": "Ezekiel Elliott",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@LAR",
+      "points": 7.8,
+      "stats": {
+        "stat_14": "78"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2558116",
+      "player_name": "Aaron Jones",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "NYG",
+      "points": 9.0,
+      "stats": {
+        "stat_14": "63",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "@BUF",
+      "points": 8.5,
+      "stats": {
+        "stat_21": "60"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562685",
+      "player_name": "DK Metcalf",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "@NO",
+      "points": 15.3,
+      "stats": {
+        "stat_21": "88",
+        "stat_22": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2540258",
+      "player_name": "Travis Kelce",
+      "position": "TE",
+      "nfl_team": "KC",
+      "opp": "LV",
+      "points": 30.0,
+      "stats": {
+        "stat_21": "25",
+        "stat_22": "4"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2562379",
+      "player_name": "Marquise Brown",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "PHI",
+      "points": 17.8,
+      "stats": {
+        "stat_21": "78",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2507225",
+      "player_name": "Nick Folk",
+      "position": "K",
+      "nfl_team": "NE",
+      "opp": "DET",
+      "points": 17.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_36": "1",
+        "stat_37": "3",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100008",
+      "player_name": "Dallas Cowboys",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@LAR",
+      "points": 23.0,
+      "stats": {
+        "stat_54": "10",
+        "stat_45": "5",
+        "stat_46": "1",
+        "stat_47": "2",
+        "stat_50": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2532956",
+      "player_name": "Ryan Tannehill",
+      "position": "QB",
+      "nfl_team": "TEN",
+      "opp": "@WAS",
+      "points": 11.54,
+      "stats": {
+        "stat_5": "181",
+        "stat_6": "1",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552409",
+      "player_name": "DeVante Parker",
+      "position": "WR",
+      "nfl_team": "NE",
+      "opp": "DET",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558123",
+      "player_name": "Marlon Mack",
+      "position": "RB",
+      "nfl_team": "DEN",
+      "opp": "IND",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2553728",
+      "player_name": "Raheem Mostert",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "@NYJ",
+      "points": 18.7,
+      "stats": {
+        "stat_14": "113",
+        "stat_15": "1",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555466",
+      "player_name": "Tyler Boyd",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@BAL",
+      "points": 4.7,
+      "stats": {
+        "stat_21": "32"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562580",
+      "player_name": "Mecole Hardman",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "MIA",
+      "points": 10.0,
+      "stats": {
+        "stat_21": "73",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562383",
+      "player_name": "Noah Fant",
+      "position": "TE",
+      "nfl_team": "SEA",
+      "opp": "@NO",
+      "points": 6.4,
+      "stats": {
+        "stat_21": "49"
+      }
+    }
+  ]
+}

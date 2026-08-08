@@ -1,0 +1,226 @@
+{
+  "season": 2022,
+  "team_id": "1",
+  "week": 2,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "TEN",
+      "points": 29.68,
+      "stats": {
+        "stat_5": "317",
+        "stat_6": "4",
+        "stat_14": "10"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2559169",
+      "player_name": "Austin Ekeler",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "@KC",
+      "points": 13.9,
+      "stats": {
+        "stat_14": "39",
+        "stat_21": "55"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "MIN",
+      "points": 15.7,
+      "stats": {
+        "stat_14": "56",
+        "stat_21": "31",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2557898",
+      "player_name": "Cooper Kupp",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "ATL",
+      "points": 26.3,
+      "stats": {
+        "stat_21": "108",
+        "stat_22": "2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2558149",
+      "player_name": "JuJu Smith-Schuster",
+      "position": "WR",
+      "nfl_team": "NE",
+      "opp": "@PIT",
+      "points": 2.5,
+      "stats": {
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2540158",
+      "player_name": "Zach Ertz",
+      "position": "TE",
+      "nfl_team": "ARI",
+      "opp": "@LV",
+      "points": 11.5,
+      "stats": {
+        "stat_21": "75"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560888",
+      "player_name": "Courtland Sutton",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "HOU",
+      "points": 16.2,
+      "stats": {
+        "stat_21": "122",
+        "stat_14": "5"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2567487",
+      "player_name": "Cade York",
+      "position": "K",
+      "nfl_team": "CLE",
+      "opp": "NYJ",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_34": "1",
+        "stat_36": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "HOU",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "9",
+        "stat_45": "3"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2568030",
+      "player_name": "Breece Hall",
+      "position": "RB",
+      "nfl_team": "NYJ",
+      "opp": "@CLE",
+      "points": 12.5,
+      "stats": {
+        "stat_14": "50",
+        "stat_21": "10",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560742",
+      "player_name": "Nyheim Hines",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "TEN",
+      "points": 7.7,
+      "stats": {
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565093",
+      "player_name": "Brandon Aiyuk",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "SEA",
+      "points": 8.8,
+      "stats": {
+        "stat_21": "63"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565836",
+      "player_name": "Rashod Bateman",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "MIA",
+      "points": 18.8,
+      "stats": {
+        "stat_21": "108",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560787",
+      "player_name": "Allen Lazard",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "@CLE",
+      "points": 8.3,
+      "stats": {
+        "stat_21": "13",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564136",
+      "player_name": "Michael Pittman",
+      "position": "WR",
+      "nfl_team": "IND",
+      "opp": "@JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "@LV",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "NYJ",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "31",
+        "stat_45": "2",
+        "stat_47": "1"
+      }
+    }
+  ]
+}

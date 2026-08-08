@@ -1,0 +1,205 @@
+{
+  "season": 2020,
+  "team_id": "6",
+  "week": 9,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504775",
+      "player_name": "Drew Brees",
+      "position": "QB",
+      "nfl_team": "NO",
+      "opp": "@TB",
+      "points": 22.68,
+      "stats": {
+        "stat_5": "222",
+        "stat_6": "4",
+        "stat_14": "-2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2553435",
+      "player_name": "David Johnson",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@JAX",
+      "points": 1.6,
+      "stats": {
+        "stat_14": "16"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2558116",
+      "player_name": "Aaron Jones",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "@SF",
+      "points": 10.4,
+      "stats": {
+        "stat_14": "58",
+        "stat_21": "21"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543509",
+      "player_name": "Allen Robinson",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "@TEN",
+      "points": 11.6,
+      "stats": {
+        "stat_21": "81"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "DET",
+      "points": 7.9,
+      "stats": {
+        "stat_21": "64"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "497240",
+      "player_name": "Rob Gronkowski",
+      "position": "TE",
+      "nfl_team": "TB",
+      "opp": "NO",
+      "points": 0.7,
+      "stats": {
+        "stat_21": "2"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2558149",
+      "player_name": "JuJu Smith-Schuster",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "@DAL",
+      "points": 18.3,
+      "stats": {
+        "stat_21": "93",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2536340",
+      "player_name": "Justin Tucker",
+      "position": "K",
+      "nfl_team": "BAL",
+      "opp": "@IND",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100019",
+      "player_name": "Miami Dolphins",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@ARI",
+      "points": 8.0,
+      "stats": {
+        "stat_54": "31",
+        "stat_45": "1",
+        "stat_47": "1",
+        "stat_50": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2561146",
+      "player_name": "Boston Scott",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562574",
+      "player_name": "Darrell Henderson",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563722",
+      "player_name": "Joe Burrow",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "PIT",
+      "points": 10.0,
+      "stats": {
+        "stat_21": "67",
+        "stat_14": "8"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2562721",
+      "player_name": "Deebo Samuel",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "GB",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558245",
+      "player_name": "Harrison Butker",
+      "position": "K",
+      "nfl_team": "KC",
+      "opp": "CAR",
+      "points": 11.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_34": "1",
+        "stat_37": "1",
+        "stat_39": "1",
+        "stat_43": "1"
+      }
+    }
+  ]
+}

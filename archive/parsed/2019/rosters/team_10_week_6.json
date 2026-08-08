@@ -1,0 +1,192 @@
+{
+  "season": 2019,
+  "team_id": "10",
+  "week": 6,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504775",
+      "player_name": "Drew Brees",
+      "position": "QB",
+      "nfl_team": "NO",
+      "opp": "@JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557973",
+      "player_name": "Leonard Fournette",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "NO",
+      "points": 14.8,
+      "stats": {
+        "stat_14": "72",
+        "stat_21": "46"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "238498",
+      "player_name": "Julian Edelman",
+      "position": "WR",
+      "nfl_team": "NE",
+      "opp": "NYG",
+      "points": 15.8,
+      "stats": {
+        "stat_21": "113"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@KC",
+      "points": 12.0,
+      "stats": {
+        "stat_21": "55",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2540258",
+      "player_name": "Travis Kelce",
+      "position": "TE",
+      "nfl_team": "KC",
+      "opp": "HOU",
+      "points": 7.8,
+      "stats": {
+        "stat_21": "58"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2559947",
+      "player_name": "Phillip Lindsay",
+      "position": "RB",
+      "nfl_team": "DEN",
+      "opp": "TEN",
+      "points": 14.5,
+      "stats": {
+        "stat_14": "70",
+        "stat_15": "1",
+        "stat_21": "5"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2558172",
+      "player_name": "Jake Elliott",
+      "position": "K",
+      "nfl_team": "PHI",
+      "opp": "@MIN",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_38": "1",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100002",
+      "player_name": "Baltimore Ravens",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CIN",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "2",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "79607",
+      "player_name": "LeSean McCoy",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "HOU",
+      "points": 5.4,
+      "stats": {
+        "stat_14": "44"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495455",
+      "player_name": "Cam Newton",
+      "position": "QB",
+      "nfl_team": "CAR",
+      "opp": "@TB",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2506106",
+      "player_name": "Larry Fitzgerald",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "ATL",
+      "points": 9.9,
+      "stats": {
+        "stat_21": "69"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2533040",
+      "player_name": "Mohamed Sanu",
+      "position": "WR",
+      "nfl_team": "NE",
+      "opp": "NYG",
+      "points": 4.4,
+      "stats": {
+        "stat_21": "29"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540160",
+      "player_name": "Jordan Reed",
+      "position": "TE",
+      "nfl_team": "WAS",
+      "opp": "@MIA",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2553895",
+      "player_name": "Adam Humphries",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "@DEN",
+      "points": 7.7,
+      "stats": {
+        "stat_21": "47"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555230",
+      "player_name": "Kenyan Drake",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "ATL",
+      "points": 12.0,
+      "stats": {
+        "stat_14": "40",
+        "stat_21": "30"
+      }
+    }
+  ]
+}

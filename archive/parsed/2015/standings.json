@@ -1,0 +1,176 @@
+{
+  "season": 2015,
+  "final_standings": [
+    {
+      "rank": 1,
+      "team_id": "2",
+      "team_name": "The Back-to-Back Champs",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1286.34,
+      "points_against": 1190.44,
+      "champion": true
+    },
+    {
+      "rank": 2,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 11,
+      "losses": 3,
+      "ties": 0,
+      "points_for": 1419.76,
+      "points_against": 1094.5,
+      "champion": false
+    },
+    {
+      "rank": 3,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1194.2,
+      "points_against": 1392.5,
+      "champion": false
+    },
+    {
+      "rank": 4,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1257.64,
+      "points_against": 1158.82,
+      "champion": false
+    },
+    {
+      "rank": 5,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 2,
+      "losses": 12,
+      "ties": 0,
+      "points_for": 1034.36,
+      "points_against": 1349.36,
+      "champion": false
+    },
+    {
+      "rank": 6,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1143.3,
+      "points_against": 1197.22,
+      "champion": false
+    },
+    {
+      "rank": 7,
+      "team_id": "5",
+      "team_name": "Los Chunches",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1327.38,
+      "points_against": 1180.06,
+      "champion": false
+    },
+    {
+      "rank": 8,
+      "team_id": "6",
+      "team_name": "May Luck Be With You",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1171.4,
+      "points_against": 1271.48,
+      "champion": false
+    }
+  ],
+  "regular_season_standings": [
+    {
+      "rank": 1,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 11,
+      "losses": 3,
+      "ties": 0,
+      "points_for": 1419.76,
+      "points_against": 1094.5
+    },
+    {
+      "rank": 2,
+      "team_id": "2",
+      "team_name": "The Back-to-Back Champs",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1286.34,
+      "points_against": 1190.44
+    },
+    {
+      "rank": 3,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1257.64,
+      "points_against": 1158.82
+    },
+    {
+      "rank": 4,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1194.2,
+      "points_against": 1392.5
+    },
+    {
+      "rank": 5,
+      "team_id": "5",
+      "team_name": "Los Chunches",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1327.38,
+      "points_against": 1180.06
+    },
+    {
+      "rank": 6,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1143.3,
+      "points_against": 1197.22
+    },
+    {
+      "rank": 7,
+      "team_id": "6",
+      "team_name": "May Luck Be With You",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1171.4,
+      "points_against": 1271.48
+    },
+    {
+      "rank": 8,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 2,
+      "losses": 12,
+      "ties": 0,
+      "points_for": 1034.36,
+      "points_against": 1349.36
+    }
+  ],
+  "notes": "final_standings wins/losses/points are regular-season figures (site doesn't separately expose postseason W-L) - see playoffs.json for actual postseason results."
+}

@@ -1,0 +1,400 @@
+{
+  "highest_weekly_score": [
+    {
+      "season": 2023,
+      "week": 5,
+      "manager_id": "5047260",
+      "display_name": "Sam",
+      "value": 192.02
+    },
+    {
+      "season": 2020,
+      "week": 3,
+      "manager_id": "4771952",
+      "display_name": "Forrest",
+      "value": 184.0
+    },
+    {
+      "season": 2022,
+      "week": 11,
+      "manager_id": "4313251",
+      "display_name": "William",
+      "value": 181.02
+    }
+  ],
+  "lowest_weekly_score": [
+    {
+      "season": 2017,
+      "week": 9,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": 4.3
+    },
+    {
+      "season": 2018,
+      "week": 12,
+      "manager_id": "4313251",
+      "display_name": "William",
+      "value": 11.5
+    },
+    {
+      "season": 2017,
+      "week": 14,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": 11.7
+    }
+  ],
+  "highest_season_points_for": [
+    {
+      "season": 2021,
+      "manager_id": "2772924",
+      "display_name": "Ashwin",
+      "value": 2099.34
+    },
+    {
+      "season": 2021,
+      "manager_id": "4313251",
+      "display_name": "William",
+      "value": 2045.7
+    },
+    {
+      "season": 2025,
+      "manager_id": "22090227",
+      "display_name": "Liam",
+      "value": 2016.46
+    }
+  ],
+  "lowest_season_points_for": [
+    {
+      "season": 2017,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": 889.5
+    },
+    {
+      "season": 2016,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": 1051.42
+    },
+    {
+      "season": 2018,
+      "manager_id": "4329175",
+      "display_name": "Jeremy",
+      "value": 1164.9
+    }
+  ],
+  "longest_win_streak": [
+    {
+      "season": 2021,
+      "week": 15,
+      "start_week": 1,
+      "manager_id": "2772924",
+      "display_name": "Ashwin",
+      "streak": "W15",
+      "value": 15
+    },
+    {
+      "season": 2020,
+      "week": 12,
+      "start_week": 6,
+      "manager_id": "4771952",
+      "display_name": "Forrest",
+      "streak": "W7",
+      "value": 7
+    },
+    {
+      "season": 2022,
+      "week": 7,
+      "start_week": 1,
+      "manager_id": "2772924",
+      "display_name": "Ashwin",
+      "streak": "W7",
+      "value": 7
+    }
+  ],
+  "longest_losing_streak": [
+    {
+      "season": 2017,
+      "week": 14,
+      "start_week": 4,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "streak": "L11",
+      "value": 11
+    },
+    {
+      "season": 2018,
+      "week": 9,
+      "start_week": 1,
+      "manager_id": "4313251",
+      "display_name": "William",
+      "streak": "L9",
+      "value": 9
+    },
+    {
+      "season": 2021,
+      "week": 15,
+      "start_week": 7,
+      "manager_id": "22251112",
+      "display_name": "Cole",
+      "streak": "L9",
+      "value": 9
+    }
+  ],
+  "best_coaching_season": [
+    {
+      "season": 2025,
+      "manager_id": "22089610",
+      "display_name": "Alex",
+      "value": -116.54
+    },
+    {
+      "season": 2019,
+      "manager_id": "22089610",
+      "display_name": "Alex",
+      "value": -129.82
+    },
+    {
+      "season": 2025,
+      "manager_id": "22251112",
+      "display_name": "Cole",
+      "value": -134.06
+    }
+  ],
+  "worst_coaching_season": [
+    {
+      "season": 2017,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": -574.3
+    },
+    {
+      "season": 2017,
+      "manager_id": "4313251",
+      "display_name": "William",
+      "value": -387.14
+    },
+    {
+      "season": 2021,
+      "manager_id": "22251112",
+      "display_name": "Cole",
+      "value": -386.48
+    }
+  ],
+  "most_players_started_season": [
+    {
+      "season": 2020,
+      "manager_id": "2772924",
+      "display_name": "Ashwin",
+      "value": 47
+    },
+    {
+      "season": 2022,
+      "manager_id": "2772924",
+      "display_name": "Ashwin",
+      "value": 40
+    },
+    {
+      "season": 2022,
+      "manager_id": "4771952",
+      "display_name": "Forrest",
+      "value": 40
+    }
+  ],
+  "fewest_players_started_season": [
+    {
+      "season": 2018,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": 8
+    },
+    {
+      "season": 2019,
+      "manager_id": "4329175",
+      "display_name": "Jeremy",
+      "value": 9
+    },
+    {
+      "season": 2017,
+      "manager_id": "5067652",
+      "display_name": "Drew",
+      "value": 11
+    }
+  ],
+  "longest_win_streak_regular_cross_season": [
+    {
+      "manager_id": "2772924",
+      "value": 25,
+      "start_season": 2020,
+      "start_week": 12,
+      "season": 2022,
+      "week": 7,
+      "display_name": "Ashwin"
+    },
+    {
+      "manager_id": "4771952",
+      "value": 7,
+      "start_season": 2020,
+      "start_week": 6,
+      "season": 2020,
+      "week": 12,
+      "display_name": "Forrest"
+    },
+    {
+      "manager_id": "4250937",
+      "value": 6,
+      "start_season": 2015,
+      "start_week": 2,
+      "season": 2015,
+      "week": 7,
+      "display_name": "Michael"
+    }
+  ],
+  "longest_losing_streak_regular_cross_season": [
+    {
+      "manager_id": "4313251",
+      "value": 15,
+      "start_season": 2017,
+      "start_week": 9,
+      "season": 2018,
+      "week": 9,
+      "display_name": "William"
+    },
+    {
+      "manager_id": "5067652",
+      "value": 11,
+      "start_season": 2017,
+      "start_week": 4,
+      "season": 2017,
+      "week": 14,
+      "display_name": "Drew"
+    },
+    {
+      "manager_id": "22251112",
+      "value": 11,
+      "start_season": 2021,
+      "start_week": 7,
+      "season": 2022,
+      "week": 2,
+      "display_name": "Cole"
+    }
+  ],
+  "longest_win_streak_postseason_cross_season": [
+    {
+      "manager_id": "4250937",
+      "value": 8,
+      "start_season": 2014,
+      "start_week": 15,
+      "season": 2017,
+      "week": 16,
+      "display_name": "Michael"
+    },
+    {
+      "manager_id": "5049083",
+      "value": 5,
+      "start_season": 2019,
+      "start_week": 16,
+      "season": 2021,
+      "week": 17,
+      "display_name": "Alex"
+    },
+    {
+      "manager_id": "22090227",
+      "value": 5,
+      "start_season": 2023,
+      "start_week": 17,
+      "season": 2025,
+      "week": 17,
+      "display_name": "Liam"
+    }
+  ],
+  "longest_losing_streak_postseason_cross_season": [
+    {
+      "manager_id": "5049083",
+      "value": 8,
+      "start_season": 2014,
+      "start_week": 15,
+      "season": 2017,
+      "week": 16,
+      "display_name": "Alex"
+    },
+    {
+      "manager_id": "2772924",
+      "value": 5,
+      "start_season": 2018,
+      "start_week": 15,
+      "season": 2020,
+      "week": 15,
+      "display_name": "Ashwin"
+    },
+    {
+      "manager_id": "4329175",
+      "value": 4,
+      "start_season": 2022,
+      "start_week": 17,
+      "season": 2024,
+      "week": 16,
+      "display_name": "Jeremy"
+    }
+  ],
+  "longest_win_streak_combined_cross_season": [
+    {
+      "manager_id": "2772924",
+      "value": 16,
+      "start_season": 2020,
+      "start_week": 16,
+      "season": 2021,
+      "week": 15,
+      "display_name": "Ashwin"
+    },
+    {
+      "manager_id": "4250937",
+      "value": 8,
+      "start_season": 2016,
+      "start_week": 15,
+      "season": 2017,
+      "week": 6,
+      "display_name": "Michael"
+    },
+    {
+      "manager_id": "4313251",
+      "value": 7,
+      "start_season": 2021,
+      "start_week": 12,
+      "season": 2022,
+      "week": 1,
+      "display_name": "William"
+    }
+  ],
+  "longest_losing_streak_combined_cross_season": [
+    {
+      "manager_id": "4313251",
+      "value": 11,
+      "start_season": 2022,
+      "start_week": 15,
+      "season": 2023,
+      "week": 9,
+      "display_name": "William"
+    },
+    {
+      "manager_id": "5067652",
+      "value": 11,
+      "start_season": 2017,
+      "start_week": 4,
+      "season": 2017,
+      "week": 14,
+      "display_name": "Drew"
+    },
+    {
+      "manager_id": "22251112",
+      "value": 11,
+      "start_season": 2021,
+      "start_week": 7,
+      "season": 2022,
+      "week": 2,
+      "display_name": "Cole"
+    }
+  ]
+}

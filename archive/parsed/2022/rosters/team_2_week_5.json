@@ -1,0 +1,225 @@
+{
+  "season": 2022,
+  "team_id": "2",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564832",
+      "player_name": "Jalen Hurts",
+      "position": "QB",
+      "nfl_team": "PHI",
+      "opp": "@ARI",
+      "points": 27.66,
+      "stats": {
+        "stat_5": "239",
+        "stat_14": "61",
+        "stat_15": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557973",
+      "player_name": "Leonard Fournette",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "ATL",
+      "points": 30.9,
+      "stats": {
+        "stat_14": "56",
+        "stat_15": "1",
+        "stat_21": "83",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "LAC",
+      "points": 25.4,
+      "stats": {
+        "stat_14": "134",
+        "stat_15": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552608",
+      "player_name": "Stefon Diggs",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "PIT",
+      "points": 20.2,
+      "stats": {
+        "stat_21": "102",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@LAR",
+      "points": 7.8,
+      "stats": {
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560995",
+      "player_name": "Dallas Goedert",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@ARI",
+      "points": 13.5,
+      "stats": {
+        "stat_21": "95"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560938",
+      "player_name": "Jeff Wilson",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "@NYJ",
+      "points": 21.7,
+      "stats": {
+        "stat_14": "120",
+        "stat_15": "1",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560993",
+      "player_name": "Daniel Carlson",
+      "position": "K",
+      "nfl_team": "LV",
+      "opp": "@KC",
+      "points": 15.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_38": "1",
+        "stat_39": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100005",
+      "player_name": "Chicago Bears",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@MIN",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "29",
+        "stat_45": "1",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2532975",
+      "player_name": "Russell Wilson",
+      "position": "QB",
+      "nfl_team": "DEN",
+      "opp": "IND",
+      "points": 11.16,
+      "stats": {
+        "stat_5": "274",
+        "stat_7": "2",
+        "stat_14": "22"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561099",
+      "player_name": "Mike Boone",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@JAX",
+      "points": 10.0,
+      "stats": {
+        "stat_14": "38",
+        "stat_21": "47"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563896",
+      "player_name": "Jerry Jeudy",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "IND",
+      "points": 6.8,
+      "stats": {
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567250",
+      "player_name": "Drake London",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "@TB",
+      "points": 5.5,
+      "stats": {
+        "stat_21": "35"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "MIA",
+      "points": 4.2,
+      "stats": {
+        "stat_21": "27"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566442",
+      "player_name": "Pat Freiermuth",
+      "position": "TE",
+      "nfl_team": "PIT",
+      "opp": "@BUF",
+      "points": 2.2,
+      "stats": {
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560866",
+      "player_name": "Dalton Schultz",
+      "position": "TE",
+      "nfl_team": "HOU",
+      "opp": "@JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2566538",
+      "player_name": "Elijah Mitchell",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "@CAR",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+{
+  "season": 2021,
+  "team_id": "9",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560757",
+      "player_name": "Lamar Jackson",
+      "position": "QB",
+      "nfl_team": "BAL",
+      "opp": "IND",
+      "points": 41.88,
+      "stats": {
+        "stat_5": "442",
+        "stat_6": "4",
+        "stat_14": "62",
+        "stat_30": "1",
+        "stat_32": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2540145",
+      "player_name": "Cordarrelle Patterson",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "NYJ",
+      "points": 14.9,
+      "stats": {
+        "stat_14": "54",
+        "stat_21": "60"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2556075",
+      "player_name": "Derrick Henry",
+      "position": "RB",
+      "nfl_team": "TEN",
+      "opp": "@JAX",
+      "points": 31.0,
+      "stats": {
+        "stat_14": "130",
+        "stat_15": "3"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2508061",
+      "player_name": "Antonio Brown",
+      "position": "WR",
+      "nfl_team": "",
+      "opp": "Bye",
+      "points": 27.9,
+      "stats": {
+        "stat_21": "124",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552415",
+      "player_name": "Jamison Crowder",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "@KC",
+      "points": 6.4,
+      "stats": {
+        "stat_21": "24",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560995",
+      "player_name": "Dallas Goedert",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@CAR",
+      "points": 3.8,
+      "stats": {
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2558204",
+      "player_name": "Jamaal Williams",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "@MIN",
+      "points": 7.5,
+      "stats": {
+        "stat_14": "57",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2559205",
+      "player_name": "Younghoe Koo",
+      "position": "K",
+      "nfl_team": "ATL",
+      "opp": "NYJ",
+      "points": 11.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_37": "1",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100005",
+      "player_name": "Chicago Bears",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@LV",
+      "points": 9.0,
+      "stats": {
+        "stat_54": "9",
+        "stat_45": "3",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2495454",
+      "player_name": "Julio Jones",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "@JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543499",
+      "player_name": "Derek Carr",
+      "position": "QB",
+      "nfl_team": "LV",
+      "opp": "CHI",
+      "points": 7.24,
+      "stats": {
+        "stat_5": "206",
+        "stat_7": "1",
+        "stat_14": "10"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562281",
+      "player_name": "Damien Harris",
+      "position": "RB",
+      "nfl_team": "NE",
+      "opp": "@HOU",
+      "points": 9.8,
+      "stats": {
+        "stat_14": "58",
+        "stat_15": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560742",
+      "player_name": "Nyheim Hines",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "@BAL",
+      "points": 1.8,
+      "stats": {
+        "stat_14": "18"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2556462",
+      "player_name": "Robby Anderson",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "PHI",
+      "points": 4.0,
+      "stats": {
+        "stat_21": "30"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564970",
+      "player_name": "Chase Claypool",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "DEN",
+      "points": 21.5,
+      "stats": {
+        "stat_21": "130",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2559270",
+      "player_name": "Robert Tonyan",
+      "position": "TE",
+      "nfl_team": "GB",
+      "opp": "@CIN",
+      "points": 1.3,
+      "stats": {
+        "stat_21": "8"
+      }
+    }
+  ]
+}

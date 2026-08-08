@@ -1,0 +1,176 @@
+{
+  "season": 2014,
+  "final_standings": [
+    {
+      "rank": 1,
+      "team_id": "2",
+      "team_name": "The Brady Bunch",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1267.7,
+      "points_against": 1261.26,
+      "champion": true
+    },
+    {
+      "rank": 2,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1305.48,
+      "points_against": 1179.12,
+      "champion": false
+    },
+    {
+      "rank": 3,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1192.46,
+      "points_against": 1228.86,
+      "champion": false
+    },
+    {
+      "rank": 4,
+      "team_id": "6",
+      "team_name": "Your Happiest Nightmare",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1371.12,
+      "points_against": 1271.08,
+      "champion": false
+    },
+    {
+      "rank": 5,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1175.68,
+      "points_against": 1390.14,
+      "champion": false
+    },
+    {
+      "rank": 6,
+      "team_id": "5",
+      "team_name": "It's Miller Time",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1273.28,
+      "points_against": 1301.6,
+      "champion": false
+    },
+    {
+      "rank": 7,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1255.12,
+      "points_against": 1212.98,
+      "champion": false
+    },
+    {
+      "rank": 8,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1376.34,
+      "points_against": 1372.14,
+      "champion": false
+    }
+  ],
+  "regular_season_standings": [
+    {
+      "rank": 1,
+      "team_id": "6",
+      "team_name": "Your Happiest Nightmare",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1371.12,
+      "points_against": 1271.08
+    },
+    {
+      "rank": 2,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1192.46,
+      "points_against": 1228.86
+    },
+    {
+      "rank": 3,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1305.48,
+      "points_against": 1179.12
+    },
+    {
+      "rank": 4,
+      "team_id": "2",
+      "team_name": "The Brady Bunch",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1267.7,
+      "points_against": 1261.26
+    },
+    {
+      "rank": 5,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1255.12,
+      "points_against": 1212.98
+    },
+    {
+      "rank": 6,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1376.34,
+      "points_against": 1372.14
+    },
+    {
+      "rank": 7,
+      "team_id": "5",
+      "team_name": "It's Miller Time",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1273.28,
+      "points_against": 1301.6
+    },
+    {
+      "rank": 8,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1175.68,
+      "points_against": 1390.14
+    }
+  ],
+  "notes": "final_standings wins/losses/points are regular-season figures (site doesn't separately expose postseason W-L) - see playoffs.json for actual postseason results."
+}

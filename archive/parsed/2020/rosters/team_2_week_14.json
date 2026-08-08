@@ -1,0 +1,231 @@
+{
+  "season": 2020,
+  "team_id": "2",
+  "week": 14,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "PIT",
+      "points": 18.32,
+      "stats": {
+        "stat_5": "238",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "28"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2559169",
+      "player_name": "Austin Ekeler",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "ATL",
+      "points": 19.1,
+      "stats": {
+        "stat_14": "79",
+        "stat_21": "67"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564223",
+      "player_name": "James Robinson",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "TEN",
+      "points": 10.3,
+      "stats": {
+        "stat_14": "67",
+        "stat_21": "16"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552608",
+      "player_name": "Stefon Diggs",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "PIT",
+      "points": 24.1,
+      "stats": {
+        "stat_21": "130",
+        "stat_22": "1",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "@BUF",
+      "points": 6.0,
+      "stats": {
+        "stat_21": "40"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2552408",
+      "player_name": "Darren Waller",
+      "position": "TE",
+      "nfl_team": "LV",
+      "opp": "IND",
+      "points": 11.0,
+      "stats": {
+        "stat_21": "75"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2552430",
+      "player_name": "Tyler Lockett",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "NYJ",
+      "points": 7.7,
+      "stats": {
+        "stat_21": "52"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2561153",
+      "player_name": "Jason Sanders",
+      "position": "K",
+      "nfl_team": "MIA",
+      "opp": "KC",
+      "points": 9.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_37": "1",
+        "stat_38": "1",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100005",
+      "player_name": "Chicago Bears",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "HOU",
+      "points": 17.0,
+      "stats": {
+        "stat_54": "7",
+        "stat_45": "7",
+        "stat_47": "2",
+        "stat_49": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2543488",
+      "player_name": "Jarvis Landry",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "BAL",
+      "points": 14.68,
+      "stats": {
+        "stat_21": "52"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555224",
+      "player_name": "Ezekiel Elliott",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@CIN",
+      "points": 6.9,
+      "stats": {
+        "stat_14": "48",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555464",
+      "player_name": "DeAndre Washington",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "KC",
+      "points": 6.2,
+      "stats": {
+        "stat_14": "35",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2556370",
+      "player_name": "Michael Thomas",
+      "position": "WR",
+      "nfl_team": "NO",
+      "opp": "@PHI",
+      "points": 12.4,
+      "stats": {
+        "stat_21": "84"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564271",
+      "player_name": "Clyde Edwards-Helaire",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "@MIA",
+      "points": 11.6,
+      "stats": {
+        "stat_14": "32",
+        "stat_21": "59"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2562270",
+      "player_name": "Myles Gaskin",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "KC",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "BAL",
+      "points": 2.0,
+      "stats": {
+        "stat_54": "45",
+        "stat_45": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100017",
+      "player_name": "Los Angeles Rams",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "NE",
+      "points": 21.0,
+      "stats": {
+        "stat_54": "3",
+        "stat_45": "6",
+        "stat_46": "1",
+        "stat_50": "1"
+      }
+    }
+  ]
+}

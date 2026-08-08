@@ -1,0 +1,203 @@
+{
+  "season": 2018,
+  "team_id": "2",
+  "week": 11,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558125",
+      "player_name": "Patrick Mahomes",
+      "position": "QB",
+      "nfl_team": "KC",
+      "opp": "@LAR",
+      "points": 35.92,
+      "stats": {
+        "stat_5": "478",
+        "stat_6": "6",
+        "stat_7": "3",
+        "stat_14": "28",
+        "stat_30": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2555224",
+      "player_name": "Ezekiel Elliott",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@ATL",
+      "points": 26.1,
+      "stats": {
+        "stat_14": "122",
+        "stat_15": "1",
+        "stat_21": "79"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2532865",
+      "player_name": "T.Y. Hilton",
+      "position": "WR",
+      "nfl_team": "IND",
+      "opp": "TEN",
+      "points": 27.5,
+      "stats": {
+        "stat_21": "155",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543496",
+      "player_name": "Odell Beckham",
+      "position": "WR",
+      "nfl_team": "NYG",
+      "opp": "TB",
+      "points": 14.5,
+      "stats": {
+        "stat_21": "74",
+        "stat_22": "1",
+        "stat_14": "11"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2540232",
+      "player_name": "Jack Doyle",
+      "position": "TE",
+      "nfl_team": "IND",
+      "opp": "TEN",
+      "points": 4.3,
+      "stats": {
+        "stat_21": "43"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2557991",
+      "player_name": "Dalvin Cook",
+      "position": "RB",
+      "nfl_team": "MIN",
+      "opp": "@CHI",
+      "points": -1.0,
+      "stats": {
+        "stat_14": "12",
+        "stat_30": "1",
+        "stat_21": "-2"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2556601",
+      "player_name": "Wil Lutz",
+      "position": "K",
+      "nfl_team": "NO",
+      "opp": "PHI",
+      "points": 12.0,
+      "stats": {
+        "stat_33": "6",
+        "stat_35": "1",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100026",
+      "player_name": "Arizona Cardinals",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "LV",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "4"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "497328",
+      "player_name": "Demaryius Thomas",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@WAS",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2532884",
+      "player_name": "Marvin Jones",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "CAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2533034",
+      "player_name": "Lamar Miller",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@WAS",
+      "points": 10.8,
+      "stats": {
+        "stat_14": "86",
+        "stat_21": "22"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543457",
+      "player_name": "Sammy Watkins",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@LAR",
+      "points": 0.4,
+      "stats": {
+        "stat_21": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558123",
+      "player_name": "Marlon Mack",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "TEN",
+      "points": 12.9,
+      "stats": {
+        "stat_14": "61",
+        "stat_15": "1",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@ATL",
+      "points": 3.6,
+      "stats": {
+        "stat_21": "36"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558194",
+      "player_name": "Josh Reynolds",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "KC",
+      "points": 14.0,
+      "stats": {
+        "stat_21": "80",
+        "stat_22": "1"
+      }
+    }
+  ]
+}

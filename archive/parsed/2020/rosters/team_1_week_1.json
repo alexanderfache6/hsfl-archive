@@ -1,0 +1,222 @@
+{
+  "season": 2020,
+  "team_id": "1",
+  "week": 1,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504775",
+      "player_name": "Drew Brees",
+      "position": "QB",
+      "nfl_team": "NO",
+      "opp": "TB",
+      "points": 14.4,
+      "stats": {
+        "stat_5": "160",
+        "stat_6": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2552475",
+      "player_name": "Todd Gurley",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "SEA",
+      "points": 12.7,
+      "stats": {
+        "stat_14": "56",
+        "stat_15": "1",
+        "stat_21": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557991",
+      "player_name": "Dalvin Cook",
+      "position": "RB",
+      "nfl_team": "MIN",
+      "opp": "GB",
+      "points": 21.3,
+      "stats": {
+        "stat_14": "50",
+        "stat_15": "2",
+        "stat_21": "-2",
+        "stat_32": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2532865",
+      "player_name": "T.Y. Hilton",
+      "position": "WR",
+      "nfl_team": "IND",
+      "opp": "@JAX",
+      "points": 7.3,
+      "stats": {
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2556214",
+      "player_name": "Tyreek Hill",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "HOU",
+      "points": 13.1,
+      "stats": {
+        "stat_21": "46",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2540158",
+      "player_name": "Zach Ertz",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 9.3,
+      "stats": {
+        "stat_21": "18",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "1581",
+      "player_name": "DeSean Jackson",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 5.6,
+      "stats": {
+        "stat_21": "46"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2550545",
+      "player_name": "Chris Boswell",
+      "position": "K",
+      "nfl_team": "PIT",
+      "opp": "@NYG",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_34": "1",
+        "stat_37": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100029",
+      "player_name": "San Francisco 49ers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "ARI",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "24",
+        "stat_45": "2",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "71265",
+      "player_name": "Jared Cook",
+      "position": "TE",
+      "nfl_team": "NO",
+      "opp": "TB",
+      "points": 10.5,
+      "stats": {
+        "stat_21": "80"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495455",
+      "player_name": "Cam Newton",
+      "position": "QB",
+      "nfl_team": "NE",
+      "opp": "MIA",
+      "points": 25.7,
+      "stats": {
+        "stat_5": "155",
+        "stat_14": "75",
+        "stat_15": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2507164",
+      "player_name": "Adrian Peterson",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "CHI",
+      "points": 12.9,
+      "stats": {
+        "stat_14": "93",
+        "stat_21": "21"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552415",
+      "player_name": "Jamison Crowder",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "@BUF",
+      "points": 21.0,
+      "stats": {
+        "stat_21": "115",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555346",
+      "player_name": "Will Fuller",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "@KC",
+      "points": 15.2,
+      "stats": {
+        "stat_21": "112"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "@BAL",
+      "points": 5.1,
+      "stats": {
+        "stat_14": "60",
+        "stat_30": "1",
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560787",
+      "player_name": "Allen Lazard",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "@MIN",
+      "points": 16.2,
+      "stats": {
+        "stat_21": "63",
+        "stat_22": "1",
+        "stat_14": "19"
+      }
+    }
+  ]
+}

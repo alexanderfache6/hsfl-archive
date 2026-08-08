@@ -1,0 +1,223 @@
+{
+  "season": 2022,
+  "team_id": "1",
+  "week": 17,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "@CIN",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RB",
+      "player_id": "2559169",
+      "player_name": "Austin Ekeler",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "LAR",
+      "points": 30.1,
+      "stats": {
+        "stat_14": "122",
+        "stat_15": "2",
+        "stat_21": "39"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "NO",
+      "points": 25.7,
+      "stats": {
+        "stat_14": "78",
+        "stat_15": "1",
+        "stat_21": "39",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2561018",
+      "player_name": "DJ Chark",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "@TB",
+      "points": 6.6,
+      "stats": {
+        "stat_21": "56"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564136",
+      "player_name": "Michael Pittman",
+      "position": "WR",
+      "nfl_team": "IND",
+      "opp": "@NYG",
+      "points": 13.1,
+      "stats": {
+        "stat_21": "41",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2557858",
+      "player_name": "Evan Engram",
+      "position": "TE",
+      "nfl_team": "JAX",
+      "opp": "@HOU",
+      "points": 3.4,
+      "stats": {
+        "stat_21": "16",
+        "stat_14": "13"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2568321",
+      "player_name": "Jahan Dotson",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "CLE",
+      "points": 5.2,
+      "stats": {
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "71309",
+      "player_name": "Graham Gano",
+      "position": "K",
+      "nfl_team": "NYG",
+      "opp": "IND",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "5",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100016",
+      "player_name": "Kansas City Chiefs",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "DEN",
+      "points": 8.0,
+      "stats": {
+        "stat_54": "24",
+        "stat_45": "4",
+        "stat_46": "1",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2567649",
+      "player_name": "Hassan Haskins",
+      "position": "RB",
+      "nfl_team": "TEN",
+      "opp": "DAL",
+      "points": 6.3,
+      "stats": {
+        "stat_14": "40",
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568036",
+      "player_name": "Bam Knight",
+      "position": "RB",
+      "nfl_team": "NYJ",
+      "opp": "@SEA",
+      "points": 5.4,
+      "stats": {
+        "stat_14": "27",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563617",
+      "player_name": "Zack Moss",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "@NYG",
+      "points": 7.4,
+      "stats": {
+        "stat_14": "74"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568315",
+      "player_name": "Rachaad White",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "CAR",
+      "points": 7.3,
+      "stats": {
+        "stat_14": "22",
+        "stat_21": "26"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "@ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560888",
+      "player_name": "Courtland Sutton",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "@KC",
+      "points": 6.4,
+      "stats": {
+        "stat_21": "44"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2557898",
+      "player_name": "Cooper Kupp",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "@LAC",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@WAS",
+      "points": 13.0,
+      "stats": {
+        "stat_54": "10",
+        "stat_45": "3",
+        "stat_46": "3"
+      }
+    }
+  ]
+}

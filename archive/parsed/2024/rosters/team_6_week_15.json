@@ -1,0 +1,221 @@
+{
+  "season": 2024,
+  "team_id": "6",
+  "week": 15,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2563722",
+      "player_name": "Joe Burrow",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "@TEN",
+      "points": 16.84,
+      "stats": {
+        "stat_5": "271",
+        "stat_6": "3",
+        "stat_7": "2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "MIA",
+      "points": 8.1,
+      "stats": {
+        "stat_14": "23",
+        "stat_21": "33"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "@DET",
+      "points": 25.8,
+      "stats": {
+        "stat_14": "105",
+        "stat_15": "2",
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "@LAC",
+      "points": 32.4,
+      "stats": {
+        "stat_21": "159",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566127",
+      "player_name": "Nico Collins",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "MIA",
+      "points": 15.7,
+      "stats": {
+        "stat_21": "17",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2562378",
+      "player_name": "T.J. Hockenson",
+      "position": "TE",
+      "nfl_team": "MIN",
+      "opp": "CHI",
+      "points": 7.7,
+      "stats": {
+        "stat_21": "52"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "CHI",
+      "points": 16.8,
+      "stats": {
+        "stat_21": "73",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2550545",
+      "player_name": "Chris Boswell",
+      "position": "K",
+      "nfl_team": "PIT",
+      "opp": "@PHI",
+      "points": 7.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_37": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100011",
+      "player_name": "Green Bay Packers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@SEA",
+      "points": 15.0,
+      "stats": {
+        "stat_54": "13",
+        "stat_45": "7",
+        "stat_46": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2561036",
+      "player_name": "Sam Darnold",
+      "position": "QB",
+      "nfl_team": "SEA",
+      "opp": "GB",
+      "points": 11.24,
+      "stats": {
+        "stat_5": "231",
+        "stat_6": "1",
+        "stat_7": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572351",
+      "player_name": "Tyrone Tracy Jr.",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "BAL",
+      "points": 4.0,
+      "stats": {
+        "stat_14": "31",
+        "stat_21": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "@NYG",
+      "points": 6.1,
+      "stats": {
+        "stat_21": "36"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567637",
+      "player_name": "Christian Watson",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "@SEA",
+      "points": 7.1,
+      "stats": {
+        "stat_21": "56"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568312",
+      "player_name": "Cade Otton",
+      "position": "TE",
+      "nfl_team": "TB",
+      "opp": "@LAC",
+      "points": 3.4,
+      "stats": {
+        "stat_21": "24"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100014",
+      "player_name": "Indianapolis Colts",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@DEN",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "25",
+        "stat_45": "1",
+        "stat_46": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100025",
+      "player_name": "Philadelphia Eagles",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "PIT",
+      "points": 8.0,
+      "stats": {
+        "stat_54": "13",
+        "stat_45": "2",
+        "stat_47": "1"
+      }
+    }
+  ]
+}

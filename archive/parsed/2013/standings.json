@@ -1,0 +1,176 @@
+{
+  "season": 2013,
+  "final_standings": [
+    {
+      "rank": 1,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1328.28,
+      "points_against": 1247.4,
+      "champion": true
+    },
+    {
+      "rank": 2,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1317.8,
+      "points_against": 1299.78,
+      "champion": false
+    },
+    {
+      "rank": 3,
+      "team_id": "5",
+      "team_name": "48'ers",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1387.0,
+      "points_against": 1169.42,
+      "champion": false
+    },
+    {
+      "rank": 4,
+      "team_id": "1",
+      "team_name": "TheGuitarists",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1278.66,
+      "points_against": 1284.84,
+      "champion": false
+    },
+    {
+      "rank": 5,
+      "team_id": "6",
+      "team_name": "Good Question",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1103.16,
+      "points_against": 1302.86,
+      "champion": false
+    },
+    {
+      "rank": 6,
+      "team_id": "4",
+      "team_name": "bontenators",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1186.2,
+      "points_against": 1350.72,
+      "champion": false
+    },
+    {
+      "rank": 7,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1178.96,
+      "points_against": 1144.06,
+      "champion": false
+    },
+    {
+      "rank": 8,
+      "team_id": "2",
+      "team_name": "The Score is too Damn Highs",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1331.16,
+      "points_against": 1312.14,
+      "champion": false
+    }
+  ],
+  "regular_season_standings": [
+    {
+      "rank": 1,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1328.28,
+      "points_against": 1247.4
+    },
+    {
+      "rank": 2,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1317.8,
+      "points_against": 1299.78
+    },
+    {
+      "rank": 3,
+      "team_id": "5",
+      "team_name": "48'ers",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1387.0,
+      "points_against": 1169.42
+    },
+    {
+      "rank": 4,
+      "team_id": "1",
+      "team_name": "TheGuitarists",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1278.66,
+      "points_against": 1284.84
+    },
+    {
+      "rank": 5,
+      "team_id": "2",
+      "team_name": "The Score is too Damn Highs",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1331.16,
+      "points_against": 1312.14
+    },
+    {
+      "rank": 6,
+      "team_id": "4",
+      "team_name": "bontenators",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1186.2,
+      "points_against": 1350.72
+    },
+    {
+      "rank": 7,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1178.96,
+      "points_against": 1144.06
+    },
+    {
+      "rank": 8,
+      "team_id": "6",
+      "team_name": "Good Question",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1103.16,
+      "points_against": 1302.86
+    }
+  ],
+  "notes": "final_standings wins/losses/points are regular-season figures (site doesn't separately expose postseason W-L) - see playoffs.json for actual postseason results."
+}

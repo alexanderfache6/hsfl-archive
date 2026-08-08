@@ -1,0 +1,218 @@
+{
+  "season": 2021,
+  "team_id": "2",
+  "week": 2,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "79860",
+      "player_name": "Matthew Stafford",
+      "position": "QB",
+      "nfl_team": "LA",
+      "opp": "@IND",
+      "points": 17.22,
+      "stats": {
+        "stat_5": "278",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2555224",
+      "player_name": "Ezekiel Elliott",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@LAC",
+      "points": 16.7,
+      "stats": {
+        "stat_14": "71",
+        "stat_15": "1",
+        "stat_21": "26"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566538",
+      "player_name": "Elijah Mitchell",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "@PHI",
+      "points": 6.3,
+      "stats": {
+        "stat_14": "42",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2540154",
+      "player_name": "Keenan Allen",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "DAL",
+      "points": 12.8,
+      "stats": {
+        "stat_21": "108"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@LAC",
+      "points": 13.4,
+      "stats": {
+        "stat_21": "81",
+        "stat_14": "13"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2555364",
+      "player_name": "Tyler Higbee",
+      "position": "TE",
+      "nfl_team": "LA",
+      "opp": "@IND",
+      "points": 1.3,
+      "stats": {
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2558105",
+      "player_name": "Chris Godwin",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "ATL",
+      "points": 14.2,
+      "stats": {
+        "stat_21": "62",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2563596",
+      "player_name": "Tyler Bass",
+      "position": "K",
+      "nfl_team": "BUF",
+      "opp": "@MIA",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "5",
+        "stat_44": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "HOU",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "21",
+        "stat_45": "1",
+        "stat_46": "1",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "497240",
+      "player_name": "Rob Gronkowski",
+      "position": "TE",
+      "nfl_team": "TB",
+      "opp": "ATL",
+      "points": 17.9,
+      "stats": {
+        "stat_21": "39",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564433",
+      "player_name": "Henry Ruggs III",
+      "position": "WR",
+      "nfl_team": "",
+      "opp": "Bye",
+      "points": 20.0,
+      "stats": {
+        "stat_21": "113",
+        "stat_22": "1",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560968",
+      "player_name": "Saquon Barkley",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "@WAS",
+      "points": 7.9,
+      "stats": {
+        "stat_14": "57",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562722",
+      "player_name": "Miles Sanders",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "SF",
+      "points": 6.4,
+      "stats": {
+        "stat_14": "55",
+        "stat_21": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543496",
+      "player_name": "Odell Beckham Jr.",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "@IND",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562379",
+      "player_name": "Marquise Brown",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "MIN",
+      "points": 20.3,
+      "stats": {
+        "stat_21": "113",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560813",
+      "player_name": "D.J. Moore",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "NO",
+      "points": 17.9,
+      "stats": {
+        "stat_21": "79",
+        "stat_22": "1"
+      }
+    }
+  ]
+}

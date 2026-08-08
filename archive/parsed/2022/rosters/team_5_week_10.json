@@ -1,0 +1,218 @@
+{
+  "season": 2022,
+  "team_id": "5",
+  "week": 10,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "@GB",
+      "points": 19.2,
+      "stats": {
+        "stat_5": "265",
+        "stat_6": "3",
+        "stat_7": "2",
+        "stat_14": "6"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562377",
+      "player_name": "Josh Jacobs",
+      "position": "RB",
+      "nfl_team": "LV",
+      "opp": "IND",
+      "points": 19.6,
+      "stats": {
+        "stat_14": "78",
+        "stat_15": "1",
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567685",
+      "player_name": "Dameon Pierce",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@NYG",
+      "points": 11.2,
+      "stats": {
+        "stat_14": "94",
+        "stat_30": "1",
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560781",
+      "player_name": "Christian Kirk",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@KC",
+      "points": 27.0,
+      "stats": {
+        "stat_21": "105",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566292",
+      "player_name": "Jaylen Waddle",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "CLE",
+      "points": 8.6,
+      "stats": {
+        "stat_21": "66"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2558954",
+      "player_name": "Taysom Hill",
+      "position": "TE",
+      "nfl_team": "NO",
+      "opp": "@PIT",
+      "points": 0.1,
+      "stats": {
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "LAC",
+      "points": 15.7,
+      "stats": {
+        "stat_14": "38",
+        "stat_15": "1",
+        "stat_21": "39"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "71309",
+      "player_name": "Graham Gano",
+      "position": "K",
+      "nfl_team": "NYG",
+      "opp": "HOU",
+      "points": 6.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100025",
+      "player_name": "Philadelphia Eagles",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "WAS",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "26",
+        "stat_45": "3",
+        "stat_46": "1",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2560757",
+      "player_name": "Lamar Jackson",
+      "position": "QB",
+      "nfl_team": "BAL",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564271",
+      "player_name": "Clyde Edwards-Helaire",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562502",
+      "player_name": "David Montgomery",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "@CHI",
+      "points": 4.9,
+      "stats": {
+        "stat_14": "37",
+        "stat_21": "7"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565941",
+      "player_name": "Ja'Marr Chase",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "SEA",
+      "points": 7.9,
+      "stats": {
+        "stat_21": "54"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562681",
+      "player_name": "Dawson Knox",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "MIN",
+      "points": 7.7,
+      "stats": {
+        "stat_21": "57"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2552408",
+      "player_name": "Darren Waller",
+      "position": "TE",
+      "nfl_team": "NYG",
+      "opp": "HOU",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

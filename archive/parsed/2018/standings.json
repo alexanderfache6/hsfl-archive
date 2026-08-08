@@ -1,0 +1,176 @@
+{
+  "season": 2018,
+  "final_standings": [
+    {
+      "rank": 1,
+      "team_id": "5",
+      "team_name": "Los Chunches",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1416.32,
+      "points_against": 1302.68,
+      "champion": true
+    },
+    {
+      "rank": 2,
+      "team_id": "6",
+      "team_name": "Yellow Jackets",
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "points_for": 1319.52,
+      "points_against": 1278.32,
+      "champion": false
+    },
+    {
+      "rank": 3,
+      "team_id": "2",
+      "team_name": "The Capitalists",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1313.4,
+      "points_against": 1182.16,
+      "champion": false
+    },
+    {
+      "rank": 4,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "points_for": 1395.68,
+      "points_against": 1234.78,
+      "champion": false
+    },
+    {
+      "rank": 5,
+      "team_id": "7",
+      "team_name": "Joe Buck Yourself",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1439.54,
+      "points_against": 1309.32,
+      "champion": false
+    },
+    {
+      "rank": 6,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1309.16,
+      "points_against": 1349.54,
+      "champion": false
+    },
+    {
+      "rank": 7,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 1,
+      "losses": 13,
+      "ties": 0,
+      "points_for": 1068.52,
+      "points_against": 1401.78,
+      "champion": false
+    },
+    {
+      "rank": 8,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1068.7,
+      "points_against": 1272.26,
+      "champion": false
+    }
+  ],
+  "regular_season_standings": [
+    {
+      "rank": 1,
+      "team_id": "6",
+      "team_name": "Yellow Jackets",
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "points_for": 1319.52,
+      "points_against": 1278.32
+    },
+    {
+      "rank": 2,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "points_for": 1395.68,
+      "points_against": 1234.78
+    },
+    {
+      "rank": 3,
+      "team_id": "5",
+      "team_name": "Los Chunches",
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "points_for": 1416.32,
+      "points_against": 1302.68
+    },
+    {
+      "rank": 4,
+      "team_id": "2",
+      "team_name": "The Capitalists",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1313.4,
+      "points_against": 1182.16
+    },
+    {
+      "rank": 5,
+      "team_id": "7",
+      "team_name": "Joe Buck Yourself",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1439.54,
+      "points_against": 1309.32
+    },
+    {
+      "rank": 6,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 6,
+      "losses": 8,
+      "ties": 0,
+      "points_for": 1068.7,
+      "points_against": 1272.26
+    },
+    {
+      "rank": 7,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1309.16,
+      "points_against": 1349.54
+    },
+    {
+      "rank": 8,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 1,
+      "losses": 13,
+      "ties": 0,
+      "points_for": 1068.52,
+      "points_against": 1401.78
+    }
+  ],
+  "notes": "final_standings wins/losses/points are regular-season figures (site doesn't separately expose postseason W-L) - see playoffs.json for actual postseason results."
+}

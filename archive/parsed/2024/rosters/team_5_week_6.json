@@ -1,0 +1,227 @@
+{
+  "season": 2024,
+  "team_id": "5",
+  "week": 6,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2569819",
+      "player_name": "C.J. Stroud",
+      "position": "QB",
+      "nfl_team": "HOU",
+      "opp": "@NE",
+      "points": 20.38,
+      "stats": {
+        "stat_5": "192",
+        "stat_6": "3",
+        "stat_7": "1",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "TEN",
+      "opp": "IND",
+      "points": 16.3,
+      "stats": {
+        "stat_14": "93",
+        "stat_15": "1",
+        "stat_21": "-5"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2568282",
+      "player_name": "Kenneth Walker III",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "SF",
+      "points": 16.9,
+      "stats": {
+        "stat_14": "32",
+        "stat_15": "1",
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2565941",
+      "player_name": "Ja'Marr Chase",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@NYG",
+      "points": 9.7,
+      "stats": {
+        "stat_21": "72"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2569765",
+      "player_name": "Jayden Reed",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "ARI",
+      "points": 11.8,
+      "stats": {
+        "stat_21": "28",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2569594",
+      "player_name": "Dalton Kincaid",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "@NYJ",
+      "points": 8.1,
+      "stats": {
+        "stat_21": "51"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "JAX",
+      "points": 19.9,
+      "stats": {
+        "stat_14": "91",
+        "stat_15": "1",
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2563596",
+      "player_name": "Tyler Bass",
+      "position": "K",
+      "nfl_team": "BUF",
+      "opp": "@NYJ",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_34": "1",
+        "stat_36": "1",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100013",
+      "player_name": "Houston Texans",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@NE",
+      "points": 12.0,
+      "stats": {
+        "stat_54": "21",
+        "stat_45": "4",
+        "stat_46": "2",
+        "stat_47": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2539335",
+      "player_name": "Geno Smith",
+      "position": "QB",
+      "nfl_team": "LV",
+      "opp": "PIT",
+      "points": 12.48,
+      "stats": {
+        "stat_5": "312",
+        "stat_6": "1",
+        "stat_7": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "@SEA",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568348",
+      "player_name": "Brian Robinson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "@BAL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2571907",
+      "player_name": "Rome Odunze",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "JAX",
+      "points": 5.0,
+      "stats": {
+        "stat_21": "40"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568159",
+      "player_name": "George Pickens",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "DET",
+      "points": 6.8,
+      "stats": {
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569110",
+      "player_name": "Rashid Shaheed",
+      "position": "WR",
+      "nfl_team": "NO",
+      "opp": "TB",
+      "points": 1.8,
+      "stats": {
+        "stat_21": "11",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2570026",
+      "player_name": "Puka Nacua",
+      "position": "WR",
+      "nfl_team": "LAR",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "LAC",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "3"
+      }
+    }
+  ]
+}

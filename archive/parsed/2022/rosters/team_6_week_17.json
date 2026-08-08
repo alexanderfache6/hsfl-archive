@@ -1,0 +1,216 @@
+{
+  "season": 2022,
+  "team_id": "6",
+  "week": 17,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2563722",
+      "player_name": "Joe Burrow",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "BUF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RB",
+      "player_id": "2543715",
+      "player_name": "Jerick McKinnon",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "DEN",
+      "points": 20.1,
+      "stats": {
+        "stat_14": "4",
+        "stat_21": "52",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567808",
+      "player_name": "Isiah Pacheco",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "DEN",
+      "points": 11.9,
+      "stats": {
+        "stat_14": "31",
+        "stat_15": "1",
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2558105",
+      "player_name": "Chris Godwin",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "CAR",
+      "points": 16.5,
+      "stats": {
+        "stat_21": "120",
+        "stat_30": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566073",
+      "player_name": "Amon-Ra St. Brown",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "CHI",
+      "points": 8.2,
+      "stats": {
+        "stat_21": "62"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2563704",
+      "player_name": "Cole Kmet",
+      "position": "TE",
+      "nfl_team": "CHI",
+      "opp": "@DET",
+      "points": 9.7,
+      "stats": {
+        "stat_21": "27",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "@GB",
+      "points": 2.0,
+      "stats": {
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2536340",
+      "player_name": "Justin Tucker",
+      "position": "K",
+      "nfl_team": "BAL",
+      "opp": "PIT",
+      "points": 9.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_37": "1",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100015",
+      "player_name": "Jacksonville Jaguars",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@HOU",
+      "points": 17.0,
+      "stats": {
+        "stat_54": "3",
+        "stat_45": "2",
+        "stat_47": "1",
+        "stat_50": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2565045",
+      "player_name": "Justin Herbert",
+      "position": "QB",
+      "nfl_team": "LAC",
+      "opp": "LAR",
+      "points": 16.68,
+      "stats": {
+        "stat_5": "212",
+        "stat_6": "2",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "@CIN",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565899",
+      "player_name": "Chuba Hubbard",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@TB",
+      "points": 8.0,
+      "stats": {
+        "stat_14": "12",
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2568282",
+      "player_name": "Kenneth Walker III",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "NYJ",
+      "points": 14.7,
+      "stats": {
+        "stat_14": "133",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543495",
+      "player_name": "Davante Adams",
+      "position": "WR",
+      "nfl_team": "LV",
+      "opp": "SF",
+      "points": 30.8,
+      "stats": {
+        "stat_21": "153",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100029",
+      "player_name": "San Francisco 49ers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@LV",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "34",
+        "stat_46": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100002",
+      "player_name": "Baltimore Ravens",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "PIT",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "16",
+        "stat_45": "2"
+      }
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "season": 2024,
+  "team_id": "1",
+  "week": 15,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564007",
+      "player_name": "Jordan Love",
+      "position": "QB",
+      "nfl_team": "GB",
+      "opp": "@SEA",
+      "points": 17.56,
+      "stats": {
+        "stat_5": "229",
+        "stat_6": "2",
+        "stat_14": "4"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562377",
+      "player_name": "Josh Jacobs",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "@SEA",
+      "points": 19.6,
+      "stats": {
+        "stat_14": "94",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "42"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2569558",
+      "player_name": "Bijan Robinson",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "@LV",
+      "points": 14.0,
+      "stats": {
+        "stat_14": "125",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "@JAX",
+      "points": 13.1,
+      "stats": {
+        "stat_21": "56",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2572162",
+      "player_name": "Brian Thomas Jr.",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "NYJ",
+      "points": 27.5,
+      "stats": {
+        "stat_21": "105",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560957",
+      "player_name": "Mark Andrews",
+      "position": "TE",
+      "nfl_team": "BAL",
+      "opp": "@NYG",
+      "points": 9.4,
+      "stats": {
+        "stat_21": "24",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2565295",
+      "player_name": "Rico Dowdle",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "DAL",
+      "points": 14.9,
+      "stats": {
+        "stat_14": "149"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2556521",
+      "player_name": "Ka'imi Fairbairn",
+      "position": "K",
+      "nfl_team": "HOU",
+      "opp": "MIA",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_36": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100026",
+      "player_name": "Arizona Cardinals",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "NE",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "2",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2569864",
+      "player_name": "Anthony Richardson",
+      "position": "QB",
+      "nfl_team": "IND",
+      "opp": "@DEN",
+      "points": 13.88,
+      "stats": {
+        "stat_5": "172",
+        "stat_7": "2",
+        "stat_14": "46",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572546",
+      "player_name": "Bucky Irving",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "@LAC",
+      "points": 12.3,
+      "stats": {
+        "stat_14": "117",
+        "stat_21": "-4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572411",
+      "player_name": "Marvin Harrison Jr.",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "NE",
+      "points": 4.2,
+      "stats": {
+        "stat_21": "32"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560854",
+      "player_name": "Calvin Ridley",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "CIN",
+      "points": 7.5,
+      "stats": {
+        "stat_21": "41",
+        "stat_14": "19"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569768",
+      "player_name": "Tucker Kraft",
+      "position": "TE",
+      "nfl_team": "GB",
+      "opp": "@SEA",
+      "points": 4.4,
+      "stats": {
+        "stat_21": "34"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2507225",
+      "player_name": "Nick Folk",
+      "position": "K",
+      "nfl_team": "TEN",
+      "opp": "CIN",
+      "points": 3.0,
+      "stats": {
+        "stat_33": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100022",
+      "player_name": "New Orleans Saints",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "WAS",
+      "points": 9.0,
+      "stats": {
+        "stat_54": "20",
+        "stat_45": "8"
+      }
+    }
+  ]
+}

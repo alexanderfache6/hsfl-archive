@@ -1,0 +1,91 @@
+{
+  "season": 2012,
+  "championship_bracket": {
+    "rounds": [
+      {
+        "round_name": "Week 15",
+        "round_order": 1,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "Semifinal",
+            "week_label": "Week 15",
+            "seed_home": 1,
+            "team_id_home": "2",
+            "score_home": 110.42,
+            "seed_away": 4,
+            "team_id_away": "4",
+            "score_away": 87.4,
+            "is_bye": false,
+            "winner_team_id": "2"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "Semifinal",
+            "week_label": "Week 15",
+            "seed_home": 2,
+            "team_id_home": "1",
+            "score_home": 130.84,
+            "seed_away": 3,
+            "team_id_away": "3",
+            "score_away": 115.94,
+            "is_bye": false,
+            "winner_team_id": "1"
+          }
+        ]
+      },
+      {
+        "round_name": "Week 16",
+        "round_order": 2,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "Championship",
+            "week_label": "Week 16",
+            "seed_home": 1,
+            "team_id_home": "2",
+            "score_home": 139.38,
+            "seed_away": 2,
+            "team_id_away": "1",
+            "score_away": 139.7,
+            "is_bye": false,
+            "winner_team_id": "1"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "3rd Place Game",
+            "week_label": "Week 16",
+            "seed_home": 4,
+            "team_id_home": "4",
+            "score_home": 155.32,
+            "seed_away": 3,
+            "team_id_away": "3",
+            "score_away": 165.88,
+            "is_bye": false,
+            "winner_team_id": "3"
+          }
+        ]
+      }
+    ],
+    "champion_team_id": "1",
+    "runner_up_team_id": "2"
+  },
+  "consolation_bracket": {
+    "rounds": [
+      {
+        "round_name": "Week 15",
+        "round_order": 1,
+        "matchups": []
+      },
+      {
+        "round_name": "Week 16",
+        "round_order": 2,
+        "matchups": []
+      }
+    ],
+    "consolation_winner_team_id": ""
+  },
+  "source_urls": [],
+  "fetch_status": "ok",
+  "notes": "Byes and placement-game structure vary by season - see instructions.md section 2 notes."
+}

@@ -1,0 +1,222 @@
+{
+  "season": 2022,
+  "team_id": "3",
+  "week": 11,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2565920",
+      "player_name": "Justin Fields",
+      "position": "QB",
+      "nfl_team": "CHI",
+      "opp": "@ATL",
+      "points": 24.62,
+      "stats": {
+        "stat_5": "153",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "85",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@MIN",
+      "points": 33.9,
+      "stats": {
+        "stat_14": "80",
+        "stat_21": "109",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564148",
+      "player_name": "Jonathan Taylor",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "PHI",
+      "points": 14.9,
+      "stats": {
+        "stat_14": "84",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "@BUF",
+      "points": 27.3,
+      "stats": {
+        "stat_21": "113",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2568159",
+      "player_name": "George Pickens",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "CIN",
+      "points": 16.3,
+      "stats": {
+        "stat_21": "83",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "@ARI",
+      "points": 22.4,
+      "stats": {
+        "stat_21": "84",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2566448",
+      "player_name": "Najee Harris",
+      "position": "RB",
+      "nfl_team": "PIT",
+      "opp": "CIN",
+      "points": 25.6,
+      "stats": {
+        "stat_14": "90",
+        "stat_15": "2",
+        "stat_21": "26"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2559205",
+      "player_name": "Younghoe Koo",
+      "position": "K",
+      "nfl_team": "ATL",
+      "opp": "CHI",
+      "points": 11.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "1",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CLE",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "23",
+        "stat_45": "1",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563986",
+      "player_name": "AJ Dillon",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "TEN",
+      "points": 2.8,
+      "stats": {
+        "stat_14": "13",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557917",
+      "player_name": "Kareem Hunt",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "@BUF",
+      "points": 6.4,
+      "stats": {
+        "stat_14": "32",
+        "stat_21": "22"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562734",
+      "player_name": "Devin Singletary",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "WAS",
+      "points": 16.7,
+      "stats": {
+        "stat_14": "86",
+        "stat_15": "1",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563551",
+      "player_name": "Devin Duvernay",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "CAR",
+      "points": 1.2,
+      "stats": {
+        "stat_21": "3",
+        "stat_14": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558846",
+      "player_name": "Mike Williams",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "KC",
+      "points": 2.0,
+      "stats": {
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567520",
+      "player_name": "Greg Dulcich",
+      "position": "TE",
+      "nfl_team": "DEN",
+      "opp": "LV",
+      "points": 5.0,
+      "stats": {
+        "stat_21": "30"
+      }
+    }
+  ]
+}

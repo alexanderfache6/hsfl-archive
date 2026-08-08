@@ -1,0 +1,3008 @@
+{
+  "season": 2012,
+  "weeks": [
+    {
+      "week": 2,
+      "standings": [
+        {
+          "team_id": "2",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "win_pct": 1.0,
+          "win_streak": "W1",
+          "points_for": 116.44,
+          "points_against": 91.8,
+          "weekly": {
+            "result": "W",
+            "points_for": 116.44,
+            "points_against": 91.8
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "1",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "win_pct": 1.0,
+          "win_streak": "W1",
+          "points_for": 86.22,
+          "points_against": 71.36,
+          "weekly": {
+            "result": "W",
+            "points_for": 86.22,
+            "points_against": 71.36
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "4",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.0,
+          "win_streak": "L1",
+          "points_for": 91.8,
+          "points_against": 116.44,
+          "weekly": {
+            "result": "L",
+            "points_for": 91.8,
+            "points_against": 116.44
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "3",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.0,
+          "win_streak": "L1",
+          "points_for": 71.36,
+          "points_against": 86.22,
+          "weekly": {
+            "result": "L",
+            "points_for": 71.36,
+            "points_against": 86.22
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 86.22,
+            "optimal_points": 108.42,
+            "diff": -22.2,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -22.2,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 116.44,
+            "optimal_points": 177.24,
+            "diff": -60.8,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -60.8,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 71.36,
+            "optimal_points": 116.0,
+            "diff": -44.64,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -44.64,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 91.8,
+            "optimal_points": 101.24,
+            "diff": -9.44,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -9.44,
+            "rank": 1
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 3,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 3,
+          "true_ranking_score": 10,
+          "true_rank": 3
+        },
+        {
+          "team_id": "2",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 1,
+          "true_ranking_score": 13,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 2,
+          "true_ranking_score": 5,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 2,
+          "points_for_rank": 3,
+          "breakdown_rank": 3,
+          "coaching_rank": 4,
+          "true_ranking_score": 12,
+          "true_rank": 2
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "standings": [
+        {
+          "team_id": "2",
+          "wins": 2,
+          "losses": 0,
+          "ties": 0,
+          "win_pct": 1.0,
+          "win_streak": "W2",
+          "points_for": 237.1,
+          "points_against": 192.82,
+          "weekly": {
+            "result": "W",
+            "points_for": 120.66,
+            "points_against": 101.02
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "4",
+          "wins": 1,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W1",
+          "points_for": 217.14,
+          "points_against": 217.22,
+          "weekly": {
+            "result": "W",
+            "points_for": 125.34,
+            "points_against": 100.78
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "1",
+          "wins": 1,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "L1",
+          "points_for": 187.0,
+          "points_against": 196.7,
+          "weekly": {
+            "result": "L",
+            "points_for": 100.78,
+            "points_against": 125.34
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "3",
+          "wins": 0,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.0,
+          "win_streak": "L2",
+          "points_for": 172.38,
+          "points_against": 206.88,
+          "weekly": {
+            "result": "L",
+            "points_for": 101.02,
+            "points_against": 120.66
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 1,
+            "losses": 5,
+            "ties": 0,
+            "win_pct": 0.1667,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.8333,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 1,
+            "losses": 5,
+            "ties": 0,
+            "win_pct": 0.1667,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.8333,
+            "rank": 1
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 101.48,
+            "optimal_points": 174.42,
+            "diff": -72.94,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -95.14,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 120.66,
+            "optimal_points": 124.16,
+            "diff": -3.5,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -64.3,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 101.02,
+            "optimal_points": 125.12,
+            "diff": -24.1,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -68.74,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 125.34,
+            "optimal_points": 143.24,
+            "diff": -17.9,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -27.34,
+            "rank": 1
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 1,
+          "coaching_rank": 1,
+          "true_ranking_score": 6,
+          "true_rank": 3
+        },
+        {
+          "team_id": "2",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 3,
+          "coaching_rank": 3,
+          "true_ranking_score": 14,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 2,
+          "coaching_rank": 2,
+          "true_ranking_score": 6,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 14,
+          "true_rank": 2
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "standings": [
+        {
+          "team_id": "2",
+          "wins": 2,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.6667,
+          "win_streak": "L1",
+          "points_for": 366.7,
+          "points_against": 325.88,
+          "weekly": {
+            "result": "L",
+            "points_for": 129.6,
+            "points_against": 133.06
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "1",
+          "wins": 2,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.6667,
+          "win_streak": "W1",
+          "points_for": 320.06,
+          "points_against": 326.3,
+          "weekly": {
+            "result": "W",
+            "points_for": 133.06,
+            "points_against": 129.6
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 1,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.3333,
+          "win_streak": "W1",
+          "points_for": 346.14,
+          "points_against": 334.9,
+          "weekly": {
+            "result": "W",
+            "points_for": 173.76,
+            "points_against": 128.02
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "4",
+          "wins": 1,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.3333,
+          "win_streak": "L1",
+          "points_for": 345.16,
+          "points_against": 390.98,
+          "weekly": {
+            "result": "L",
+            "points_for": 128.02,
+            "points_against": 173.76
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 3,
+            "losses": 6,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 6,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 4,
+            "losses": 5,
+            "ties": 0,
+            "win_pct": 0.4444,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 4,
+            "ties": 0,
+            "win_pct": 0.5556,
+            "rank": 2
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 133.06,
+            "optimal_points": 160.8,
+            "diff": -27.74,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -122.88,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 129.6,
+            "optimal_points": 129.6,
+            "diff": 0.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -64.3,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 173.76,
+            "optimal_points": 207.46,
+            "diff": -33.7,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -102.44,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 128.02,
+            "optimal_points": 154.34,
+            "diff": -26.32,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -53.66,
+            "rank": 1
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 3,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 1,
+          "true_ranking_score": 6,
+          "true_rank": 4
+        },
+        {
+          "team_id": "2",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 3,
+          "true_ranking_score": 15,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 3,
+          "breakdown_rank": 2,
+          "coaching_rank": 2,
+          "true_ranking_score": 9,
+          "true_rank": 3
+        },
+        {
+          "team_id": "4",
+          "record_rank": 1,
+          "points_for_rank": 2,
+          "breakdown_rank": 3,
+          "coaching_rank": 4,
+          "true_ranking_score": 10,
+          "true_rank": 2
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "standings": [
+        {
+          "team_id": "2",
+          "wins": 3,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.75,
+          "win_streak": "W1",
+          "points_for": 524.12,
+          "points_against": 433.82,
+          "weekly": {
+            "result": "W",
+            "points_for": 157.42,
+            "points_against": 107.94
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "1",
+          "wins": 3,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.75,
+          "win_streak": "W2",
+          "points_for": 476.06,
+          "points_against": 456.2,
+          "weekly": {
+            "result": "W",
+            "points_for": 156.0,
+            "points_against": 129.9
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 1,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.25,
+          "win_streak": "L1",
+          "points_for": 476.04,
+          "points_against": 490.9,
+          "weekly": {
+            "result": "L",
+            "points_for": 129.9,
+            "points_against": 156.0
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "4",
+          "wins": 1,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.25,
+          "win_streak": "L2",
+          "points_for": 453.1,
+          "points_against": 548.4,
+          "weekly": {
+            "result": "L",
+            "points_for": 107.94,
+            "points_against": 157.42
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 7,
+            "ties": 0,
+            "win_pct": 0.4167,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 9,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.75,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 7,
+            "ties": 0,
+            "win_pct": 0.4167,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 7,
+            "ties": 0,
+            "win_pct": 0.4167,
+            "rank": 4
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 156.0,
+            "optimal_points": 167.2,
+            "diff": -11.2,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -134.08,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 157.42,
+            "optimal_points": 163.92,
+            "diff": -6.5,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -70.8,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 129.9,
+            "optimal_points": 129.9,
+            "diff": 0.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -102.44,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 107.94,
+            "optimal_points": 152.0,
+            "diff": -44.06,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -97.72,
+            "rank": 2
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 3,
+          "coaching_rank": 1,
+          "true_ranking_score": 10,
+          "true_rank": 2
+        },
+        {
+          "team_id": "2",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 16,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 2,
+          "true_ranking_score": 8,
+          "true_rank": 3
+        },
+        {
+          "team_id": "4",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 3,
+          "true_ranking_score": 6,
+          "true_rank": 4
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "standings": [
+        {
+          "team_id": "1",
+          "wins": 4,
+          "losses": 1,
+          "ties": 0,
+          "win_pct": 0.8,
+          "win_streak": "W3",
+          "points_for": 600.62,
+          "points_against": 557.04,
+          "weekly": {
+            "result": "W",
+            "points_for": 124.56,
+            "points_against": 100.84
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "2",
+          "wins": 3,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.6,
+          "win_streak": "L1",
+          "points_for": 638.28,
+          "points_against": 569.14,
+          "weekly": {
+            "result": "L",
+            "points_for": 114.16,
+            "points_against": 135.32
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 2,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.4,
+          "win_streak": "W1",
+          "points_for": 611.36,
+          "points_against": 605.06,
+          "weekly": {
+            "result": "W",
+            "points_for": 135.32,
+            "points_against": 114.16
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "4",
+          "wins": 1,
+          "losses": 4,
+          "ties": 0,
+          "win_pct": 0.2,
+          "win_streak": "L3",
+          "points_for": 553.94,
+          "points_against": 672.96,
+          "weekly": {
+            "result": "L",
+            "points_for": 100.84,
+            "points_against": 124.56
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 7,
+            "losses": 8,
+            "ties": 0,
+            "win_pct": 0.4667,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 10,
+            "losses": 5,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 8,
+            "losses": 7,
+            "ties": 0,
+            "win_pct": 0.5333,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 10,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 4
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 124.56,
+            "optimal_points": 169.04,
+            "diff": -44.48,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -178.56,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 114.16,
+            "optimal_points": 147.56,
+            "diff": -33.4,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -104.2,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 135.32,
+            "optimal_points": 169.32,
+            "diff": -34.0,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -136.44,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 100.84,
+            "optimal_points": 151.88,
+            "diff": -51.04,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -148.76,
+            "rank": 3
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 4,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 1,
+          "true_ranking_score": 9,
+          "true_rank": 3
+        },
+        {
+          "team_id": "2",
+          "record_rank": 3,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 15,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 3,
+          "breakdown_rank": 3,
+          "coaching_rank": 3,
+          "true_ranking_score": 11,
+          "true_rank": 2
+        },
+        {
+          "team_id": "4",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 2,
+          "true_ranking_score": 5,
+          "true_rank": 4
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "standings": [
+        {
+          "team_id": "2",
+          "wins": 4,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.6667,
+          "win_streak": "W1",
+          "points_for": 768.24,
+          "points_against": 696.18,
+          "weekly": {
+            "result": "W",
+            "points_for": 129.96,
+            "points_against": 127.04
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "1",
+          "wins": 4,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.6667,
+          "win_streak": "L1",
+          "points_for": 727.66,
+          "points_against": 687.0,
+          "weekly": {
+            "result": "L",
+            "points_for": 127.04,
+            "points_against": 129.96
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 3,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W2",
+          "points_for": 742.44,
+          "points_against": 708.58,
+          "weekly": {
+            "result": "W",
+            "points_for": 131.08,
+            "points_against": 103.52
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "4",
+          "wins": 1,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.1667,
+          "win_streak": "L4",
+          "points_for": 657.46,
+          "points_against": 804.04,
+          "weekly": {
+            "result": "L",
+            "points_for": 103.52,
+            "points_against": 131.08
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 8,
+            "losses": 10,
+            "ties": 0,
+            "win_pct": 0.4444,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 12,
+            "losses": 6,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 11,
+            "losses": 7,
+            "ties": 0,
+            "win_pct": 0.6111,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 5,
+            "losses": 13,
+            "ties": 0,
+            "win_pct": 0.2778,
+            "rank": 4
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 127.04,
+            "optimal_points": 127.04,
+            "diff": 0.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -178.56,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 129.96,
+            "optimal_points": 156.66,
+            "diff": -26.7,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -130.9,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 131.08,
+            "optimal_points": 142.88,
+            "diff": -11.8,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -148.24,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 103.52,
+            "optimal_points": 125.98,
+            "diff": -22.46,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -171.22,
+            "rank": 3
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 3,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 1,
+          "true_ranking_score": 8,
+          "true_rank": 3
+        },
+        {
+          "team_id": "2",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 16,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 3,
+          "breakdown_rank": 3,
+          "coaching_rank": 3,
+          "true_ranking_score": 11,
+          "true_rank": 2
+        },
+        {
+          "team_id": "4",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 2,
+          "true_ranking_score": 5,
+          "true_rank": 4
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "standings": [
+        {
+          "team_id": "1",
+          "wins": 5,
+          "losses": 2,
+          "ties": 0,
+          "win_pct": 0.7143,
+          "win_streak": "W1",
+          "points_for": 859.94,
+          "points_against": 783.34,
+          "weekly": {
+            "result": "W",
+            "points_for": 132.28,
+            "points_against": 96.34
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "2",
+          "wins": 4,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.5714,
+          "win_streak": "L1",
+          "points_for": 870.9,
+          "points_against": 848.66,
+          "weekly": {
+            "result": "L",
+            "points_for": 102.66,
+            "points_against": 152.48
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 3,
+          "losses": 4,
+          "ties": 0,
+          "win_pct": 0.4286,
+          "win_streak": "L1",
+          "points_for": 838.78,
+          "points_against": 840.86,
+          "weekly": {
+            "result": "L",
+            "points_for": 96.34,
+            "points_against": 132.28
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "4",
+          "wins": 2,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.2857,
+          "win_streak": "W1",
+          "points_for": 809.94,
+          "points_against": 906.7,
+          "weekly": {
+            "result": "W",
+            "points_for": 152.48,
+            "points_against": 102.66
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 10,
+            "losses": 11,
+            "ties": 0,
+            "win_pct": 0.4762,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 13,
+            "losses": 8,
+            "ties": 0,
+            "win_pct": 0.619,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 11,
+            "losses": 10,
+            "ties": 0,
+            "win_pct": 0.5238,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 8,
+            "losses": 13,
+            "ties": 0,
+            "win_pct": 0.381,
+            "rank": 4
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 132.28,
+            "optimal_points": 146.88,
+            "diff": -14.6,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -193.16,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 102.66,
+            "optimal_points": 139.86,
+            "diff": -37.2,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -168.1,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 96.34,
+            "optimal_points": 147.14,
+            "diff": -50.8,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -199.04,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 152.48,
+            "optimal_points": 155.42,
+            "diff": -2.94,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -174.16,
+            "rank": 2
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 4,
+          "points_for_rank": 3,
+          "breakdown_rank": 2,
+          "coaching_rank": 2,
+          "true_ranking_score": 11,
+          "true_rank": 2
+        },
+        {
+          "team_id": "2",
+          "record_rank": 3,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 15,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 3,
+          "coaching_rank": 1,
+          "true_ranking_score": 8,
+          "true_rank": 3
+        },
+        {
+          "team_id": "4",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 3,
+          "true_ranking_score": 6,
+          "true_rank": 4
+        }
+      ]
+    },
+    {
+      "week": 9,
+      "standings": [
+        {
+          "team_id": "1",
+          "wins": 5,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.625,
+          "win_streak": "L1",
+          "points_for": 1017.38,
+          "points_against": 960.54,
+          "weekly": {
+            "result": "L",
+            "points_for": 157.44,
+            "points_against": 177.2
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "2",
+          "wins": 4,
+          "losses": 4,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "L2",
+          "points_for": 1007.34,
+          "points_against": 991.18,
+          "weekly": {
+            "result": "L",
+            "points_for": 136.44,
+            "points_against": 142.52
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 4,
+          "losses": 4,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W1",
+          "points_for": 981.3,
+          "points_against": 977.3,
+          "weekly": {
+            "result": "W",
+            "points_for": 142.52,
+            "points_against": 136.44
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "4",
+          "wins": 3,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.375,
+          "win_streak": "W2",
+          "points_for": 987.14,
+          "points_against": 1064.14,
+          "weekly": {
+            "result": "W",
+            "points_for": 177.2,
+            "points_against": 157.44
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 12,
+            "losses": 12,
+            "ties": 0,
+            "win_pct": 0.5,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 13,
+            "losses": 11,
+            "ties": 0,
+            "win_pct": 0.5417,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 12,
+            "losses": 12,
+            "ties": 0,
+            "win_pct": 0.5,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 11,
+            "losses": 13,
+            "ties": 0,
+            "win_pct": 0.4583,
+            "rank": 4
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 157.44,
+            "optimal_points": 166.54,
+            "diff": -9.1,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -202.26,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 136.44,
+            "optimal_points": 159.14,
+            "diff": -22.7,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -190.8,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 142.52,
+            "optimal_points": 145.02,
+            "diff": -2.5,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -201.54,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 177.2,
+            "optimal_points": 198.46,
+            "diff": -21.26,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -195.42,
+            "rank": 2
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 3,
+          "coaching_rank": 1,
+          "true_ranking_score": 12,
+          "true_rank": 2
+        },
+        {
+          "team_id": "2",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 14,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 1,
+          "breakdown_rank": 2,
+          "coaching_rank": 2,
+          "true_ranking_score": 7,
+          "true_rank": 3
+        },
+        {
+          "team_id": "4",
+          "record_rank": 1,
+          "points_for_rank": 2,
+          "breakdown_rank": 1,
+          "coaching_rank": 3,
+          "true_ranking_score": 7,
+          "true_rank": 4
+        }
+      ]
+    },
+    {
+      "week": 10,
+      "standings": [
+        {
+          "team_id": "1",
+          "wins": 6,
+          "losses": 3,
+          "ties": 0,
+          "win_pct": 0.6667,
+          "win_streak": "W1",
+          "points_for": 1158.42,
+          "points_against": 1082.52,
+          "weekly": {
+            "result": "W",
+            "points_for": 141.04,
+            "points_against": 121.98
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "2",
+          "wins": 4,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.4444,
+          "win_streak": "L3",
+          "points_for": 1129.32,
+          "points_against": 1132.22,
+          "weekly": {
+            "result": "L",
+            "points_for": 121.98,
+            "points_against": 141.04
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "4",
+          "wins": 4,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.4444,
+          "win_streak": "W3",
+          "points_for": 1102.76,
+          "points_against": 1167.4,
+          "weekly": {
+            "result": "W",
+            "points_for": 115.62,
+            "points_against": 103.26
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "3",
+          "wins": 4,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.4444,
+          "win_streak": "L1",
+          "points_for": 1084.56,
+          "points_against": 1092.92,
+          "weekly": {
+            "result": "L",
+            "points_for": 103.26,
+            "points_against": 115.62
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 15,
+            "losses": 12,
+            "ties": 0,
+            "win_pct": 0.5556,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 15,
+            "losses": 12,
+            "ties": 0,
+            "win_pct": 0.5556,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 12,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.4444,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 12,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.4444,
+            "rank": 3
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 141.04,
+            "optimal_points": 144.54,
+            "diff": -3.5,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -205.76,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 121.98,
+            "optimal_points": 135.48,
+            "diff": -13.5,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -204.3,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 103.26,
+            "optimal_points": 153.76,
+            "diff": -50.5,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -252.04,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 115.62,
+            "optimal_points": 143.56,
+            "diff": -27.94,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -223.36,
+            "rank": 3
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 3,
+          "true_ranking_score": 15,
+          "true_rank": 1
+        },
+        {
+          "team_id": "2",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 3,
+          "coaching_rank": 4,
+          "true_ranking_score": 13,
+          "true_rank": 2
+        },
+        {
+          "team_id": "3",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 1,
+          "true_ranking_score": 4,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 2,
+          "true_ranking_score": 8,
+          "true_rank": 3
+        }
+      ]
+    },
+    {
+      "week": 11,
+      "standings": [
+        {
+          "team_id": "1",
+          "wins": 6,
+          "losses": 4,
+          "ties": 0,
+          "win_pct": 0.6,
+          "win_streak": "L1",
+          "points_for": 1239.06,
+          "points_against": 1188.86,
+          "weekly": {
+            "result": "L",
+            "points_for": 80.64,
+            "points_against": 106.34
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "4",
+          "wins": 5,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W4",
+          "points_for": 1258.32,
+          "points_against": 1282.24,
+          "weekly": {
+            "result": "W",
+            "points_for": 155.56,
+            "points_against": 114.84
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "3",
+          "wins": 5,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W1",
+          "points_for": 1190.9,
+          "points_against": 1173.56,
+          "weekly": {
+            "result": "W",
+            "points_for": 106.34,
+            "points_against": 80.64
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "2",
+          "wins": 4,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.4,
+          "win_streak": "L4",
+          "points_for": 1244.16,
+          "points_against": 1287.78,
+          "weekly": {
+            "result": "L",
+            "points_for": 114.84,
+            "points_against": 155.56
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 15,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.5,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 17,
+            "losses": 13,
+            "ties": 0,
+            "win_pct": 0.5667,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 13,
+            "losses": 17,
+            "ties": 0,
+            "win_pct": 0.4333,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 15,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.5,
+            "rank": 2
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 80.64,
+            "optimal_points": 101.78,
+            "diff": -21.14,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -226.9,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 114.84,
+            "optimal_points": 129.74,
+            "diff": -14.9,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -219.2,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 106.34,
+            "optimal_points": 120.42,
+            "diff": -14.08,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -266.12,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 155.56,
+            "optimal_points": 186.8,
+            "diff": -31.24,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -254.6,
+            "rank": 3
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 4,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 3,
+          "true_ranking_score": 11,
+          "true_rank": 3
+        },
+        {
+          "team_id": "2",
+          "record_rank": 1,
+          "points_for_rank": 3,
+          "breakdown_rank": 4,
+          "coaching_rank": 4,
+          "true_ranking_score": 12,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 2,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 1,
+          "true_ranking_score": 5,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 3,
+          "points_for_rank": 4,
+          "breakdown_rank": 3,
+          "coaching_rank": 2,
+          "true_ranking_score": 12,
+          "true_rank": 2
+        }
+      ]
+    },
+    {
+      "week": 12,
+      "standings": [
+        {
+          "team_id": "4",
+          "wins": 6,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.5455,
+          "win_streak": "W5",
+          "points_for": 1423.18,
+          "points_against": 1420.26,
+          "weekly": {
+            "result": "W",
+            "points_for": 164.86,
+            "points_against": 138.02
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "1",
+          "wins": 6,
+          "losses": 5,
+          "ties": 0,
+          "win_pct": 0.5455,
+          "win_streak": "L2",
+          "points_for": 1377.08,
+          "points_against": 1353.72,
+          "weekly": {
+            "result": "L",
+            "points_for": 138.02,
+            "points_against": 164.86
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "2",
+          "wins": 5,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.4545,
+          "win_streak": "W1",
+          "points_for": 1371.16,
+          "points_against": 1391.04,
+          "weekly": {
+            "result": "W",
+            "points_for": 127.0,
+            "points_against": 103.26
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "3",
+          "wins": 5,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.4545,
+          "win_streak": "L1",
+          "points_for": 1294.16,
+          "points_against": 1300.56,
+          "weekly": {
+            "result": "L",
+            "points_for": 103.26,
+            "points_against": 127.0
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 17,
+            "losses": 16,
+            "ties": 0,
+            "win_pct": 0.5152,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 18,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.5455,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 13,
+            "losses": 20,
+            "ties": 0,
+            "win_pct": 0.3939,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 18,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.5455,
+            "rank": 1
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 138.02,
+            "optimal_points": 162.84,
+            "diff": -24.82,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -251.72,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 127.0,
+            "optimal_points": 172.12,
+            "diff": -45.12,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -264.32,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 103.26,
+            "optimal_points": 127.16,
+            "diff": -23.9,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -290.02,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 164.86,
+            "optimal_points": 166.56,
+            "diff": -1.7,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -256.3,
+            "rank": 2
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 2,
+          "coaching_rank": 4,
+          "true_ranking_score": 12,
+          "true_rank": 2
+        },
+        {
+          "team_id": "2",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 3,
+          "coaching_rank": 2,
+          "true_ranking_score": 9,
+          "true_rank": 3
+        },
+        {
+          "team_id": "3",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 1,
+          "true_ranking_score": 4,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 3,
+          "true_ranking_score": 15,
+          "true_rank": 1
+        }
+      ]
+    },
+    {
+      "week": 13,
+      "standings": [
+        {
+          "team_id": "4",
+          "wins": 6,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "L1",
+          "points_for": 1537.1,
+          "points_against": 1534.4,
+          "weekly": {
+            "result": "L",
+            "points_for": 113.92,
+            "points_against": 114.14
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "2",
+          "wins": 6,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W2",
+          "points_for": 1517.64,
+          "points_against": 1514.64,
+          "weekly": {
+            "result": "W",
+            "points_for": 146.48,
+            "points_against": 123.6
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "1",
+          "wins": 6,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "L3",
+          "points_for": 1500.68,
+          "points_against": 1500.2,
+          "weekly": {
+            "result": "L",
+            "points_for": 123.6,
+            "points_against": 146.48
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "3",
+          "wins": 6,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.5,
+          "win_streak": "W1",
+          "points_for": 1408.3,
+          "points_against": 1414.48,
+          "weekly": {
+            "result": "W",
+            "points_for": 114.14,
+            "points_against": 113.92
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 19,
+            "losses": 17,
+            "ties": 0,
+            "win_pct": 0.5278,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 21,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.5833,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 14,
+            "losses": 22,
+            "ties": 0,
+            "win_pct": 0.3889,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 18,
+            "losses": 18,
+            "ties": 0,
+            "win_pct": 0.5,
+            "rank": 3
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 123.6,
+            "optimal_points": 169.54,
+            "diff": -45.94,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -297.66,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 146.48,
+            "optimal_points": 155.38,
+            "diff": -8.9,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -273.22,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 114.14,
+            "optimal_points": 143.28,
+            "diff": -29.14,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -319.16,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 113.92,
+            "optimal_points": 130.02,
+            "diff": -16.1,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -272.4,
+            "rank": 1
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 3,
+          "coaching_rank": 2,
+          "true_ranking_score": 9,
+          "true_rank": 3
+        },
+        {
+          "team_id": "2",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 4,
+          "coaching_rank": 3,
+          "true_ranking_score": 13,
+          "true_rank": 2
+        },
+        {
+          "team_id": "3",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 1,
+          "true_ranking_score": 4,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 2,
+          "coaching_rank": 4,
+          "true_ranking_score": 14,
+          "true_rank": 1
+        }
+      ]
+    },
+    {
+      "week": 14,
+      "standings": [
+        {
+          "team_id": "2",
+          "wins": 7,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.5385,
+          "win_streak": "W3",
+          "points_for": 1679.94,
+          "points_against": 1621.52,
+          "weekly": {
+            "result": "W",
+            "points_for": 162.3,
+            "points_against": 106.88
+          },
+          "rank": 1
+        },
+        {
+          "team_id": "1",
+          "wins": 7,
+          "losses": 6,
+          "ties": 0,
+          "win_pct": 0.5385,
+          "win_streak": "W1",
+          "points_for": 1653.42,
+          "points_against": 1629.02,
+          "weekly": {
+            "result": "W",
+            "points_for": 152.74,
+            "points_against": 128.82
+          },
+          "rank": 2
+        },
+        {
+          "team_id": "4",
+          "wins": 6,
+          "losses": 7,
+          "ties": 0,
+          "win_pct": 0.4615,
+          "win_streak": "L2",
+          "points_for": 1643.98,
+          "points_against": 1696.7,
+          "weekly": {
+            "result": "L",
+            "points_for": 106.88,
+            "points_against": 162.3
+          },
+          "rank": 3
+        },
+        {
+          "team_id": "3",
+          "wins": 6,
+          "losses": 7,
+          "ties": 0,
+          "win_pct": 0.4615,
+          "win_streak": "L1",
+          "points_for": 1537.12,
+          "points_against": 1567.22,
+          "weekly": {
+            "result": "L",
+            "points_for": 128.82,
+            "points_against": 152.74
+          },
+          "rank": 4
+        }
+      ],
+      "breakdown": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "wins": 2,
+            "losses": 1,
+            "ties": 0,
+            "win_pct": 0.6667,
+            "rank": 2
+          },
+          "cumulative": {
+            "wins": 21,
+            "losses": 18,
+            "ties": 0,
+            "win_pct": 0.5385,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "wins": 3,
+            "losses": 0,
+            "ties": 0,
+            "win_pct": 1.0,
+            "rank": 1
+          },
+          "cumulative": {
+            "wins": 24,
+            "losses": 15,
+            "ties": 0,
+            "win_pct": 0.6154,
+            "rank": 1
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "wins": 1,
+            "losses": 2,
+            "ties": 0,
+            "win_pct": 0.3333,
+            "rank": 3
+          },
+          "cumulative": {
+            "wins": 15,
+            "losses": 24,
+            "ties": 0,
+            "win_pct": 0.3846,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "wins": 0,
+            "losses": 3,
+            "ties": 0,
+            "win_pct": 0.0,
+            "rank": 4
+          },
+          "cumulative": {
+            "wins": 18,
+            "losses": 21,
+            "ties": 0,
+            "win_pct": 0.4615,
+            "rank": 3
+          }
+        }
+      ],
+      "coaching": [
+        {
+          "team_id": "1",
+          "weekly": {
+            "actual_points": 152.74,
+            "optimal_points": 196.38,
+            "diff": -43.64,
+            "rank": 4
+          },
+          "cumulative": {
+            "diff_sum": -341.3,
+            "rank": 4
+          }
+        },
+        {
+          "team_id": "2",
+          "weekly": {
+            "actual_points": 162.3,
+            "optimal_points": 182.94,
+            "diff": -20.64,
+            "rank": 2
+          },
+          "cumulative": {
+            "diff_sum": -293.86,
+            "rank": 2
+          }
+        },
+        {
+          "team_id": "3",
+          "weekly": {
+            "actual_points": 128.82,
+            "optimal_points": 146.16,
+            "diff": -17.34,
+            "rank": 1
+          },
+          "cumulative": {
+            "diff_sum": -336.5,
+            "rank": 3
+          }
+        },
+        {
+          "team_id": "4",
+          "weekly": {
+            "actual_points": 106.88,
+            "optimal_points": 128.16,
+            "diff": -21.28,
+            "rank": 3
+          },
+          "cumulative": {
+            "diff_sum": -293.68,
+            "rank": 1
+          }
+        }
+      ],
+      "true_ranking": [
+        {
+          "team_id": "1",
+          "record_rank": 3,
+          "points_for_rank": 3,
+          "breakdown_rank": 3,
+          "coaching_rank": 1,
+          "true_ranking_score": 10,
+          "true_rank": 2
+        },
+        {
+          "team_id": "2",
+          "record_rank": 4,
+          "points_for_rank": 4,
+          "breakdown_rank": 4,
+          "coaching_rank": 3,
+          "true_ranking_score": 15,
+          "true_rank": 1
+        },
+        {
+          "team_id": "3",
+          "record_rank": 1,
+          "points_for_rank": 1,
+          "breakdown_rank": 1,
+          "coaching_rank": 2,
+          "true_ranking_score": 5,
+          "true_rank": 4
+        },
+        {
+          "team_id": "4",
+          "record_rank": 2,
+          "points_for_rank": 2,
+          "breakdown_rank": 2,
+          "coaching_rank": 4,
+          "true_ranking_score": 10,
+          "true_rank": 3
+        }
+      ]
+    }
+  ]
+}

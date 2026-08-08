@@ -1,0 +1,258 @@
+{
+  "season": 2012,
+  "team_id": "1",
+  "week": 14,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2533031",
+      "player_name": "Andrew Luck",
+      "position": "QB",
+      "nfl_team": "IND",
+      "opp": "TEN",
+      "points": 10.54,
+      "stats": {
+        "stat_5": "196",
+        "stat_6": "1",
+        "stat_7": "2",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "79555",
+      "player_name": "Arian Foster",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@NE",
+      "points": 14.5,
+      "stats": {
+        "stat_14": "46",
+        "stat_15": "1",
+        "stat_21": "39"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2495560",
+      "player_name": "Ahmad Bradshaw",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "NO",
+      "points": 3.3,
+      "stats": {
+        "stat_14": "33"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2505936",
+      "player_name": "Steven Jackson",
+      "position": "RB",
+      "nfl_team": "STL",
+      "opp": "@BUF",
+      "points": 13.3,
+      "stats": {
+        "stat_14": "64",
+        "stat_15": "1",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2495454",
+      "player_name": "Julio Jones",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "@CAR",
+      "points": 12.6,
+      "stats": {
+        "stat_21": "66",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2495893",
+      "player_name": "Brandon Marshall",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "@MIN",
+      "points": 22.0,
+      "stats": {
+        "stat_21": "160",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "497244",
+      "player_name": "Aaron Hernandez",
+      "position": "TE",
+      "nfl_team": "NE",
+      "opp": "HOU",
+      "points": 19.8,
+      "stats": {
+        "stat_21": "58",
+        "stat_22": "2"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "497328",
+      "player_name": "Demaryius Thomas",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "@LV",
+      "points": 8.3,
+      "stats": {
+        "stat_21": "83"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2495450",
+      "player_name": "A.J. Green",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "DAL",
+      "points": 4.4,
+      "stats": {
+        "stat_21": "44"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2507463",
+      "player_name": "Connor Barth",
+      "position": "K",
+      "nfl_team": "TB",
+      "opp": "PHI",
+      "points": 3.0,
+      "stats": {
+        "stat_33": "3"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100030",
+      "player_name": "Seattle Seahawks",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "ARI",
+      "points": 41.0,
+      "stats": {
+        "stat_54": "0",
+        "stat_45": "3",
+        "stat_46": "4",
+        "stat_47": "4",
+        "stat_50": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "234",
+      "player_name": "Matt Forte",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "@MIN",
+      "points": 11.9,
+      "stats": {
+        "stat_14": "85",
+        "stat_21": "34"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "310",
+      "player_name": "Matt Ryan",
+      "position": "QB",
+      "nfl_team": "ATL",
+      "opp": "@CAR",
+      "points": 19.68,
+      "stats": {
+        "stat_5": "342",
+        "stat_6": "2",
+        "stat_7": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "497284",
+      "player_name": "Eric Decker",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "@LV",
+      "points": 8.8,
+      "stats": {
+        "stat_21": "88"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495455",
+      "player_name": "Cam Newton",
+      "position": "QB",
+      "nfl_team": "CAR",
+      "opp": "ATL",
+      "points": 37.08,
+      "stats": {
+        "stat_5": "287",
+        "stat_6": "2",
+        "stat_14": "116",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495468",
+      "player_name": "Mikel Leshoure",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "@GB",
+      "points": 4.9,
+      "stats": {
+        "stat_14": "49"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2504595",
+      "player_name": "Steve Smith",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "ATL",
+      "points": 10.9,
+      "stats": {
+        "stat_21": "109"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2506369",
+      "player_name": "Heath Miller",
+      "position": "TE",
+      "nfl_team": "PIT",
+      "opp": "LAC",
+      "points": 6.6,
+      "stats": {
+        "stat_21": "66"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2506874",
+      "player_name": "Reggie Bush",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "@SF",
+      "points": 10.3,
+      "stats": {
+        "stat_14": "65",
+        "stat_21": "38"
+      }
+    }
+  ]
+}

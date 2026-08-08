@@ -1,0 +1,228 @@
+{
+  "season": 2025,
+  "team_id": "6",
+  "week": 4,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2562299",
+      "player_name": "Daniel Jones",
+      "position": "QB",
+      "nfl_team": "IND",
+      "opp": "@LAR",
+      "points": 10.38,
+      "stats": {
+        "stat_5": "262",
+        "stat_6": "1",
+        "stat_7": "2",
+        "stat_14": "-1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "NO",
+      "points": 21.0,
+      "stats": {
+        "stat_14": "117",
+        "stat_15": "1",
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567808",
+      "player_name": "Isiah Pacheco",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "BAL",
+      "points": 11.8,
+      "stats": {
+        "stat_14": "35",
+        "stat_21": "13",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560888",
+      "player_name": "Courtland Sutton",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "CIN",
+      "points": 16.6,
+      "stats": {
+        "stat_21": "81",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "@PIT",
+      "points": 17.6,
+      "stats": {
+        "stat_21": "126"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2564676",
+      "player_name": "Juwan Johnson",
+      "position": "TE",
+      "nfl_team": "NO",
+      "opp": "@BUF",
+      "points": 4.3,
+      "stats": {
+        "stat_21": "28"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2565899",
+      "player_name": "Chuba Hubbard",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@NE",
+      "points": 8.4,
+      "stats": {
+        "stat_14": "49",
+        "stat_21": "20"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2571750",
+      "player_name": "Brandon Aubrey",
+      "position": "K",
+      "nfl_team": "DAL",
+      "opp": "GB",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "5",
+        "stat_36": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CIN",
+      "points": 10.0,
+      "stats": {
+        "stat_54": "3",
+        "stat_45": "3"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2569819",
+      "player_name": "C.J. Stroud",
+      "position": "QB",
+      "nfl_team": "HOU",
+      "opp": "TEN",
+      "points": 18.42,
+      "stats": {
+        "stat_5": "233",
+        "stat_6": "2",
+        "stat_14": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543468",
+      "player_name": "Mike Evans",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "PHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560854",
+      "player_name": "Calvin Ridley",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "@HOU",
+      "points": 4.0,
+      "stats": {
+        "stat_21": "30"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562721",
+      "player_name": "Deebo Samuel Sr.",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "@ATL",
+      "points": 19.1,
+      "stats": {
+        "stat_21": "72",
+        "stat_22": "1",
+        "stat_14": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569594",
+      "player_name": "Dalton Kincaid",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "NO",
+      "points": 9.3,
+      "stats": {
+        "stat_21": "28",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "TEN",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100011",
+      "player_name": "Green Bay Packers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@DAL",
+      "points": -3.0,
+      "stats": {
+        "stat_54": "38",
+        "stat_45": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100021",
+      "player_name": "New England Patriots",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CAR",
+      "points": 11.0,
+      "stats": {
+        "stat_54": "13",
+        "stat_45": "1",
+        "stat_53": "1"
+      }
+    }
+  ]
+}

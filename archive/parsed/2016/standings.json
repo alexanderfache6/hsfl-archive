@@ -1,0 +1,176 @@
+{
+  "season": 2016,
+  "final_standings": [
+    {
+      "rank": 1,
+      "team_id": "2",
+      "team_name": "Daddy",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1238.46,
+      "points_against": 1179.44,
+      "champion": true
+    },
+    {
+      "rank": 2,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "points_for": 1254.6,
+      "points_against": 1124.5,
+      "champion": false
+    },
+    {
+      "rank": 3,
+      "team_id": "5",
+      "team_name": "Los Chunches",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1326.78,
+      "points_against": 1223.7,
+      "champion": false
+    },
+    {
+      "rank": 4,
+      "team_id": "6",
+      "team_name": "Yellow Jackets",
+      "wins": 12,
+      "losses": 2,
+      "ties": 0,
+      "points_for": 1469.38,
+      "points_against": 1010.7,
+      "champion": false
+    },
+    {
+      "rank": 5,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1038.08,
+      "points_against": 1302.3,
+      "champion": false
+    },
+    {
+      "rank": 6,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 3,
+      "losses": 11,
+      "ties": 0,
+      "points_for": 913.62,
+      "points_against": 1143.2,
+      "champion": false
+    },
+    {
+      "rank": 7,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 4,
+      "losses": 10,
+      "ties": 0,
+      "points_for": 1035.52,
+      "points_against": 1212.82,
+      "champion": false
+    },
+    {
+      "rank": 8,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1123.9,
+      "points_against": 1203.68,
+      "champion": false
+    }
+  ],
+  "regular_season_standings": [
+    {
+      "rank": 1,
+      "team_id": "6",
+      "team_name": "Yellow Jackets",
+      "wins": 12,
+      "losses": 2,
+      "ties": 0,
+      "points_for": 1469.38,
+      "points_against": 1010.7
+    },
+    {
+      "rank": 2,
+      "team_id": "1",
+      "team_name": "The Nosehares",
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "points_for": 1254.6,
+      "points_against": 1124.5
+    },
+    {
+      "rank": 3,
+      "team_id": "5",
+      "team_name": "Los Chunches",
+      "wins": 8,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1326.78,
+      "points_against": 1223.7
+    },
+    {
+      "rank": 4,
+      "team_id": "2",
+      "team_name": "Daddy",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1238.46,
+      "points_against": 1179.44
+    },
+    {
+      "rank": 5,
+      "team_id": "7",
+      "team_name": "Redwood Forrests",
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1123.9,
+      "points_against": 1203.68
+    },
+    {
+      "rank": 6,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 5,
+      "losses": 9,
+      "ties": 0,
+      "points_for": 1038.08,
+      "points_against": 1302.3
+    },
+    {
+      "rank": 7,
+      "team_id": "4",
+      "team_name": "Duct Tape Crusaders",
+      "wins": 4,
+      "losses": 10,
+      "ties": 0,
+      "points_for": 1035.52,
+      "points_against": 1212.82
+    },
+    {
+      "rank": 8,
+      "team_id": "8",
+      "team_name": "Victorious Secret",
+      "wins": 3,
+      "losses": 11,
+      "ties": 0,
+      "points_for": 913.62,
+      "points_against": 1143.2
+    }
+  ],
+  "notes": "final_standings wins/losses/points are regular-season figures (site doesn't separately expose postseason W-L) - see playoffs.json for actual postseason results."
+}

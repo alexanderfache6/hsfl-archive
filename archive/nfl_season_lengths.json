@@ -1,0 +1,19 @@
+{
+  "nfl_regular_season_games": {
+    "2012": 16,
+    "2013": 16,
+    "2014": 16,
+    "2015": 16,
+    "2016": 16,
+    "2017": 16,
+    "2018": 16,
+    "2019": 16,
+    "2020": 16,
+    "2021": 17,
+    "2022": 17,
+    "2023": 17,
+    "2024": 17,
+    "2025": 17
+  },
+  "note": "Each NFL team's real regular-season game count per year (source: NFL's own published schedule history) - 16 games/season through 2020, expanded to 17 games/season starting 2021 per the 2020 CBA. Used by the frontend's Players tab to compute an 'NFL Games' metric (regular_season_games - 1 bye, assuming exactly one bye per team per season) - the count of real NFL games a player was ELIGIBLE to appear in during every season they show up in archive/player_ownership.json, regardless of whether any fantasy manager actually rostered them that week. Deliberately NOT the same as this league's own fantasy regular-season week count (which is shorter, since it excludes fantasy playoff weeks - see load_regular_season_weeks() in code/stats-aggregation/utils.py for that separate, smaller number)."
+}

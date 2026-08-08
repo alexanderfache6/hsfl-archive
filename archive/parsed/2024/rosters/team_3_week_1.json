@@ -1,0 +1,217 @@
+{
+  "season": 2024,
+  "team_id": "3",
+  "week": 1,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "ARI",
+      "points": 31.18,
+      "stats": {
+        "stat_5": "232",
+        "stat_6": "2",
+        "stat_14": "39",
+        "stat_15": "2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557978",
+      "player_name": "James Conner",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "@BUF",
+      "points": 17.8,
+      "stats": {
+        "stat_14": "50",
+        "stat_15": "1",
+        "stat_21": "33",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566157",
+      "player_name": "Travis Etienne",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "@MIA",
+      "points": 10.9,
+      "stats": {
+        "stat_14": "44",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560813",
+      "player_name": "DJ Moore",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "TEN",
+      "points": 7.5,
+      "stats": {
+        "stat_21": "36",
+        "stat_14": "14"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566073",
+      "player_name": "Amon-Ra St. Brown",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "LAR",
+      "points": 2.8,
+      "stats": {
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2569726",
+      "player_name": "Sam LaPorta",
+      "position": "TE",
+      "nfl_team": "DET",
+      "opp": "LAR",
+      "points": 6.5,
+      "stats": {
+        "stat_21": "45"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2569921",
+      "player_name": "Rashee Rice",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "BAL",
+      "points": 13.8,
+      "stats": {
+        "stat_21": "103"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2539227",
+      "player_name": "Dustin Hopkins",
+      "position": "K",
+      "nfl_team": "CLE",
+      "opp": "DAL",
+      "points": 7.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "DAL",
+      "points": 2.0,
+      "stats": {
+        "stat_54": "33",
+        "stat_45": "3"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "LAR",
+      "points": 11.38,
+      "stats": {
+        "stat_5": "217",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572189",
+      "player_name": "Blake Corum",
+      "position": "RB",
+      "nfl_team": "LAR",
+      "opp": "@DET",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562734",
+      "player_name": "Devin Singletary",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "MIN",
+      "points": 7.2,
+      "stats": {
+        "stat_14": "37",
+        "stat_21": "15"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569573",
+      "player_name": "Zay Flowers",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "@KC",
+      "points": 8.1,
+      "stats": {
+        "stat_21": "37",
+        "stat_14": "14"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "DAL",
+      "points": 2.9,
+      "stats": {
+        "stat_21": "19"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552430",
+      "player_name": "Tyler Lockett",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "@CHI",
+      "points": 10.7,
+      "stats": {
+        "stat_21": "77"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572219",
+      "player_name": "Brock Bowers",
+      "position": "TE",
+      "nfl_team": "LV",
+      "opp": "@LAC",
+      "points": 8.8,
+      "stats": {
+        "stat_21": "58"
+      }
+    }
+  ]
+}

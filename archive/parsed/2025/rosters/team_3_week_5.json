@@ -1,0 +1,220 @@
+{
+  "season": 2025,
+  "team_id": "3",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564832",
+      "player_name": "Jalen Hurts",
+      "position": "QB",
+      "nfl_team": "PHI",
+      "opp": "DEN",
+      "points": 19.5,
+      "stats": {
+        "stat_5": "280",
+        "stat_6": "2",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "@LAR",
+      "points": 23.9,
+      "stats": {
+        "stat_14": "57",
+        "stat_21": "82",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2574427",
+      "player_name": "Cam Skattebo",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "@NO",
+      "points": 11.4,
+      "stats": {
+        "stat_14": "59",
+        "stat_30": "1",
+        "stat_21": "45"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566073",
+      "player_name": "Amon-Ra St. Brown",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "@CIN",
+      "points": 14.0,
+      "stats": {
+        "stat_21": "100"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2568048",
+      "player_name": "Garrett Wilson",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "DAL",
+      "points": 16.1,
+      "stats": {
+        "stat_21": "71",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2568117",
+      "player_name": "Trey McBride",
+      "position": "TE",
+      "nfl_team": "ARI",
+      "opp": "TEN",
+      "points": 6.6,
+      "stats": {
+        "stat_21": "41"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2574585",
+      "player_name": "Emeka Egbuka",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "@SEA",
+      "points": 27.8,
+      "stats": {
+        "stat_21": "163",
+        "stat_22": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2558245",
+      "player_name": "Harrison Butker",
+      "position": "K",
+      "nfl_team": "KC",
+      "opp": "@JAX",
+      "points": 4.0,
+      "stats": {
+        "stat_33": "4"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100020",
+      "player_name": "Minnesota Vikings",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CLE",
+      "points": 3.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "@CIN",
+      "points": 20.12,
+      "stats": {
+        "stat_5": "258",
+        "stat_6": "3",
+        "stat_14": "-2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566157",
+      "player_name": "Travis Etienne",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "KC",
+      "points": 7.3,
+      "stats": {
+        "stat_14": "49",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569257",
+      "player_name": "Jordan Mason",
+      "position": "RB",
+      "nfl_team": "MIN",
+      "opp": "@CLE",
+      "points": 11.1,
+      "stats": {
+        "stat_14": "52",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "4"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "TEN",
+      "opp": "@ARI",
+      "points": 13.3,
+      "stats": {
+        "stat_14": "67",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2573992",
+      "player_name": "Tetairoa McMillan",
+      "position": "WR",
+      "nfl_team": "CAR",
+      "opp": "MIA",
+      "points": 10.3,
+      "stats": {
+        "stat_21": "73"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567334",
+      "player_name": "Khalil Shakir",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "NE",
+      "points": 8.0,
+      "stats": {
+        "stat_21": "45",
+        "stat_14": "5"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540158",
+      "player_name": "Zach Ertz",
+      "position": "TE",
+      "nfl_team": "WAS",
+      "opp": "@LAC",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

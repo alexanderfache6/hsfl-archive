@@ -1,0 +1,228 @@
+{
+  "season": 2024,
+  "team_id": "8",
+  "week": 16,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560757",
+      "player_name": "Lamar Jackson",
+      "position": "QB",
+      "nfl_team": "BAL",
+      "opp": "PIT",
+      "points": 20.48,
+      "stats": {
+        "stat_5": "207",
+        "stat_6": "3",
+        "stat_7": "1",
+        "stat_14": "22"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2560968",
+      "player_name": "Saquon Barkley",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 27.0,
+      "stats": {
+        "stat_14": "150",
+        "stat_15": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2569642",
+      "player_name": "Chase Brown",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "CLE",
+      "points": 12.4,
+      "stats": {
+        "stat_14": "91",
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543495",
+      "player_name": "Davante Adams",
+      "position": "WR",
+      "nfl_team": "LAR",
+      "opp": "@NYJ",
+      "points": 16.3,
+      "stats": {
+        "stat_21": "68",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2570341",
+      "player_name": "Jaxon Smith-Njigba",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "MIN",
+      "points": 20.0,
+      "stats": {
+        "stat_21": "95",
+        "stat_22": "1",
+        "stat_14": "5"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "@MIA",
+      "points": 14.6,
+      "stats": {
+        "stat_21": "106"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2566409",
+      "player_name": "DeVonta Smith",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 8.1,
+      "stats": {
+        "stat_21": "51"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2536340",
+      "player_name": "Justin Tucker",
+      "position": "K",
+      "nfl_team": "BAL",
+      "opp": "PIT",
+      "points": 12.0,
+      "stats": {
+        "stat_33": "4",
+        "stat_36": "1",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100010",
+      "player_name": "Detroit Lions",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CHI",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "17",
+        "stat_45": "2",
+        "stat_47": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2532975",
+      "player_name": "Russell Wilson",
+      "position": "QB",
+      "nfl_team": "NYG",
+      "opp": "@ATL",
+      "points": 15.38,
+      "stats": {
+        "stat_5": "217",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "27",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2570335",
+      "player_name": "Zach Charbonnet",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "MIN",
+      "points": 2.3,
+      "stats": {
+        "stat_14": "-1",
+        "stat_21": "14"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2559169",
+      "player_name": "Austin Ekeler",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "PHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562502",
+      "player_name": "David Montgomery",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "@CHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569912",
+      "player_name": "Brenton Strange",
+      "position": "TE",
+      "nfl_team": "JAX",
+      "opp": "@LV",
+      "points": 1.2,
+      "stats": {
+        "stat_21": "22",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2562379",
+      "player_name": "Marquise Brown",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "HOU",
+      "points": 7.0,
+      "stats": {
+        "stat_21": "45"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563596",
+      "player_name": "Tyler Bass",
+      "position": "K",
+      "nfl_team": "BUF",
+      "opp": "NE",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100029",
+      "player_name": "San Francisco 49ers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@MIA",
+      "points": -1.0,
+      "stats": {
+        "stat_54": "29"
+      }
+    }
+  ]
+}

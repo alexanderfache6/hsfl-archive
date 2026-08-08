@@ -1,0 +1,191 @@
+{
+  "season": 2016,
+  "team_id": "3",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2505245",
+      "player_name": "Carson Palmer",
+      "position": "QB",
+      "nfl_team": "ARI",
+      "opp": "@SF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RB",
+      "player_id": "79607",
+      "player_name": "LeSean McCoy",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "@LAR",
+      "points": 15.8,
+      "stats": {
+        "stat_14": "150",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543488",
+      "player_name": "Jarvis Landry",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "TEN",
+      "points": 3.0,
+      "stats": {
+        "stat_21": "28",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543509",
+      "player_name": "Allen Robinson",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "TE",
+      "player_id": "2540160",
+      "player_name": "Jordan Reed",
+      "position": "TE",
+      "nfl_team": "WAS",
+      "opp": "@BAL",
+      "points": 5.3,
+      "stats": {
+        "stat_21": "53"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2531332",
+      "player_name": "Terrelle Pryor",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "NE",
+      "points": 7.3,
+      "stats": {
+        "stat_21": "48",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "71309",
+      "player_name": "Graham Gano",
+      "position": "K",
+      "nfl_team": "CAR",
+      "opp": "TB",
+      "points": 2.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100030",
+      "player_name": "Seattle Seahawks",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "497278",
+      "player_name": "Dez Bryant",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "CIN",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2495328",
+      "player_name": "Bilal Powell",
+      "position": "RB",
+      "nfl_team": "NYJ",
+      "opp": "@PIT",
+      "points": 5.1,
+      "stats": {
+        "stat_14": "10",
+        "stat_21": "41"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543500",
+      "player_name": "Jordan Matthews",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "@DET",
+      "points": 6.5,
+      "stats": {
+        "stat_21": "65"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543664",
+      "player_name": "Terrance West",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "WAS",
+      "points": 8.9,
+      "stats": {
+        "stat_14": "95",
+        "stat_21": "-6"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2553913",
+      "player_name": "Tyrell Williams",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "@LV",
+      "points": 17.7,
+      "stats": {
+        "stat_21": "117",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540158",
+      "player_name": "Zach Ertz",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@DET",
+      "points": 3.7,
+      "stats": {
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100020",
+      "player_name": "Minnesota Vikings",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "HOU",
+      "points": 16.0,
+      "stats": {
+        "stat_54": "13",
+        "stat_45": "4",
+        "stat_46": "1",
+        "stat_53": "1"
+      }
+    }
+  ]
+}

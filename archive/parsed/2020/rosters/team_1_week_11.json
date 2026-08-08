@@ -1,0 +1,228 @@
+{
+  "season": 2020,
+  "team_id": "1",
+  "week": 11,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558954",
+      "player_name": "Taysom Hill",
+      "position": "QB",
+      "nfl_team": "NO",
+      "opp": "ATL",
+      "points": 24.22,
+      "stats": {
+        "stat_5": "233",
+        "stat_14": "49",
+        "stat_15": "2",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557991",
+      "player_name": "Dalvin Cook",
+      "position": "RB",
+      "nfl_team": "MIN",
+      "opp": "DAL",
+      "points": 22.5,
+      "stats": {
+        "stat_14": "115",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "45"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "PHI",
+      "points": 11.4,
+      "stats": {
+        "stat_14": "114"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2555346",
+      "player_name": "Will Fuller",
+      "position": "WR",
+      "nfl_team": "HOU",
+      "opp": "NE",
+      "points": 11.0,
+      "stats": {
+        "stat_21": "80"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2556214",
+      "player_name": "Tyreek Hill",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@LV",
+      "points": 21.5,
+      "stats": {
+        "stat_21": "102",
+        "stat_22": "1",
+        "stat_14": "-2"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2543767",
+      "player_name": "Logan Thomas",
+      "position": "TE",
+      "nfl_team": "WAS",
+      "opp": "CIN",
+      "points": 1.8,
+      "stats": {
+        "stat_21": "6",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2552461",
+      "player_name": "Duke Johnson",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "NE",
+      "points": 5.0,
+      "stats": {
+        "stat_14": "15",
+        "stat_21": "20"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2553112",
+      "player_name": "Jason Myers",
+      "position": "K",
+      "nfl_team": "SEA",
+      "opp": "ARI",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_34": "1",
+        "stat_36": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100032",
+      "player_name": "Washington Football Team",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "CIN",
+      "points": 12.0,
+      "stats": {
+        "stat_54": "9",
+        "stat_45": "4",
+        "stat_46": "1",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "LAR",
+      "points": 12.64,
+      "stats": {
+        "stat_5": "216",
+        "stat_6": "2",
+        "stat_7": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2508061",
+      "player_name": "Antonio Brown",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "LAR",
+      "points": 9.8,
+      "stats": {
+        "stat_21": "57",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2540160",
+      "player_name": "Jordan Reed",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543715",
+      "player_name": "Jerick McKinnon",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552475",
+      "player_name": "Todd Gurley",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "@NO",
+      "points": 3.4,
+      "stats": {
+        "stat_14": "26",
+        "stat_21": "3"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564499",
+      "player_name": "Tua Tagovailoa",
+      "position": "QB",
+      "nfl_team": "MIA",
+      "opp": "@DEN",
+      "points": 7.32,
+      "stats": {
+        "stat_5": "83",
+        "stat_6": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560787",
+      "player_name": "Allen Lazard",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "@IND",
+      "points": 2.8,
+      "stats": {
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2540158",
+      "player_name": "Zach Ertz",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@CLE",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

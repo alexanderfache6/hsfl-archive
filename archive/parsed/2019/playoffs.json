@@ -1,0 +1,145 @@
+{
+  "season": 2019,
+  "championship_bracket": {
+    "rounds": [
+      {
+        "round_name": "Week 15",
+        "round_order": 1,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "Semifinal",
+            "week_label": "Week 15",
+            "seed_home": 1,
+            "team_id_home": "6",
+            "score_home": 83.12,
+            "seed_away": 4,
+            "team_id_away": "8",
+            "score_away": 115.98,
+            "is_bye": false,
+            "winner_team_id": "8"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "Semifinal",
+            "week_label": "Week 15",
+            "seed_home": 2,
+            "team_id_home": "9",
+            "score_home": 91.4,
+            "seed_away": 3,
+            "team_id_away": "1",
+            "score_away": 88.36,
+            "is_bye": false,
+            "winner_team_id": "9"
+          }
+        ]
+      },
+      {
+        "round_name": "Week 16",
+        "round_order": 2,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "Fantasy Super Bowl",
+            "week_label": "Week 16",
+            "seed_home": 4,
+            "team_id_home": "8",
+            "score_home": 97.92,
+            "seed_away": 2,
+            "team_id_away": "9",
+            "score_away": 85.52,
+            "is_bye": false,
+            "winner_team_id": "8"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "3rd Place Game",
+            "week_label": "Week 16",
+            "seed_home": 1,
+            "team_id_home": "6",
+            "score_home": 109.96,
+            "seed_away": 3,
+            "team_id_away": "1",
+            "score_away": 100.58,
+            "is_bye": false,
+            "winner_team_id": "6"
+          }
+        ]
+      }
+    ],
+    "champion_team_id": "8",
+    "runner_up_team_id": "9"
+  },
+  "consolation_bracket": {
+    "rounds": [
+      {
+        "round_name": "Week 15",
+        "round_order": 1,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "",
+            "week_label": "Week 15",
+            "seed_home": 1,
+            "team_id_home": "3",
+            "score_home": 135.6,
+            "seed_away": 4,
+            "team_id_away": "2",
+            "score_away": 148.72,
+            "is_bye": false,
+            "winner_team_id": "2"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "",
+            "week_label": "Week 15",
+            "seed_home": 2,
+            "team_id_home": "5",
+            "score_home": 108.7,
+            "seed_away": 3,
+            "team_id_away": "10",
+            "score_away": 97.58,
+            "is_bye": false,
+            "winner_team_id": "5"
+          }
+        ]
+      },
+      {
+        "round_name": "Week 16",
+        "round_order": 2,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "5th Place Game",
+            "week_label": "Week 16",
+            "seed_home": 4,
+            "team_id_home": "2",
+            "score_home": 120.4,
+            "seed_away": 2,
+            "team_id_away": "5",
+            "score_away": 116.44,
+            "is_bye": false,
+            "winner_team_id": "2"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "7th Place Game",
+            "week_label": "Week 16",
+            "seed_home": 1,
+            "team_id_home": "3",
+            "score_home": 65.36,
+            "seed_away": 3,
+            "team_id_away": "10",
+            "score_away": 97.66,
+            "is_bye": false,
+            "winner_team_id": "10"
+          }
+        ]
+      }
+    ],
+    "consolation_winner_team_id": "2"
+  },
+  "source_urls": [],
+  "fetch_status": "ok",
+  "notes": "Byes and placement-game structure vary by season - see instructions.md section 2 notes."
+}

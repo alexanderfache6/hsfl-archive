@@ -1,0 +1,226 @@
+{
+  "season": 2020,
+  "team_id": "5",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558063",
+      "player_name": "Deshaun Watson",
+      "position": "QB",
+      "nfl_team": "HOU",
+      "opp": "JAX",
+      "points": 24.86,
+      "stats": {
+        "stat_5": "359",
+        "stat_6": "3",
+        "stat_7": "2",
+        "stat_14": "25"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2553439",
+      "player_name": "Mike Davis",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@ATL",
+      "points": 25.4,
+      "stats": {
+        "stat_14": "89",
+        "stat_21": "60",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "@BAL",
+      "points": 12.4,
+      "stats": {
+        "stat_14": "59",
+        "stat_21": "35"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "@NYJ",
+      "points": 22.1,
+      "stats": {
+        "stat_21": "131",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560854",
+      "player_name": "Calvin Ridley",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "CAR",
+      "points": 17.6,
+      "stats": {
+        "stat_21": "136"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "MIA",
+      "points": 6.4,
+      "stats": {
+        "stat_21": "44"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2565276",
+      "player_name": "Antonio Gibson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "LAR",
+      "points": 7.6,
+      "stats": {
+        "stat_14": "27",
+        "stat_21": "24"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2534797",
+      "player_name": "Greg Zuerlein",
+      "position": "K",
+      "nfl_team": "DAL",
+      "opp": "NYG",
+      "points": 13.0,
+      "stats": {
+        "stat_33": "4",
+        "stat_36": "1",
+        "stat_37": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100026",
+      "player_name": "Arizona Cardinals",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@NYJ",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "10",
+        "stat_45": "3"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2532956",
+      "player_name": "Ryan Tannehill",
+      "position": "QB",
+      "nfl_team": "TEN",
+      "opp": "BUF",
+      "points": 30.0,
+      "stats": {
+        "stat_5": "195",
+        "stat_6": "3",
+        "stat_14": "42",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552409",
+      "player_name": "DeVante Parker",
+      "position": "WR",
+      "nfl_team": "MIA",
+      "opp": "@SF",
+      "points": 12.0,
+      "stats": {
+        "stat_21": "50",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557848",
+      "player_name": "Corey Davis",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "BUF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565054",
+      "player_name": "Joshua Kelley",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "@NO",
+      "points": 4.3,
+      "stats": {
+        "stat_14": "29",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562489",
+      "player_name": "Terry McLaurin",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "LAR",
+      "points": 4.1,
+      "stats": {
+        "stat_21": "26"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560747",
+      "player_name": "Hayden Hurst",
+      "position": "TE",
+      "nfl_team": "ATL",
+      "opp": "CAR",
+      "points": 1.8,
+      "stats": {
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@TEN",
+      "points": -4.0,
+      "stats": {
+        "stat_54": "42"
+      }
+    }
+  ]
+}

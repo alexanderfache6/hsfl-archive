@@ -1,0 +1,220 @@
+{
+  "season": 2020,
+  "team_id": "6",
+  "week": 10,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504775",
+      "player_name": "Drew Brees",
+      "position": "QB",
+      "nfl_team": "NO",
+      "opp": "SF",
+      "points": 8.94,
+      "stats": {
+        "stat_5": "76",
+        "stat_6": "1",
+        "stat_14": "-1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2558116",
+      "player_name": "Aaron Jones",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "JAX",
+      "points": 12.0,
+      "stats": {
+        "stat_14": "46",
+        "stat_21": "49"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562574",
+      "player_name": "Darrell Henderson",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "SEA",
+      "points": 9.8,
+      "stats": {
+        "stat_14": "28",
+        "stat_15": "1",
+        "stat_21": "5"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2558149",
+      "player_name": "JuJu Smith-Schuster",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "CIN",
+      "points": 18.2,
+      "stats": {
+        "stat_21": "77",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2560781",
+      "player_name": "Christian Kirk",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "BUF",
+      "points": 4.7,
+      "stats": {
+        "stat_21": "27"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "497240",
+      "player_name": "Rob Gronkowski",
+      "position": "TE",
+      "nfl_team": "TB",
+      "opp": "@CAR",
+      "points": 12.1,
+      "stats": {
+        "stat_21": "51",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2543509",
+      "player_name": "Allen Robinson",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "MIN",
+      "points": 7.3,
+      "stats": {
+        "stat_21": "43"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2536340",
+      "player_name": "Justin Tucker",
+      "position": "K",
+      "nfl_team": "BAL",
+      "opp": "@NE",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_36": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100019",
+      "player_name": "Miami Dolphins",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "LAC",
+      "points": 6.0,
+      "stats": {
+        "stat_54": "21",
+        "stat_45": "2",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2561146",
+      "player_name": "Boston Scott",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@NYG",
+      "points": 13.9,
+      "stats": {
+        "stat_14": "63",
+        "stat_15": "1",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563722",
+      "player_name": "Joe Burrow",
+      "position": "QB",
+      "nfl_team": "CIN",
+      "opp": "@PIT",
+      "points": 12.52,
+      "stats": {
+        "stat_5": "213",
+        "stat_6": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@PIT",
+      "points": 19.0,
+      "stats": {
+        "stat_21": "115",
+        "stat_22": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "@CHI",
+      "points": 17.5,
+      "stats": {
+        "stat_21": "135"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562721",
+      "player_name": "Deebo Samuel",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "@NO",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2553435",
+      "player_name": "David Johnson",
+      "position": "RB",
+      "nfl_team": "HOU",
+      "opp": "@CLE",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558245",
+      "player_name": "Harrison Butker",
+      "position": "K",
+      "nfl_team": "KC",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "season": 2021,
+  "championship_bracket": {
+    "rounds": [
+      {
+        "round_name": "Week 16",
+        "round_order": 1,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "Semifinal",
+            "week_label": "Week 16",
+            "seed_home": 1,
+            "team_id_home": "1",
+            "score_home": 136.64,
+            "seed_away": 4,
+            "team_id_away": "5",
+            "score_away": 157.46,
+            "is_bye": false,
+            "winner_team_id": "5"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "Semifinal",
+            "week_label": "Week 16",
+            "seed_home": 2,
+            "team_id_home": "3",
+            "score_home": 119.16,
+            "seed_away": 3,
+            "team_id_away": "2",
+            "score_away": 75.48,
+            "is_bye": false,
+            "winner_team_id": "3"
+          }
+        ]
+      },
+      {
+        "round_name": "Week 17",
+        "round_order": 2,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "Fantasy Super Bowl",
+            "week_label": "Week 17",
+            "seed_home": 4,
+            "team_id_home": "5",
+            "score_home": 128.06,
+            "seed_away": 2,
+            "team_id_away": "3",
+            "score_away": 135.6,
+            "is_bye": false,
+            "winner_team_id": "3"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "3rd Place Game",
+            "week_label": "Week 17",
+            "seed_home": 1,
+            "team_id_home": "1",
+            "score_home": 98.88,
+            "seed_away": 3,
+            "team_id_away": "2",
+            "score_away": 130.86,
+            "is_bye": false,
+            "winner_team_id": "2"
+          }
+        ]
+      }
+    ],
+    "champion_team_id": "3",
+    "runner_up_team_id": "5"
+  },
+  "consolation_bracket": {
+    "rounds": [
+      {
+        "round_name": "Week 16",
+        "round_order": 1,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "",
+            "week_label": "Week 16",
+            "seed_home": 1,
+            "team_id_home": "6",
+            "score_home": 138.9,
+            "seed_away": 4,
+            "team_id_away": "4",
+            "score_away": 115.82,
+            "is_bye": false,
+            "winner_team_id": "6"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "",
+            "week_label": "Week 16",
+            "seed_home": 2,
+            "team_id_home": "7",
+            "score_home": 100.5,
+            "seed_away": 3,
+            "team_id_away": "8",
+            "score_away": 93.88,
+            "is_bye": false,
+            "winner_team_id": "7"
+          }
+        ]
+      },
+      {
+        "round_name": "Week 17",
+        "round_order": 2,
+        "matchups": [
+          {
+            "bracket_position": 1,
+            "round_label": "5th Place Game",
+            "week_label": "Week 17",
+            "seed_home": 1,
+            "team_id_home": "6",
+            "score_home": 105.54,
+            "seed_away": 2,
+            "team_id_away": "7",
+            "score_away": 99.74,
+            "is_bye": false,
+            "winner_team_id": "6"
+          },
+          {
+            "bracket_position": 2,
+            "round_label": "7th Place Game",
+            "week_label": "Week 17",
+            "seed_home": 4,
+            "team_id_home": "4",
+            "score_home": 93.56,
+            "seed_away": 3,
+            "team_id_away": "8",
+            "score_away": 104.52,
+            "is_bye": false,
+            "winner_team_id": "8"
+          }
+        ]
+      }
+    ],
+    "consolation_winner_team_id": "6"
+  },
+  "source_urls": [],
+  "fetch_status": "ok",
+  "notes": "Byes and placement-game structure vary by season - see instructions.md section 2 notes."
+}

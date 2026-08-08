@@ -1,0 +1,228 @@
+{
+  "season": 2023,
+  "team_id": "2",
+  "week": 3,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "@ARI",
+      "points": 14.36,
+      "stats": {
+        "stat_5": "249",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "24"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567469",
+      "player_name": "Jerome Ford",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "TEN",
+      "points": 18.1,
+      "stats": {
+        "stat_14": "18",
+        "stat_15": "1",
+        "stat_21": "33",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2570149",
+      "player_name": "Kendre Miller",
+      "position": "RB",
+      "nfl_team": "NO",
+      "opp": "@GB",
+      "points": 3.9,
+      "stats": {
+        "stat_14": "34"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "LAR",
+      "points": 3.1,
+      "stats": {
+        "stat_21": "21"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563848",
+      "player_name": "CeeDee Lamb",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@ARI",
+      "points": 8.2,
+      "stats": {
+        "stat_21": "53",
+        "stat_14": "9"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2563704",
+      "player_name": "Cole Kmet",
+      "position": "TE",
+      "nfl_team": "CHI",
+      "opp": "@KC",
+      "points": 3.2,
+      "stats": {
+        "stat_21": "22"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2570026",
+      "player_name": "Puka Nacua",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "@CIN",
+      "points": 9.7,
+      "stats": {
+        "stat_21": "72"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2558245",
+      "player_name": "Harrison Butker",
+      "position": "K",
+      "nfl_team": "KC",
+      "opp": "CHI",
+      "points": 11.0,
+      "stats": {
+        "stat_33": "5",
+        "stat_37": "1",
+        "stat_38": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "TEN",
+      "points": 12.0,
+      "stats": {
+        "stat_54": "3",
+        "stat_45": "5"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2558918",
+      "player_name": "Matt Breida",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "@SF",
+      "points": 9.3,
+      "stats": {
+        "stat_14": "17",
+        "stat_15": "1",
+        "stat_21": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2539335",
+      "player_name": "Geno Smith",
+      "position": "QB",
+      "nfl_team": "SEA",
+      "opp": "CAR",
+      "points": 15.44,
+      "stats": {
+        "stat_5": "296",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "-4",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2559169",
+      "player_name": "Austin Ekeler",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "BUF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569573",
+      "player_name": "Zay Flowers",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "IND",
+      "points": 9.0,
+      "stats": {
+        "stat_21": "48",
+        "stat_14": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566376",
+      "player_name": "Kadarius Toney",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "CHI",
+      "points": 0.4,
+      "stats": {
+        "stat_21": "-1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558846",
+      "player_name": "Mike Williams",
+      "position": "WR",
+      "nfl_team": "NYJ",
+      "opp": "NE",
+      "points": 21.6,
+      "stats": {
+        "stat_21": "121",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566442",
+      "player_name": "Pat Freiermuth",
+      "position": "TE",
+      "nfl_team": "PIT",
+      "opp": "@LV",
+      "points": 11.6,
+      "stats": {
+        "stat_21": "41",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "TEN",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

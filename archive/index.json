@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-08-07T05:13:47.610703+00:00",
+  "seasons": {
+    "2025": {
+      "metadata": "ok",
+      "standings_final": "ok",
+      "standings_regular": "ok",
+      "draft": "ok",
+      "playoffs_championship": "ok",
+      "playoffs_consolation": "ok",
+      "schedule": "ok",
+      "weeks_fetched": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "weeks_total": 17,
+      "transactions": "ok",
+      "transactions_pages_fetched": 61,
+      "transactions_complete": true,
+      "rosters": "ok",
+      "rosters_fetched": 170,
+      "rosters_expected": 170,
+      "errors": [
+        {
+          "timestamp": "2026-08-06T22:43:01.593968+00:00",
+          "url": "https://fantasy.nfl.com/league/1401993/history/2025/",
+          "status_code": 404,
+          "error": "non-2xx response"
+        }
+      ]
+    },
+    "2024": {
+      "metadata": "ok",
+      "standings_final": "ok",
+      "standings_regular": "ok",
+      "draft": "ok",
+      "playoffs_championship": "ok",
+      "playoffs_consolation": "ok",
+      "schedule": "ok",
+      "weeks_fetched": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "weeks_total": 17,
+      "transactions": "ok",
+      "transactions_pages_fetched": 67,
+      "transactions_complete": true,
+      "rosters": "ok",
+      "rosters_fetched": 170,
+      "rosters_expected": 170,
+      "errors": []
+    }
+  },
+  "managers_registry": {
+    "total_managers": 10,
+    "unresolved_count": 0
+  }
+}

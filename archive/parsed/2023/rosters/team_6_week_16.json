@@ -1,0 +1,220 @@
+{
+  "season": 2023,
+  "team_id": "6",
+  "week": 16,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "79860",
+      "player_name": "Matthew Stafford",
+      "position": "QB",
+      "nfl_team": "LA",
+      "opp": "NO",
+      "points": 20.72,
+      "stats": {
+        "stat_5": "328",
+        "stat_6": "2",
+        "stat_14": "-4"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2556075",
+      "player_name": "Derrick Henry",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "@SF",
+      "points": 20.88,
+      "stats": {
+        "stat_14": "88",
+        "stat_15": "1",
+        "stat_21": "11"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567862",
+      "player_name": "Kyren Williams",
+      "position": "RB",
+      "nfl_team": "LA",
+      "opp": "NO",
+      "points": 16.4,
+      "stats": {
+        "stat_14": "104",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2564556",
+      "player_name": "Justin Jefferson",
+      "position": "WR",
+      "nfl_team": "MIN",
+      "opp": "DET",
+      "points": 25.1,
+      "stats": {
+        "stat_21": "141",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2570026",
+      "player_name": "Puka Nacua",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "NO",
+      "points": 28.5,
+      "stats": {
+        "stat_21": "164",
+        "stat_22": "1",
+        "stat_14": "16"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2557986",
+      "player_name": "David Njoku",
+      "position": "TE",
+      "nfl_team": "CLE",
+      "opp": "@HOU",
+      "points": 13.4,
+      "stats": {
+        "stat_21": "44",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2562721",
+      "player_name": "Deebo Samuel Sr.",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "BAL",
+      "points": 7.4,
+      "stats": {
+        "stat_21": "47",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2539227",
+      "player_name": "Dustin Hopkins",
+      "position": "K",
+      "nfl_team": "CLE",
+      "opp": "@HOU",
+      "points": 2.0,
+      "stats": {
+        "stat_33": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100009",
+      "player_name": "Denver Broncos",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "NE",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "20",
+        "stat_45": "2",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "382",
+      "player_name": "Joe Flacco",
+      "position": "QB",
+      "nfl_team": "IND",
+      "opp": "@ATL",
+      "points": 24.82,
+      "stats": {
+        "stat_5": "368",
+        "stat_6": "3",
+        "stat_7": "2",
+        "stat_14": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "@MIN",
+      "points": 14.28,
+      "stats": {
+        "stat_5": "257",
+        "stat_6": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "ARI",
+      "points": 15.2,
+      "stats": {
+        "stat_14": "92",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564136",
+      "player_name": "Michael Pittman",
+      "position": "WR",
+      "nfl_team": "IND",
+      "opp": "@ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565953",
+      "player_name": "Evan McPherson",
+      "position": "K",
+      "nfl_team": "CIN",
+      "opp": "@PIT",
+      "points": 3.0,
+      "stats": {
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100008",
+      "player_name": "Dallas Cowboys",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@MIA",
+      "points": 1.0,
+      "stats": {
+        "stat_54": "22",
+        "stat_45": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100019",
+      "player_name": "Miami Dolphins",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "DAL",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "20",
+        "stat_45": "4",
+        "stat_47": "1"
+      }
+    }
+  ]
+}

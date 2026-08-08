@@ -1,0 +1,222 @@
+{
+  "season": 2025,
+  "team_id": "1",
+  "week": 5,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "NE",
+      "points": 19.42,
+      "stats": {
+        "stat_5": "253",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "53",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2568282",
+      "player_name": "Kenneth Walker III",
+      "position": "RB",
+      "nfl_team": "SEA",
+      "opp": "TB",
+      "points": 9.1,
+      "stats": {
+        "stat_14": "86"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2568315",
+      "player_name": "Rachaad White",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "@SEA",
+      "points": 21.1,
+      "stats": {
+        "stat_14": "41",
+        "stat_15": "2",
+        "stat_21": "30"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2568159",
+      "player_name": "George Pickens",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@NYJ",
+      "points": 12.7,
+      "stats": {
+        "stat_21": "57",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2570275",
+      "player_name": "Quentin Johnston",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "WAS",
+      "points": 4.9,
+      "stats": {
+        "stat_21": "40",
+        "stat_30": "1",
+        "stat_14": "9"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2574204",
+      "player_name": "Tyler Warren",
+      "position": "TE",
+      "nfl_team": "IND",
+      "opp": "LV",
+      "points": 12.4,
+      "stats": {
+        "stat_21": "44",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2567565",
+      "player_name": "Jameson Williams",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "@CIN",
+      "points": 1.5,
+      "stats": {
+        "stat_21": "9",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2553112",
+      "player_name": "Jason Myers",
+      "position": "K",
+      "nfl_team": "SEA",
+      "opp": "TB",
+      "points": 5.0,
+      "stats": {
+        "stat_33": "5",
+        "stat_43": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100010",
+      "player_name": "Detroit Lions",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@CIN",
+      "points": 10.0,
+      "stats": {
+        "stat_54": "24",
+        "stat_45": "2",
+        "stat_46": "3",
+        "stat_49": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2572294",
+      "player_name": "Drake Maye",
+      "position": "QB",
+      "nfl_team": "NE",
+      "opp": "@BUF",
+      "points": 12.12,
+      "stats": {
+        "stat_5": "273",
+        "stat_14": "12"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572546",
+      "player_name": "Bucky Irving",
+      "position": "RB",
+      "nfl_team": "TB",
+      "opp": "@SEA",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2570149",
+      "player_name": "Kendre Miller",
+      "position": "RB",
+      "nfl_team": "NO",
+      "opp": "NYG",
+      "points": 5.4,
+      "stats": {
+        "stat_14": "41",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569558",
+      "player_name": "Bijan Robinson",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2571859",
+      "player_name": "Keon Coleman",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "NE",
+      "points": 8.3,
+      "stats": {
+        "stat_21": "23",
+        "stat_22": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2572507",
+      "player_name": "Ricky Pearsall",
+      "position": "WR",
+      "nfl_team": "SF",
+      "opp": "@LAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "@LAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2569921",
+      "player_name": "Rashee Rice",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@JAX",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

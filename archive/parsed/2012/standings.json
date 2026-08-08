@@ -1,0 +1,92 @@
+{
+  "season": 2012,
+  "final_standings": [
+    {
+      "rank": 1,
+      "team_id": "1",
+      "team_name": "TheGuitarists",
+      "wins": 7,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1653.42,
+      "points_against": 1629.02,
+      "champion": true
+    },
+    {
+      "rank": 2,
+      "team_id": "2",
+      "team_name": "The Problema Aqu",
+      "wins": 7,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1679.94,
+      "points_against": 1621.52,
+      "champion": false
+    },
+    {
+      "rank": 3,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 6,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1537.12,
+      "points_against": 1567.22,
+      "champion": false
+    },
+    {
+      "rank": 4,
+      "team_id": "4",
+      "team_name": "bontenators",
+      "wins": 6,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1643.98,
+      "points_against": 1696.7,
+      "champion": false
+    }
+  ],
+  "regular_season_standings": [
+    {
+      "rank": 1,
+      "team_id": "2",
+      "team_name": "The Problema Aqu",
+      "wins": 7,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1679.94,
+      "points_against": 1621.52
+    },
+    {
+      "rank": 2,
+      "team_id": "1",
+      "team_name": "TheGuitarists",
+      "wins": 7,
+      "losses": 6,
+      "ties": 0,
+      "points_for": 1653.42,
+      "points_against": 1629.02
+    },
+    {
+      "rank": 3,
+      "team_id": "3",
+      "team_name": "The Gangnams",
+      "wins": 6,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1537.12,
+      "points_against": 1567.22
+    },
+    {
+      "rank": 4,
+      "team_id": "4",
+      "team_name": "bontenators",
+      "wins": 6,
+      "losses": 7,
+      "ties": 0,
+      "points_for": 1643.98,
+      "points_against": 1696.7
+    }
+  ],
+  "notes": "final_standings wins/losses/points are regular-season figures (site doesn't separately expose postseason W-L) - see playoffs.json for actual postseason results."
+}

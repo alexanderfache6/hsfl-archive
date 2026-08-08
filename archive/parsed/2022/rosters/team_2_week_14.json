@@ -1,0 +1,217 @@
+{
+  "season": 2022,
+  "team_id": "2",
+  "week": 14,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564832",
+      "player_name": "Jalen Hurts",
+      "position": "QB",
+      "nfl_team": "PHI",
+      "opp": "@NYG",
+      "points": 30.38,
+      "stats": {
+        "stat_5": "217",
+        "stat_6": "2",
+        "stat_14": "77",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2561021",
+      "player_name": "Nick Chubb",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "@CIN",
+      "points": 6.9,
+      "stats": {
+        "stat_14": "34",
+        "stat_21": "20"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562665",
+      "player_name": "Travis Homer",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "Bye",
+      "points": 4.4,
+      "stats": {
+        "stat_14": "26",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2552608",
+      "player_name": "Stefon Diggs",
+      "position": "WR",
+      "nfl_team": "BUF",
+      "opp": "NYJ",
+      "points": 5.2,
+      "stats": {
+        "stat_21": "37"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562685",
+      "player_name": "DK Metcalf",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "CAR",
+      "points": 15.6,
+      "stats": {
+        "stat_21": "71",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2560866",
+      "player_name": "Dalton Schultz",
+      "position": "TE",
+      "nfl_team": "HOU",
+      "opp": "@DAL",
+      "points": 11.7,
+      "stats": {
+        "stat_21": "87"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2563896",
+      "player_name": "Jerry Jeudy",
+      "position": "WR",
+      "nfl_team": "DEN",
+      "opp": "KC",
+      "points": 29.3,
+      "stats": {
+        "stat_21": "73",
+        "stat_22": "3"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560993",
+      "player_name": "Daniel Carlson",
+      "position": "K",
+      "nfl_team": "LV",
+      "opp": "@LAR",
+      "points": 12.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_37": "2",
+        "stat_39": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100031",
+      "player_name": "Tampa Bay Buccaneers",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@SF",
+      "points": -2.0,
+      "stats": {
+        "stat_54": "35",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2566163",
+      "player_name": "Trevor Lawrence",
+      "position": "QB",
+      "nfl_team": "JAX",
+      "opp": "@TEN",
+      "points": 33.42,
+      "stats": {
+        "stat_5": "368",
+        "stat_6": "3",
+        "stat_14": "7",
+        "stat_15": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567328",
+      "player_name": "James Cook",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "NYJ",
+      "points": 2.0,
+      "stats": {
+        "stat_14": "6",
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558116",
+      "player_name": "Aaron Jones",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562502",
+      "player_name": "David Montgomery",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "MIN",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567643",
+      "player_name": "Treylon Burks",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "JAX",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566433",
+      "player_name": "Rondale Moore",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "NE",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2560995",
+      "player_name": "Dallas Goedert",
+      "position": "TE",
+      "nfl_team": "PHI",
+      "opp": "@NYG",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100020",
+      "player_name": "Minnesota Vikings",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@DET",
+      "points": -1.0,
+      "stats": {
+        "stat_54": "34"
+      }
+    }
+  ]
+}

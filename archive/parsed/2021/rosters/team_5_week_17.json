@@ -1,0 +1,226 @@
+{
+  "season": 2021,
+  "team_id": "5",
+  "week": 17,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2564832",
+      "player_name": "Jalen Hurts",
+      "position": "QB",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 12.96,
+      "stats": {
+        "stat_5": "214",
+        "stat_14": "44"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562734",
+      "player_name": "Devin Singletary",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "ATL",
+      "points": 23.0,
+      "stats": {
+        "stat_14": "110",
+        "stat_15": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2567160",
+      "player_name": "Jaret Patterson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "PHI",
+      "points": 18.3,
+      "stats": {
+        "stat_14": "57",
+        "stat_15": "1",
+        "stat_21": "41"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2543495",
+      "player_name": "Davante Adams",
+      "position": "WR",
+      "nfl_team": "LV",
+      "opp": "@IND",
+      "points": 25.1,
+      "stats": {
+        "stat_21": "136",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566073",
+      "player_name": "Amon-Ra St. Brown",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "@SEA",
+      "points": 31.4,
+      "stats": {
+        "stat_21": "111",
+        "stat_22": "1",
+        "stat_14": "23",
+        "stat_15": "1",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2562681",
+      "player_name": "Dawson Knox",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2564358",
+      "player_name": "Van Jefferson",
+      "position": "WR",
+      "nfl_team": "LA",
+      "opp": "@BAL",
+      "points": 8.3,
+      "stats": {
+        "stat_21": "63"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "89802",
+      "player_name": "Ryan Succop",
+      "position": "K",
+      "nfl_team": "TB",
+      "opp": "@NYJ",
+      "points": 8.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_36": "1",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100008",
+      "player_name": "Dallas Cowboys",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "ARI",
+      "points": 1.0,
+      "stats": {
+        "stat_54": "25",
+        "stat_45": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2552461",
+      "player_name": "Duke Johnson",
+      "position": "RB",
+      "nfl_team": "BUF",
+      "opp": "ATL",
+      "points": 9.5,
+      "stats": {
+        "stat_14": "49",
+        "stat_21": "16"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560756",
+      "player_name": "Justin Jackson",
+      "position": "RB",
+      "nfl_team": "LAC",
+      "opp": "DEN",
+      "points": 7.6,
+      "stats": {
+        "stat_14": "41",
+        "stat_21": "20"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2561146",
+      "player_name": "Boston Scott",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@WAS",
+      "points": 22.6,
+      "stats": {
+        "stat_14": "47",
+        "stat_15": "2",
+        "stat_21": "39"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565276",
+      "player_name": "Antonio Gibson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "PHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565899",
+      "player_name": "Chuba Hubbard",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@NO",
+      "points": 14.3,
+      "stats": {
+        "stat_14": "55",
+        "stat_15": "1",
+        "stat_21": "13"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558914",
+      "player_name": "Kendrick Bourne",
+      "position": "WR",
+      "nfl_team": "NE",
+      "opp": "JAX",
+      "points": 11.8,
+      "stats": {
+        "stat_21": "76",
+        "stat_14": "17"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560781",
+      "player_name": "Christian Kirk",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@NE",
+      "points": 10.9,
+      "stats": {
+        "stat_21": "79"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "@NO",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

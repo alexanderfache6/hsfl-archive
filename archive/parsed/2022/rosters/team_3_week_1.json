@@ -1,0 +1,221 @@
+{
+  "season": 2022,
+  "team_id": "3",
+  "week": 1,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "TB",
+      "opp": "@DAL",
+      "points": 10.38,
+      "stats": {
+        "stat_5": "212",
+        "stat_6": "1",
+        "stat_7": "1",
+        "stat_14": "-1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2564148",
+      "player_name": "Jonathan Taylor",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "@HOU",
+      "points": 25.5,
+      "stats": {
+        "stat_14": "161",
+        "stat_15": "1",
+        "stat_21": "14"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566448",
+      "player_name": "Najee Harris",
+      "position": "RB",
+      "nfl_team": "PIT",
+      "opp": "@CIN",
+      "points": 9.6,
+      "stats": {
+        "stat_14": "23",
+        "stat_21": "3",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2558846",
+      "player_name": "Mike Williams",
+      "position": "WR",
+      "nfl_team": "LAC",
+      "opp": "LV",
+      "points": 2.0,
+      "stats": {
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562712",
+      "player_name": "Hunter Renfrow",
+      "position": "WR",
+      "nfl_team": "LV",
+      "opp": "@LAC",
+      "points": 5.6,
+      "stats": {
+        "stat_21": "21"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "@CHI",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560835",
+      "player_name": "Rashaad Penny",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@DET",
+      "points": 7.7,
+      "stats": {
+        "stat_14": "60",
+        "stat_21": "7"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2559205",
+      "player_name": "Younghoe Koo",
+      "position": "K",
+      "nfl_team": "ATL",
+      "opp": "NO",
+      "points": 18.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_36": "1",
+        "stat_38": "1",
+        "stat_39": "2",
+        "stat_44": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@LAR",
+      "points": 17.0,
+      "stats": {
+        "stat_54": "10",
+        "stat_45": "7",
+        "stat_46": "3"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2555260",
+      "player_name": "Dak Prescott",
+      "position": "QB",
+      "nfl_team": "DAL",
+      "opp": "TB",
+      "points": 4.46,
+      "stats": {
+        "stat_5": "134",
+        "stat_7": "1",
+        "stat_14": "11"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563986",
+      "player_name": "AJ Dillon",
+      "position": "RB",
+      "nfl_team": "GB",
+      "opp": "@MIN",
+      "points": 17.6,
+      "stats": {
+        "stat_14": "45",
+        "stat_15": "1",
+        "stat_21": "46"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557917",
+      "player_name": "Kareem Hunt",
+      "position": "RB",
+      "nfl_team": "CLE",
+      "opp": "@CAR",
+      "points": 21.0,
+      "stats": {
+        "stat_14": "46",
+        "stat_15": "1",
+        "stat_21": "24",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "TB",
+      "points": 3.2,
+      "stats": {
+        "stat_14": "8",
+        "stat_21": "14"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552487",
+      "player_name": "Amari Cooper",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "@CAR",
+      "points": 3.2,
+      "stats": {
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566376",
+      "player_name": "Kadarius Toney",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@ARI",
+      "points": 2.3,
+      "stats": {
+        "stat_14": "23"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562681",
+      "player_name": "Dawson Knox",
+      "position": "TE",
+      "nfl_team": "BUF",
+      "opp": "@LAR",
+      "points": 1.0,
+      "stats": {
+        "stat_21": "5"
+      }
+    }
+  ]
+}

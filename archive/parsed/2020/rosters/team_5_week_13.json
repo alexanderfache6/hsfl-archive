@@ -1,0 +1,219 @@
+{
+  "season": 2020,
+  "team_id": "5",
+  "week": 13,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558063",
+      "player_name": "Deshaun Watson",
+      "position": "QB",
+      "nfl_team": "HOU",
+      "opp": "IND",
+      "points": 19.44,
+      "stats": {
+        "stat_5": "341",
+        "stat_7": "1",
+        "stat_14": "38",
+        "stat_15": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2555223",
+      "player_name": "Devontae Booker",
+      "position": "RB",
+      "nfl_team": "LV",
+      "opp": "@NYJ",
+      "points": 5.6,
+      "stats": {
+        "stat_14": "50",
+        "stat_21": "1"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2565276",
+      "player_name": "Antonio Gibson",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "@PIT",
+      "points": 1.4,
+      "stats": {
+        "stat_14": "14"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "LAR",
+      "points": 15.2,
+      "stats": {
+        "stat_21": "52",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562489",
+      "player_name": "Terry McLaurin",
+      "position": "WR",
+      "nfl_team": "WAS",
+      "opp": "@PIT",
+      "points": 2.4,
+      "stats": {
+        "stat_21": "14"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2557858",
+      "player_name": "Evan Engram",
+      "position": "TE",
+      "nfl_team": "NYG",
+      "opp": "@SEA",
+      "points": 5.2,
+      "stats": {
+        "stat_21": "32"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560854",
+      "player_name": "Calvin Ridley",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "NO",
+      "points": 13.3,
+      "stats": {
+        "stat_21": "108"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2563596",
+      "player_name": "Tyler Bass",
+      "position": "K",
+      "nfl_team": "BUF",
+      "opp": "@SF",
+      "points": 10.0,
+      "stats": {
+        "stat_33": "4",
+        "stat_36": "1",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100022",
+      "player_name": "New Orleans Saints",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@ATL",
+      "points": 6.0,
+      "stats": {
+        "stat_54": "16",
+        "stat_45": "3",
+        "stat_47": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2540156",
+      "player_name": "Giovani Bernard",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "@MIA",
+      "points": 3.9,
+      "stats": {
+        "stat_14": "30",
+        "stat_21": "-1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2553439",
+      "player_name": "Mike Davis",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557997",
+      "player_name": "Christian McCaffrey",
+      "position": "RB",
+      "nfl_team": "CAR",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557976",
+      "player_name": "Joe Mixon",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "@MIA",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2564970",
+      "player_name": "Chase Claypool",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "WAS",
+      "points": 4.8,
+      "stats": {
+        "stat_21": "38"
+      }
+    },
+    {
+      "slot": "RES",
+      "player_id": "2558266",
+      "player_name": "George Kittle",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "BUF",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@SF",
+      "points": 4.0,
+      "stats": {
+        "stat_54": "24",
+        "stat_46": "2"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100025",
+      "player_name": "Philadelphia Eagles",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@GB",
+      "points": 7.0,
+      "stats": {
+        "stat_54": "30",
+        "stat_45": "2",
+        "stat_53": "1"
+      }
+    }
+  ]
+}

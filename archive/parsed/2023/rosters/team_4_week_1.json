@@ -1,0 +1,224 @@
+{
+  "season": 2023,
+  "team_id": "4",
+  "week": 1,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2562299",
+      "player_name": "Daniel Jones",
+      "position": "QB",
+      "nfl_team": "NYG",
+      "opp": "DAL",
+      "points": 8.46,
+      "stats": {
+        "stat_5": "104",
+        "stat_7": "2",
+        "stat_14": "43"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2560968",
+      "player_name": "Saquon Barkley",
+      "position": "RB",
+      "nfl_team": "PHI",
+      "opp": "@NE",
+      "points": 7.8,
+      "stats": {
+        "stat_14": "51",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2569747",
+      "player_name": "Jahmyr Gibbs",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "@KC",
+      "points": 7.0,
+      "stats": {
+        "stat_14": "42",
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2540154",
+      "player_name": "Keenan Allen",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "GB",
+      "points": 11.2,
+      "stats": {
+        "stat_21": "76",
+        "stat_14": "6"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2562685",
+      "player_name": "DK Metcalf",
+      "position": "WR",
+      "nfl_team": "SEA",
+      "opp": "LAR",
+      "points": 12.2,
+      "stats": {
+        "stat_21": "47",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2565830",
+      "player_name": "Kyle Pitts",
+      "position": "TE",
+      "nfl_team": "ATL",
+      "opp": "CAR",
+      "points": 5.4,
+      "stats": {
+        "stat_21": "44"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2560854",
+      "player_name": "Calvin Ridley",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "@NO",
+      "points": 20.1,
+      "stats": {
+        "stat_21": "101",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2553112",
+      "player_name": "Jason Myers",
+      "position": "K",
+      "nfl_team": "SEA",
+      "opp": "LAR",
+      "points": 7.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_37": "1",
+        "stat_38": "1",
+        "stat_42": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100003",
+      "player_name": "Buffalo Bills",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@NYJ",
+      "points": 5.0,
+      "stats": {
+        "stat_54": "22",
+        "stat_45": "3",
+        "stat_46": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2532975",
+      "player_name": "Russell Wilson",
+      "position": "QB",
+      "nfl_team": "PIT",
+      "opp": "SF",
+      "points": 15.18,
+      "stats": {
+        "stat_5": "177",
+        "stat_6": "2",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2565926",
+      "player_name": "Khalil Herbert",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "GB",
+      "points": 9.9,
+      "stats": {
+        "stat_14": "27",
+        "stat_21": "37",
+        "stat_32": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2563617",
+      "player_name": "Zack Moss",
+      "position": "RB",
+      "nfl_team": "CIN",
+      "opp": "@CLE",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562379",
+      "player_name": "Marquise Brown",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "DET",
+      "points": 7.2,
+      "stats": {
+        "stat_21": "28",
+        "stat_14": "29"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2543498",
+      "player_name": "Brandin Cooks",
+      "position": "WR",
+      "nfl_team": "DAL",
+      "opp": "@NYG",
+      "points": 3.2,
+      "stats": {
+        "stat_21": "22"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560781",
+      "player_name": "Christian Kirk",
+      "position": "WR",
+      "nfl_team": "JAX",
+      "opp": "@IND",
+      "points": 1.4,
+      "stats": {
+        "stat_21": "9"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2567250",
+      "player_name": "Drake London",
+      "position": "WR",
+      "nfl_team": "ATL",
+      "opp": "CAR",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "RES",
+      "player_id": "2564148",
+      "player_name": "Jonathan Taylor",
+      "position": "RB",
+      "nfl_team": "IND",
+      "opp": "JAX",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

@@ -1,0 +1,448 @@
+{
+  "season": 2025,
+  "week": 16,
+  "matchup_id": "2025_w16_4_5",
+  "home": {
+    "team_id": "4",
+    "score": 86.0,
+    "starters": [
+      {
+        "slot": "QB",
+        "player_id": "2560800",
+        "player_name": "B. Mayfield",
+        "position": "QB",
+        "nfl_team": "TB",
+        "opp": "@CAR",
+        "points": 12.7,
+        "stats": {
+          "stat_5": "145",
+          "stat_6": "1",
+          "stat_7": "1",
+          "stat_14": "49"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2564148",
+        "player_name": "J. Taylor",
+        "position": "RB",
+        "nfl_team": "IND",
+        "opp": "SF",
+        "points": 15.4,
+        "stats": {
+          "stat_14": "46",
+          "stat_15": "1",
+          "stat_21": "33"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2570062",
+        "player_name": "D. Achane",
+        "position": "RB",
+        "nfl_team": "MIA",
+        "opp": "CIN",
+        "points": 16.5,
+        "stats": {
+          "stat_14": "81",
+          "stat_15": "1",
+          "stat_21": "9"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2562238",
+        "player_name": "A. Brown",
+        "position": "WR",
+        "nfl_team": "PHI",
+        "opp": "@WAS",
+        "points": 14.0,
+        "stats": {
+          "stat_21": "95"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2562685",
+        "player_name": "D. Metcalf",
+        "position": "WR",
+        "nfl_team": "PIT",
+        "opp": "@DET",
+        "points": 6.2,
+        "stats": {
+          "stat_21": "42"
+        }
+      },
+      {
+        "slot": "TE",
+        "player_id": "2552408",
+        "player_name": "D. Waller",
+        "position": "TE",
+        "nfl_team": "MIA",
+        "opp": "CIN",
+        "points": 5.5,
+        "stats": {
+          "stat_21": "40"
+        }
+      },
+      {
+        "slot": "W/R",
+        "player_id": "2574374",
+        "player_name": "T. Henderson",
+        "position": "RB",
+        "nfl_team": "NE",
+        "opp": "@BAL",
+        "points": 1.7,
+        "stats": {
+          "stat_14": "3",
+          "stat_21": "9"
+        }
+      },
+      {
+        "slot": "K",
+        "player_id": "2572147",
+        "player_name": "C. Little",
+        "position": "K",
+        "nfl_team": "JAX",
+        "opp": "@DEN",
+        "points": 10.0,
+        "stats": {
+          "stat_33": "4",
+          "stat_36": "1",
+          "stat_38": "1"
+        }
+      },
+      {
+        "slot": "DEF",
+        "player_id": "100010",
+        "player_name": "Lions",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "PIT",
+        "points": 4.0,
+        "stats": {
+          "stat_54": "27",
+          "stat_45": "2",
+          "stat_47": "1"
+        }
+      }
+    ],
+    "bench": [
+      {
+        "slot": "BN",
+        "player_id": "2565045",
+        "player_name": "J. Herbert",
+        "position": "QB",
+        "nfl_team": "LAC",
+        "opp": "@DAL",
+        "points": 32.2,
+        "stats": {
+          "stat_5": "300",
+          "stat_6": "2",
+          "stat_14": "42",
+          "stat_15": "1"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2567973",
+        "player_name": "C. Olave",
+        "position": "WR",
+        "nfl_team": "NO",
+        "opp": "NYJ",
+        "points": 31.8,
+        "stats": {
+          "stat_21": "148",
+          "stat_22": "2"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2571907",
+        "player_name": "R. Odunze",
+        "position": "WR",
+        "nfl_team": "CHI",
+        "opp": "GB",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2572261",
+        "player_name": "J. Wright",
+        "position": "RB",
+        "nfl_team": "MIA",
+        "opp": "CIN",
+        "points": 11.8,
+        "stats": {
+          "stat_14": "35",
+          "stat_15": "1",
+          "stat_21": "18"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2574063",
+        "player_name": "S. Sanders",
+        "position": "QB",
+        "nfl_team": "CLE",
+        "opp": "BUF",
+        "points": 11.18,
+        "stats": {
+          "stat_5": "157",
+          "stat_6": "1",
+          "stat_7": "2",
+          "stat_14": "49"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2574511",
+        "player_name": "O. Gadsden",
+        "position": "TE",
+        "nfl_team": "LAC",
+        "opp": "@DAL",
+        "points": 1.2,
+        "stats": {
+          "stat_21": "7"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2574589",
+        "player_name": "T. Johnson",
+        "position": "WR",
+        "nfl_team": "TB",
+        "opp": "@CAR",
+        "points": 0.4,
+        "stats": {
+          "stat_21": "-1"
+        }
+      }
+    ]
+  },
+  "away": {
+    "team_id": "5",
+    "score": 109.98,
+    "starters": [
+      {
+        "slot": "QB",
+        "player_id": "2572003",
+        "player_name": "B. Nix",
+        "position": "QB",
+        "nfl_team": "DEN",
+        "opp": "JAX",
+        "points": 15.18,
+        "stats": {
+          "stat_5": "352",
+          "stat_6": "1",
+          "stat_7": "1",
+          "stat_14": "11",
+          "stat_30": "1"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2574053",
+        "player_name": "Q. Judkins",
+        "position": "RB",
+        "nfl_team": "CLE",
+        "opp": "BUF",
+        "points": 7.6,
+        "stats": {
+          "stat_14": "22",
+          "stat_21": "29"
+        }
+      },
+      {
+        "slot": "RB",
+        "player_id": "2574514",
+        "player_name": "O. Hampton",
+        "position": "RB",
+        "nfl_team": "LAC",
+        "opp": "@DAL",
+        "points": 16.0,
+        "stats": {
+          "stat_14": "85",
+          "stat_15": "1",
+          "stat_21": "10"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2565941",
+        "player_name": "J. Chase",
+        "position": "WR",
+        "nfl_team": "CIN",
+        "opp": "@MIA",
+        "points": 15.4,
+        "stats": {
+          "stat_21": "109"
+        }
+      },
+      {
+        "slot": "WR",
+        "player_id": "2566127",
+        "player_name": "N. Collins",
+        "position": "WR",
+        "nfl_team": "HOU",
+        "opp": "LV",
+        "points": 7.9,
+        "stats": {
+          "stat_21": "59"
+        }
+      },
+      {
+        "slot": "TE",
+        "player_id": "2565830",
+        "player_name": "K. Pitts",
+        "position": "TE",
+        "nfl_team": "ATL",
+        "opp": "@ARI",
+        "points": 15.2,
+        "stats": {
+          "stat_21": "57",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "W/R",
+        "player_id": "2569573",
+        "player_name": "Z. Flowers",
+        "position": "WR",
+        "nfl_team": "BAL",
+        "opp": "NE",
+        "points": 17.7,
+        "stats": {
+          "stat_21": "84",
+          "stat_30": "1",
+          "stat_14": "18",
+          "stat_15": "1"
+        }
+      },
+      {
+        "slot": "K",
+        "player_id": "2565953",
+        "player_name": "E. McPherson",
+        "position": "K",
+        "nfl_team": "CIN",
+        "opp": "@MIA",
+        "points": 9.0,
+        "stats": {
+          "stat_33": "6",
+          "stat_38": "1"
+        }
+      },
+      {
+        "slot": "DEF",
+        "player_id": "100017",
+        "player_name": "Rams",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "@SEA",
+        "points": 6.0,
+        "stats": {
+          "stat_54": "38",
+          "stat_45": "4",
+          "stat_46": "2",
+          "stat_47": "1"
+        }
+      }
+    ],
+    "bench": [
+      {
+        "slot": "BN",
+        "player_id": "2555261",
+        "player_name": "J. Brissett",
+        "position": "QB",
+        "nfl_team": "ARI",
+        "opp": "ATL",
+        "points": 10.62,
+        "stats": {
+          "stat_5": "203",
+          "stat_6": "1",
+          "stat_7": "1",
+          "stat_14": "5"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2555341",
+        "player_name": "H. Henry",
+        "position": "TE",
+        "nfl_team": "NE",
+        "opp": "@BAL",
+        "points": 12.5,
+        "stats": {
+          "stat_21": "35",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2566292",
+        "player_name": "J. Waddle",
+        "position": "WR",
+        "nfl_team": "MIA",
+        "opp": "CIN",
+        "points": 9.7,
+        "stats": {
+          "stat_21": "72"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "2574174",
+        "player_name": "W. Marks",
+        "position": "RB",
+        "nfl_team": "HOU",
+        "opp": "LV",
+        "points": 0.0,
+        "stats": {}
+      },
+      {
+        "slot": "BN",
+        "player_id": "2574298",
+        "player_name": "A. Jeanty",
+        "position": "RB",
+        "nfl_team": "LV",
+        "opp": "@HOU",
+        "points": 31.3,
+        "stats": {
+          "stat_14": "128",
+          "stat_15": "1",
+          "stat_21": "60",
+          "stat_22": "1"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "100014",
+        "player_name": "Colts",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "SF",
+        "points": -1.0,
+        "stats": {
+          "stat_54": "42",
+          "stat_45": "1",
+          "stat_46": "1"
+        }
+      },
+      {
+        "slot": "BN",
+        "player_id": "100020",
+        "player_name": "Vikings",
+        "position": "DEF",
+        "nfl_team": "",
+        "opp": "@NYG",
+        "points": 11.0,
+        "stats": {
+          "stat_54": "7",
+          "stat_45": "5",
+          "stat_46": "1"
+        }
+      }
+    ]
+  }
+}

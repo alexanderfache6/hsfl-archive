@@ -1,0 +1,218 @@
+{
+  "season": 2024,
+  "team_id": "3",
+  "week": 3,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2560955",
+      "player_name": "Josh Allen",
+      "position": "QB",
+      "nfl_team": "BUF",
+      "opp": "JAX",
+      "points": 30.92,
+      "stats": {
+        "stat_5": "263",
+        "stat_6": "4",
+        "stat_14": "44"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2557978",
+      "player_name": "James Conner",
+      "position": "RB",
+      "nfl_team": "ARI",
+      "opp": "DET",
+      "points": 3.0,
+      "stats": {
+        "stat_14": "17",
+        "stat_21": "8"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2566157",
+      "player_name": "Travis Etienne",
+      "position": "RB",
+      "nfl_team": "JAX",
+      "opp": "@BUF",
+      "points": 10.5,
+      "stats": {
+        "stat_14": "68",
+        "stat_21": "17"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2566073",
+      "player_name": "Amon-Ra St. Brown",
+      "position": "WR",
+      "nfl_team": "DET",
+      "opp": "@ARI",
+      "points": 17.0,
+      "stats": {
+        "stat_21": "75",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2569573",
+      "player_name": "Zay Flowers",
+      "position": "WR",
+      "nfl_team": "BAL",
+      "opp": "@DAL",
+      "points": 3.8,
+      "stats": {
+        "stat_21": "20",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2572219",
+      "player_name": "Brock Bowers",
+      "position": "TE",
+      "nfl_team": "LV",
+      "opp": "CAR",
+      "points": 5.6,
+      "stats": {
+        "stat_21": "41"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2569921",
+      "player_name": "Rashee Rice",
+      "position": "WR",
+      "nfl_team": "KC",
+      "opp": "@ATL",
+      "points": 23.1,
+      "stats": {
+        "stat_21": "110",
+        "stat_22": "1",
+        "stat_14": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2539227",
+      "player_name": "Dustin Hopkins",
+      "position": "K",
+      "nfl_team": "CLE",
+      "opp": "NYG",
+      "points": 1.0,
+      "stats": {
+        "stat_33": "1",
+        "stat_44": "1"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100007",
+      "player_name": "Cleveland Browns",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "NYG",
+      "points": 6.0,
+      "stats": {
+        "stat_54": "21",
+        "stat_45": "2",
+        "stat_47": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2555334",
+      "player_name": "Jared Goff",
+      "position": "QB",
+      "nfl_team": "DET",
+      "opp": "@ARI",
+      "points": 14.56,
+      "stats": {
+        "stat_5": "199",
+        "stat_6": "2",
+        "stat_7": "1",
+        "stat_14": "6"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557917",
+      "player_name": "Kareem Hunt",
+      "position": "RB",
+      "nfl_team": "KC",
+      "opp": "@ATL",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562734",
+      "player_name": "Devin Singletary",
+      "position": "RB",
+      "nfl_team": "NYG",
+      "opp": "@CLE",
+      "points": 16.8,
+      "stats": {
+        "stat_14": "65",
+        "stat_15": "1",
+        "stat_30": "1",
+        "stat_21": "43"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562674",
+      "player_name": "Diontae Johnson",
+      "position": "WR",
+      "nfl_team": "CLE",
+      "opp": "NYG",
+      "points": 22.2,
+      "stats": {
+        "stat_21": "122",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2552430",
+      "player_name": "Tyler Lockett",
+      "position": "WR",
+      "nfl_team": "TEN",
+      "opp": "GB",
+      "points": 7.1,
+      "stats": {
+        "stat_21": "46"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2560813",
+      "player_name": "DJ Moore",
+      "position": "WR",
+      "nfl_team": "CHI",
+      "opp": "@IND",
+      "points": 11.2,
+      "stats": {
+        "stat_21": "78",
+        "stat_14": "-6"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2569726",
+      "player_name": "Sam LaPorta",
+      "position": "TE",
+      "nfl_team": "DET",
+      "opp": "@ARI",
+      "points": 4.6,
+      "stats": {
+        "stat_21": "36"
+      }
+    }
+  ]
+}

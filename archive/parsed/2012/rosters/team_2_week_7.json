@@ -1,0 +1,246 @@
+{
+  "season": 2012,
+  "team_id": "2",
+  "week": 7,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2504211",
+      "player_name": "Tom Brady",
+      "position": "QB",
+      "nfl_team": "NE",
+      "opp": "NYJ",
+      "points": 18.36,
+      "stats": {
+        "stat_5": "259",
+        "stat_6": "2"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "234",
+      "player_name": "Matt Forte",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "DET",
+      "points": 10.0,
+      "stats": {
+        "stat_14": "96",
+        "stat_21": "4"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "941",
+      "player_name": "Ray Rice",
+      "position": "RB",
+      "nfl_team": "BAL",
+      "opp": "@HOU",
+      "points": 5.4,
+      "stats": {
+        "stat_14": "42",
+        "stat_21": "12"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2507164",
+      "player_name": "Adrian Peterson",
+      "position": "RB",
+      "nfl_team": "MIN",
+      "opp": "ARI",
+      "points": 21.9,
+      "stats": {
+        "stat_14": "153",
+        "stat_15": "1",
+        "stat_21": "6"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2495821",
+      "player_name": "Marques Colston",
+      "position": "WR",
+      "nfl_team": "NO",
+      "opp": "@TB",
+      "points": 13.3,
+      "stats": {
+        "stat_21": "73",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2507855",
+      "player_name": "Victor Cruz",
+      "position": "WR",
+      "nfl_team": "NYG",
+      "opp": "WAS",
+      "points": 19.1,
+      "stats": {
+        "stat_21": "131",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2495826",
+      "player_name": "Vernon Davis",
+      "position": "TE",
+      "nfl_team": "SF",
+      "opp": "SEA",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2504747",
+      "player_name": "Reggie Wayne",
+      "position": "WR",
+      "nfl_team": "IND",
+      "opp": "CLE",
+      "points": 7.3,
+      "stats": {
+        "stat_21": "73"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2506400",
+      "player_name": "Vincent Jackson",
+      "position": "WR",
+      "nfl_team": "TB",
+      "opp": "NO",
+      "points": 27.6,
+      "stats": {
+        "stat_21": "216",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2506922",
+      "player_name": "Stephen Gostkowski",
+      "position": "K",
+      "nfl_team": "NE",
+      "opp": "NYJ",
+      "points": 9.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_38": "2"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100002",
+      "player_name": "Baltimore Ravens",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "@HOU",
+      "points": -2.0,
+      "stats": {
+        "stat_54": "35",
+        "stat_45": "2"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "1032",
+      "player_name": "Jordy Nelson",
+      "position": "WR",
+      "nfl_team": "GB",
+      "opp": "@LAR",
+      "points": 18.2,
+      "stats": {
+        "stat_21": "122",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2501863",
+      "player_name": "Peyton Manning",
+      "position": "QB",
+      "nfl_team": "DEN",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2505674",
+      "player_name": "Willis McGahee",
+      "position": "RB",
+      "nfl_team": "DEN",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    },
+    {
+      "slot": "BN",
+      "player_id": "2506404",
+      "player_name": "Frank Gore",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "SEA",
+      "points": 18.2,
+      "stats": {
+        "stat_14": "131",
+        "stat_21": "51"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2507763",
+      "player_name": "Mike Wallace",
+      "position": "WR",
+      "nfl_team": "PIT",
+      "opp": "@CIN",
+      "points": 5.9,
+      "stats": {
+        "stat_21": "52",
+        "stat_14": "7"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2533457",
+      "player_name": "Alfred Morris",
+      "position": "RB",
+      "nfl_team": "WAS",
+      "opp": "@NYG",
+      "points": 11.0,
+      "stats": {
+        "stat_14": "120",
+        "stat_30": "1",
+        "stat_21": "10"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2504346",
+      "player_name": "Lawrence Tynes",
+      "position": "K",
+      "nfl_team": "NYG",
+      "opp": "WAS",
+      "points": 9.0,
+      "stats": {
+        "stat_33": "3",
+        "stat_36": "1",
+        "stat_37": "1"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "100001",
+      "player_name": "Atlanta Falcons",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "Bye",
+      "points": 0.0,
+      "stats": {}
+    }
+  ]
+}

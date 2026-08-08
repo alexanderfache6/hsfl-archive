@@ -1,0 +1,220 @@
+{
+  "season": 2021,
+  "team_id": "4",
+  "week": 2,
+  "starters": [
+    {
+      "slot": "QB",
+      "player_id": "2558125",
+      "player_name": "Patrick Mahomes",
+      "position": "QB",
+      "nfl_team": "KC",
+      "opp": "@BAL",
+      "points": 26.02,
+      "stats": {
+        "stat_5": "343",
+        "stat_6": "3",
+        "stat_7": "1",
+        "stat_14": "3"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2562502",
+      "player_name": "David Montgomery",
+      "position": "RB",
+      "nfl_team": "CHI",
+      "opp": "CIN",
+      "points": 9.4,
+      "stats": {
+        "stat_14": "61",
+        "stat_21": "18"
+      }
+    },
+    {
+      "slot": "RB",
+      "player_id": "2563965",
+      "player_name": "D'Andre Swift",
+      "position": "RB",
+      "nfl_team": "DET",
+      "opp": "@GB",
+      "points": 9.8,
+      "stats": {
+        "stat_14": "37",
+        "stat_21": "41"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2540165",
+      "player_name": "DeAndre Hopkins",
+      "position": "WR",
+      "nfl_team": "ARI",
+      "opp": "MIN",
+      "points": 13.4,
+      "stats": {
+        "stat_21": "54",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "WR",
+      "player_id": "2563731",
+      "player_name": "Tee Higgins",
+      "position": "WR",
+      "nfl_team": "CIN",
+      "opp": "@CHI",
+      "points": 13.0,
+      "stats": {
+        "stat_21": "60",
+        "stat_22": "1",
+        "stat_30": "1"
+      }
+    },
+    {
+      "slot": "TE",
+      "player_id": "2562378",
+      "player_name": "T.J. Hockenson",
+      "position": "TE",
+      "nfl_team": "DET",
+      "opp": "@GB",
+      "points": 16.6,
+      "stats": {
+        "stat_21": "66",
+        "stat_22": "1"
+      }
+    },
+    {
+      "slot": "W/R",
+      "player_id": "2562270",
+      "player_name": "Myles Gaskin",
+      "position": "RB",
+      "nfl_team": "MIA",
+      "opp": "BUF",
+      "points": 6.6,
+      "stats": {
+        "stat_14": "25",
+        "stat_21": "21"
+      }
+    },
+    {
+      "slot": "K",
+      "player_id": "2560993",
+      "player_name": "Daniel Carlson",
+      "position": "K",
+      "nfl_team": "LV",
+      "opp": "@PIT",
+      "points": 14.0,
+      "stats": {
+        "stat_33": "2",
+        "stat_37": "1",
+        "stat_38": "3"
+      }
+    },
+    {
+      "slot": "DEF",
+      "player_id": "100026",
+      "player_name": "Arizona Cardinals",
+      "position": "DEF",
+      "nfl_team": "",
+      "opp": "MIN",
+      "points": 1.0,
+      "stats": {
+        "stat_54": "27",
+        "stat_45": "1"
+      }
+    }
+  ],
+  "bench": [
+    {
+      "slot": "BN",
+      "player_id": "2553439",
+      "player_name": "Mike Davis",
+      "position": "RB",
+      "nfl_team": "ATL",
+      "opp": "@TB",
+      "points": 9.8,
+      "stats": {
+        "stat_14": "38",
+        "stat_21": "25"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2558052",
+      "player_name": "Kenny Golladay",
+      "position": "WR",
+      "nfl_team": "NYG",
+      "opp": "@WAS",
+      "points": 5.3,
+      "stats": {
+        "stat_21": "38"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566163",
+      "player_name": "Trevor Lawrence",
+      "position": "QB",
+      "nfl_team": "JAX",
+      "opp": "DEN",
+      "points": 6.82,
+      "stats": {
+        "stat_5": "118",
+        "stat_6": "1",
+        "stat_7": "2",
+        "stat_14": "21"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2562699",
+      "player_name": "Tony Pollard",
+      "position": "RB",
+      "nfl_team": "DAL",
+      "opp": "@LAC",
+      "points": 21.5,
+      "stats": {
+        "stat_14": "109",
+        "stat_15": "1",
+        "stat_21": "31"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566544",
+      "player_name": "Trey Sermon",
+      "position": "RB",
+      "nfl_team": "SF",
+      "opp": "@PHI",
+      "points": 0.8,
+      "stats": {
+        "stat_14": "8"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2566409",
+      "player_name": "DeVonta Smith",
+      "position": "WR",
+      "nfl_team": "PHI",
+      "opp": "SF",
+      "points": 2.6,
+      "stats": {
+        "stat_21": "16"
+      }
+    },
+    {
+      "slot": "BN",
+      "player_id": "2557889",
+      "player_name": "Gerald Everett",
+      "position": "TE",
+      "nfl_team": "LAC",
+      "opp": "DAL",
+      "points": 0.8,
+      "stats": {
+        "stat_21": "3"
+      }
+    }
+  ]
+}
