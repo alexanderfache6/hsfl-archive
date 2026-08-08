@@ -33,6 +33,7 @@ GITHUB_API_BASE = "https://api.github.com"
 
 FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
 REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
+KNOWN_PAGES = {*REAL_PAGES, "Other"}
 TITLE_MAX_CHARS = 50
 DESCRIPTION_MAX_CHARS = 400
 
@@ -40,12 +41,17 @@ ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Fea
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
 
-# Issues filed by this form always have a title of "[{feedback_type}]
-# {title}" and "**Page:**"/"**Description:**" lines in the body (see
-# _render_feedback_form) - parsed back out via these rather than relying
-# on labels, since "Improvement" and "New Feature" both map to the same
-# "enhancement" label and so can't be told apart from labels alone.
+# Issues filed by this form always have "**Type:**"/"**Page:**"/
+# "**Description:**" lines in the body (see _render_feedback_form).
+# Type is always parsed from the body, not labels, since "Improvement"
+# and "New Feature" both map to the same "enhancement" label so can't be
+# told apart from labels alone. Page prefers the title's own "[...]"
+# bracket (the current naming format is "[Page] Title") but falls back
+# to the body's "**Page:**" line when the bracket isn't a recognized
+# page - older issues filed before this naming format held the TYPE in
+# that bracket instead (see _parse_issue's KNOWN_PAGES check).
 ISSUE_TITLE_PATTERN = re.compile(r"^\[(.*?)\]\s*(.*)$")
+ISSUE_TYPE_PATTERN = re.compile(r"\*\*Type:\*\*\s*(.+)")
 ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
 ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
 
@@ -99,10 +105,18 @@ def _format_pacific(iso_timestamp: str | None) -> str:
 
 def _parse_issue(issue: dict) -> dict:
     title_match = ISSUE_TITLE_PATTERN.match(issue["title"])
-    issue_type, title = title_match.groups() if title_match else ("", issue["title"])
+    bracket, title = title_match.groups() if title_match else ("", issue["title"])
     body = issue.get("body") or ""
-    page_match = ISSUE_PAGE_PATTERN.search(body)
-    page = page_match.group(1).strip() if page_match else ""
+    type_match = ISSUE_TYPE_PATTERN.search(body)
+    issue_type = type_match.group(1).strip() if type_match else ""
+    if bracket in KNOWN_PAGES:
+        page = bracket
+    else:
+        # Older issue, filed before the "[Page] Title" naming format -
+        # the bracket holds the type instead, so fall back to the body's
+        # own "**Page:**" line.
+        page_match = ISSUE_PAGE_PATTERN.search(body)
+        page = page_match.group(1).strip() if page_match else ""
     description_match = ISSUE_DESCRIPTION_PATTERN.search(body)
     description = description_match.group(1).strip() if description_match else ""
     return {
@@ -309,6 +323,15 @@ def _render_issues_table(issues: list[dict]) -> None:
             "Search titles", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
         )
 
+    # Any filter change (including unchecking one back to "Any") jumps
+    # back to page 1 of the results - otherwise a filter narrowing the
+    # list while the user is on, say, page 3 can land them on a page that
+    # no longer makes sense for the new result set.
+    filter_signature = (selected_state, selected_type, selected_page, searched_title)
+    if st.session_state.get("feedback_issues_filter_signature") != filter_signature:
+        st.session_state["feedback_issues_filter_signature"] = filter_signature
+        st.session_state["feedback_issues_page"] = 1
+
     rows = []
     for issue in issues:
         if selected_state and issue["state"] != selected_state.lower():
@@ -347,8 +370,10 @@ def _render_issues_table(issues: list[dict]) -> None:
     if st.session_state.get("feedback_issues_page", 1) > total_pages:
         st.session_state["feedback_issues_page"] = 1
     with page_counter_column:
-        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1, key="feedback_issues_page")
-    st.caption(f"Page {page} of {total_pages} ({len(rows)} issues)")
+        # Labeled "Pagination" (not "Page") to avoid reading like a
+        # second "Page" filter alongside the actual Page dropdown above.
+        page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="feedback_issues_page")
+    st.caption(f"Pagination {page} of {total_pages} ({len(rows)} issues)")
 
     start_index = (page - 1) * ISSUES_PAGE_SIZE
     page_rows = rows[start_index : start_index + ISSUES_PAGE_SIZE]

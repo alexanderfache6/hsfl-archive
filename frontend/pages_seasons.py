@@ -1083,8 +1083,11 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # st.columns row) so Page visually sits on their right, even though
     # its max_value can only be computed after those filters are applied.
     with page_column:
-        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
-    st.caption(f"Page {page} of {total_pages} ({len(rows)} transactions)")
+        # Labeled "Pagination" (not "Page") for the same reason as the
+        # Feedback tab's Issues table - keeps it distinct from any
+        # "Page" filter elsewhere in the app.
+        page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
+    st.caption(f"Pagination {page} of {total_pages} ({len(rows)} transactions)")
 
     start_index = (page - 1) * TRANSACTIONS_PAGE_SIZE
     page_rows = rows[start_index : start_index + TRANSACTIONS_PAGE_SIZE]
