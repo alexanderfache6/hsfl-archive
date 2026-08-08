@@ -127,9 +127,19 @@ def _render_feedback_form() -> None:
             st.error(f"Couldn't submit feedback - GitHub API error: {error}")
             return
 
-        # Bust the 60s cache on the issues list so the one just filed
-        # shows up immediately below, instead of waiting out the TTL - a
-        # fresh submission is exactly when a user is watching for it.
+        # GitHub's list-issues endpoint (what _all_issues/the chart read)
+        # isn't guaranteed to reflect a create instantly - it goes through
+        # a separate index from the create endpoint, which is why the
+        # issue shows up on github.com right away but can lag here for a
+        # few seconds even after clearing our own cache. The create
+        # response itself IS immediately correct, so it's stashed and
+        # merged into the rendered list below (see render_feedback_page)
+        # until GitHub's list endpoint catches up on its own.
+        st.session_state.setdefault("feedback_pending_issues", []).append(_parse_issue(issue))
+
+        # Bust the 60s cache too, so once GitHub's list DOES catch up the
+        # next load reflects it rather than serving a stale cached list
+        # for up to another 60s.
         _all_issues.clear()
         st.success(f"Filed as [#{issue['number']}]({issue['html_url']}).")
 
@@ -312,14 +322,33 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
     st.plotly_chart(figure, width="stretch")
 
 
+def _issues_with_pending_merged() -> list[dict] | None:
+    """_all_issues()'s real fetch, with any just-submitted issue
+    (recorded in session_state - see the submit handler above) merged in
+    if GitHub's own list endpoint hasn't caught up to include it yet.
+    Returns None on a fetch failure."""
+    try:
+        issues = _all_issues()
+    except requests.RequestException:
+        return None
+
+    pending_issues = st.session_state.get("feedback_pending_issues", [])
+    if not pending_issues:
+        return issues
+
+    known_numbers = {issue["number"] for issue in issues}
+    still_pending = [issue for issue in pending_issues if issue["number"] not in known_numbers]
+    st.session_state["feedback_pending_issues"] = still_pending
+    return issues + still_pending
+
+
 def render_feedback_page() -> None:
     _render_feedback_form()
     st.divider()
 
-    try:
-        issues = _all_issues()
-    except requests.RequestException as error:
-        st.info(f"Couldn't load issues right now ({error}).")
+    issues = _issues_with_pending_merged()
+    if issues is None:
+        st.info("Couldn't load issues right now.")
         return
 
     _render_issues_table(issues)
