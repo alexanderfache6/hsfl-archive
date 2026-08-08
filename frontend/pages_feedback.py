@@ -21,7 +21,8 @@ GITHUB_API_BASE = "https://api.github.com"
 
 FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
 REAL_PAGES = ["History", "Seasons", "Matchups", "Managers", "Players", "Drafts"]
-DESCRIPTION_MAX_CHARS = 200
+TITLE_MAX_CHARS = 50
+DESCRIPTION_MAX_CHARS = 400
 
 
 def _viewer_email() -> str:
@@ -53,11 +54,20 @@ def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
 ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["enhancement"]}
 
 
-FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_description")
+FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
 
 
 def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
+
+    # A successful submit resets the form on the SAME rerun it triggers
+    # (see the bottom of this function) - the success message can't be
+    # shown before that rerun (it would just be wiped by it), so it's
+    # stashed in session_state and displayed here instead, one rerun
+    # later.
+    if "feedback_last_submitted" in st.session_state:
+        submitted = st.session_state.pop("feedback_last_submitted")
+        st.success(f"Issue [#{submitted['number']}]({submitted['url']}) submitted.")
 
     viewer_email = _viewer_email()
     if viewer_email:
@@ -66,11 +76,11 @@ def _render_feedback_form() -> None:
         st.caption("Submitting anonymously (no Streamlit Cloud login detected - expected in local dev).")
 
     # Same versioned-widget-key pattern as the Matchups/Players tabs'
-    # Clear Filters - Clear Feedback bumps this counter instead of just
-    # deleting session_state, forcing Streamlit to mount brand-new widget
-    # instances (deleting session_state alone can leave a widget showing
-    # its old value in some browsers, since the component itself never
-    # actually remounts).
+    # Clear Filters - Clear Feedback (and a successful Submit) bumps this
+    # counter instead of just deleting session_state, forcing Streamlit
+    # to mount brand-new widget instances (deleting session_state alone
+    # can leave a widget showing its old value in some browsers, since
+    # the component itself never actually remounts).
     generation = st.session_state.setdefault("feedback_form_generation", 0)
 
     def versioned_key(base_key: str) -> str:
@@ -89,23 +99,27 @@ def _render_feedback_form() -> None:
         st.session_state[page_widget_key] = page_options[0]
     selected_page = st.radio("Page", page_options, key=page_widget_key, horizontal=True)
 
+    title = st.text_input("Title", max_chars=TITLE_MAX_CHARS, key=versioned_key("feedback_title"))
     description = st.text_input("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
 
     st.session_state["feedback_type"] = feedback_type
     st.session_state["feedback_page"] = selected_page
+    st.session_state["feedback_title"] = title
     st.session_state["feedback_description"] = description
+
+    def _reset_form_fields() -> None:
+        st.session_state["feedback_type"] = FEEDBACK_TYPES[0]
+        st.session_state["feedback_page"] = REAL_PAGES[0]
+        st.session_state["feedback_title"] = ""
+        st.session_state["feedback_description"] = ""
+        st.session_state["feedback_form_generation"] = generation + 1
 
     submit_column, clear_column, _ = st.columns([1, 1, 3])
     with submit_column:
-        submit_clicked = st.button("Submit", disabled=not description.strip())
+        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()))
     with clear_column:
         if st.button("Clear Feedback"):
-            # Explicit defaults (not just popping the keys) - first item
-            # of each radio's own option list, description emptied.
-            st.session_state["feedback_type"] = FEEDBACK_TYPES[0]
-            st.session_state["feedback_page"] = REAL_PAGES[0]
-            st.session_state["feedback_description"] = ""
-            st.session_state["feedback_form_generation"] = generation + 1
+            _reset_form_fields()
             st.rerun()
 
     if submit_clicked:
@@ -113,16 +127,17 @@ def _render_feedback_form() -> None:
             st.error("GitHub integration isn't configured (missing the 'github_token' secret) - can't submit right now.")
             return
 
-        title = f"[{feedback_type}] {description}"
+        issue_title = f"[{feedback_type}] {title}"
         body_lines = [
             f"**Type:** {feedback_type}",
             f"**Page:** {selected_page}",
+            f"**Title:** {title}",
             f"**Description:** {description}",
             f"**Submitted by:** {viewer_email or '_unknown (local/dev)_'}",
         ]
 
         try:
-            issue = _create_github_issue(title, "\n\n".join(body_lines), ISSUE_LABELS_BY_TYPE[feedback_type])
+            issue = _create_github_issue(issue_title, "\n\n".join(body_lines), ISSUE_LABELS_BY_TYPE[feedback_type])
         except requests.RequestException as error:
             st.error(f"Couldn't submit feedback - GitHub API error: {error}")
             return
@@ -141,7 +156,10 @@ def _render_feedback_form() -> None:
         # next load reflects it rather than serving a stale cached list
         # for up to another 60s.
         _all_issues.clear()
-        st.success(f"Filed as [#{issue['number']}]({issue['html_url']}).")
+
+        st.session_state["feedback_last_submitted"] = {"number": issue["number"], "url": issue["html_url"]}
+        _reset_form_fields()
+        st.rerun()
 
 
 # Issues filed by this form always have a title of "[{feedback_type}]
@@ -151,6 +169,7 @@ def _render_feedback_form() -> None:
 # "enhancement" label and so can't be told apart from labels alone.
 ISSUE_TITLE_PATTERN = re.compile(r"^\[(.*?)\]\s*(.*)$")
 ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
+ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
 
 
 def _format_pacific(iso_timestamp: str | None) -> str:
@@ -167,13 +186,17 @@ def _format_pacific(iso_timestamp: str | None) -> str:
 
 def _parse_issue(issue: dict) -> dict:
     title_match = ISSUE_TITLE_PATTERN.match(issue["title"])
-    issue_type, description = title_match.groups() if title_match else ("", issue["title"])
-    page_match = ISSUE_PAGE_PATTERN.search(issue.get("body") or "")
+    issue_type, title = title_match.groups() if title_match else ("", issue["title"])
+    body = issue.get("body") or ""
+    page_match = ISSUE_PAGE_PATTERN.search(body)
     page = page_match.group(1).strip() if page_match else ""
+    description_match = ISSUE_DESCRIPTION_PATTERN.search(body)
+    description = description_match.group(1).strip() if description_match else ""
     return {
         "state": issue["state"],
         "issue_type": issue_type,
         "page": page,
+        "title": title,
         "description": description,
         "number": issue["number"],
         "url": issue["html_url"],
@@ -224,9 +247,9 @@ def _render_issues_table(issues: list[dict]) -> None:
     # Same searchable-selectbox pattern as the Players tab's player
     # search - typing narrows the list via Streamlit's own built-in
     # substring matching in the dropdown.
-    description_options = sorted({issue["description"] for issue in issues})
-    searched_description = st.selectbox(
-        "Search descriptions", description_options, index=None, placeholder="Type to search descriptions...", key="feedback_search_description"
+    title_options = sorted({issue["title"] for issue in issues})
+    searched_title = st.selectbox(
+        "Search titles", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
     )
 
     rows = []
@@ -237,7 +260,7 @@ def _render_issues_table(issues: list[dict]) -> None:
             continue
         if selected_page and issue["page"] != selected_page:
             continue
-        if searched_description and issue["description"] != searched_description:
+        if searched_title and issue["title"] != searched_title:
             continue
         rows.append(
             {
@@ -245,7 +268,7 @@ def _render_issues_table(issues: list[dict]) -> None:
                 "State": issue["state"].capitalize(),
                 "Issue Type": issue["issue_type"],
                 "Page": issue["page"],
-                "Description": issue["description"],
+                "Title": issue["title"],
                 "Submitted": issue["submitted_at"],
                 "Closed": issue["closed_at"],
                 "URL": issue["url"],
