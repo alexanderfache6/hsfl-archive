@@ -36,7 +36,7 @@ REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
 TITLE_MAX_CHARS = 50
 DESCRIPTION_MAX_CHARS = 400
 
-ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["enhancement"]}
+ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["feature"]}
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
 
@@ -249,7 +249,7 @@ def _render_feedback_form() -> None:
             st.error("GitHub integration isn't configured (missing the 'github_token' secret) - can't submit right now.")
             return
 
-        issue_title = f"[{feedback_type}] {title}"
+        issue_title = f"[{selected_page}] {title}"
         body_lines = [
             f"**Type:** {feedback_type}",
             f"**Page:** {selected_page}",
