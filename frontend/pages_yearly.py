@@ -12,7 +12,9 @@ import streamlit as st
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
+    contrasting_text_color,
     discover_seasons,
+    load_matchups,
     load_playoffs,
     load_post_season_stats,
     load_team_logo_data_uri,
@@ -1126,6 +1128,189 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
             )
 
 
+PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
+LAST_PLACE_EMOJI = "🥞"
+
+
+def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> None:
+    """Combined regular + post-season table - same combined-record idea
+    as the podium/Final Standings tab, but every team, with W-L-T/Win
+    %/Points For/Points Against all summing the regular season with
+    whichever post-season bracket (if any) that team played in."""
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    if not weekly_tables:
+        st.info("No standings available for this season yet.")
+        return
+
+    team_info = team_id_to_manager_map(season)
+    post_season_stats = load_post_season_stats(season)
+    regular_season_standings = {row["team_id"]: row for row in weekly_tables[-1]["standings"]}
+
+    if post_season_stats and post_season_stats.get("final_placements"):
+        ranked_team_ids = sorted(post_season_stats["final_placements"].items(), key=lambda entry: entry[1])
+    else:
+        ranked_team_ids = [(row["team_id"], row["rank"]) for row in weekly_tables[-1]["standings"]]
+
+    last_place_rank = max((rank for _, rank in ranked_team_ids), default=None)
+
+    rows = []
+    for team_id, rank in ranked_team_ids:
+        info = team_info.get(team_id, {})
+        team_name = info.get("team_name", "")
+        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+
+        regular_row = regular_season_standings.get(team_id, {})
+        wins, losses, ties = regular_row.get("wins", 0), regular_row.get("losses", 0), regular_row.get("ties", 0)
+        points_for, points_against = regular_row.get("points_for", 0.0), regular_row.get("points_against", 0.0)
+
+        bracket_name = "—"
+        if post_season_stats:
+            for candidate_bracket, candidate_name in (("championship", "Championship"), ("consolation", "Consolation")):
+                post_season_record = post_season_stats[candidate_bracket].get(team_id)
+                if post_season_record:
+                    bracket_name = candidate_name
+                    wins += post_season_record["wins"]
+                    losses += post_season_record["losses"]
+                    ties += post_season_record["ties"]
+                    points_for += post_season_record["points_for"]
+                    points_against += post_season_record["points_against"]
+                    break
+
+        games_played = wins + losses + ties
+        win_pct = (wins + 0.5 * ties) / games_played if games_played else 0.0
+
+        rows.append(
+            {
+                "Rank": rank,
+                "Podium": PODIUM_EMOJI.get(rank) or (LAST_PLACE_EMOJI if rank == last_place_rank else ""),
+                "Team": f"{team_name} ({manager_name})",
+                "Bracket": bracket_name,
+                "W-L-T": f"{wins}-{losses}-{ties}",
+                "Win %": win_pct,
+                "Points For": points_for,
+                "Points Against": points_against,
+            }
+        )
+
+    dataframe = pd.DataFrame(rows).sort_values("Rank")
+    st.dataframe(
+        dataframe,
+        hide_index=True,
+        width="stretch",
+        height=_full_table_height(len(dataframe)),
+        column_config={
+            "Win %": st.column_config.NumberColumn(format="%.3f"),
+            "Points For": st.column_config.NumberColumn(format="%.2f"),
+            "Points Against": st.column_config.NumberColumn(format="%.2f"),
+        },
+    )
+
+
+def _go_to_game_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
+    """Jumps to the Games page pre-filtered to this exact matchup, same
+    st.switch_page pattern as the History tab's _go_to_game - must be
+    called from the main script body (not a button's on_click callback),
+    since st.switch_page is a no-op/error from within a callback."""
+    st.session_state["games_team1_manager_id"] = team1_manager_id
+    st.session_state["games_season"] = season
+    st.session_state["games_week"] = week
+    st.session_state["games_team2_manager_id"] = team2_manager_id
+    st.session_state["games_matchup_type"] = "regular"
+    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
+    st.session_state["games_applied_filters"] = {
+        "season": season,
+        "week": week,
+        "team1_manager_id": team1_manager_id,
+        "team2_manager_id": team2_manager_id,
+        "matchup_type": "regular",
+    }
+    st.switch_page(st.session_state["_games_page"])
+
+
+SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.2, 4]
+
+
+def _render_schedule_highlight(team: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str], align: str) -> None:
+    """Manager name/team name/score in one colored block - same styling
+    as the Games tab's matchup card (background = that manager's color,
+    text = contrasting_text_color against it) - so a team reads the same
+    way in both places."""
+    manager_name = resolve_manager_name(team.get("manager_id", ""), name_resolver, team.get("display_name", ""))
+    background_color = manager_color_map.get(team.get("manager_id", ""), "#CCCCCC")
+    text_color = contrasting_text_color(background_color)
+    flex_direction = "row" if align == "left" else "row-reverse"
+
+    st.markdown(
+        f"<div style='background-color:{background_color}; color:{text_color}; padding:6px 10px; "
+        f"border-radius:6px; display:flex; flex-direction:{flex_direction}; justify-content:space-between; "
+        f"align-items:center;'>"
+        f"<div style='text-align:{align};'><span style='font-weight:600; font-size:1em;'>{html.escape(manager_name)}</span><br>"
+        f"<span style='font-weight:400; font-size:0.85em;'>{html.escape(team.get('team_name', ''))}</span></div>"
+        f"<div style='font-weight:600; font-size:2em;'>{team['score']:.2f}</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _render_schedule_record(standings_row: dict | None, align: str) -> None:
+    if not standings_row:
+        return
+    lines = [
+        f"Record: {standings_row['wins']}-{standings_row['losses']}-{standings_row['ties']}",
+        f"Streak: {standings_row['win_streak'] or '—'}",
+        f"Rank: {standings_row['rank']}",
+    ]
+    st.markdown(f"<div style='text-align:{align};'>{'<br>'.join(lines)}</div>", unsafe_allow_html=True)
+
+
+def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+    matchups = load_matchups(season, week, None, None, "regular")
+    if not matchups:
+        st.info("No regular-season games recorded for this week.")
+        return
+
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    week_table = next((table for table in weekly_tables if table["week"] == week), None)
+    standings_by_team = {row["team_id"]: row for row in week_table["standings"]} if week_table else {}
+
+    # Scoped to this week's own key (the established st.container(key=...)
+    # -> ".st-key-*" CSS-scoping technique used elsewhere in the app) so
+    # tightening the gap between row containers doesn't leak into any
+    # other vertical stack on the page.
+    outer_key = f"schedule_week_{season}_{week}"
+    with st.container(key=outer_key):
+        st.markdown(f"<style>.st-key-{outer_key} div[data-testid='stVerticalBlock'] {{ gap: 0.4rem; }}</style>", unsafe_allow_html=True)
+        for matchup in matchups:
+            home, away = matchup["home"], matchup["away"]
+            # 1:6:1 outer split centers the actual row at exactly 75%
+            # (6/8) of the available width, rather than stretching edge
+            # to edge.
+            _, row_area, _ = st.columns([1, 6, 1])
+            with row_area, st.container(border=True):
+                # Highlight row and record-stats row are two SEPARATE
+                # st.columns calls (not one column stacking both) so
+                # vertical_alignment="center" here centers the button
+                # against just the colored highlight blocks, not the
+                # highlight+record text combined.
+                team1_highlight_column, button_column, team2_highlight_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS, vertical_alignment="center")
+
+                with team1_highlight_column:
+                    _render_schedule_highlight(home, name_resolver, manager_color_map, align="left")
+                with button_column:
+                    if st.button("View Game", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
+                        _go_to_game_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
+                with team2_highlight_column:
+                    _render_schedule_highlight(away, name_resolver, manager_color_map, align="right")
+
+                st.markdown("<div style='height:0.6rem;'></div>", unsafe_allow_html=True)
+
+                team1_record_column, _, team2_record_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS)
+                with team1_record_column:
+                    _render_schedule_record(standings_by_team.get(home["team_id"]), align="left")
+                with team2_record_column:
+                    _render_schedule_record(standings_by_team.get(away["team_id"]), align="right")
+
+
 def render_yearly_page() -> None:
     seasons = discover_seasons()
     if not seasons:
@@ -1140,10 +1325,27 @@ def render_yearly_page() -> None:
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
 
-    season_summary_tab, regular_season_tab, post_season_tab = st.tabs(["Season Summary", "Regular Season", "Post Season"])
+    season_summary_tab, schedule_tab, regular_season_tab, post_season_tab = st.tabs(
+        ["Season Summary", "Schedule", "Regular Season", "Post Season"]
+    )
 
     with season_summary_tab:
         _render_season_podium(selected_season, name_resolver)
+        st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
+        _render_season_summary_table(selected_season, name_resolver)
+
+    with schedule_tab:
+        # weekly_tables.json is already built from load_regular_season_weeks
+        # (see aggregate_season.py) - its "week" numbers never include
+        # playoff weeks, so no separate filtering is needed here.
+        regular_season_weeks = [week_table["week"] for week_table in load_weekly_tables(selected_season)["weeks"]]
+        if not regular_season_weeks:
+            st.info("No schedule available for this season yet.")
+        else:
+            week_tabs = st.tabs([f"Week {week}" for week in regular_season_weeks])
+            for week_tab, week in zip(week_tabs, regular_season_weeks):
+                with week_tab:
+                    _render_schedule_week(selected_season, week, name_resolver, manager_color_map)
 
     with regular_season_tab:
         standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab = st.tabs(
