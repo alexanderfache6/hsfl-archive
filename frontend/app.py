@@ -55,6 +55,7 @@ feedback_page = st.Page(render_feedback_page, title="Feedback", url_path="feedba
 # st.switch_page() straight to Matchups without app.py needing to pass
 # page objects down through every render_*_page() call signature.
 st.session_state["_games_page"] = games_page
+st.session_state["_seasons_page"] = seasons_page
 
 st.title("The Music League")
 

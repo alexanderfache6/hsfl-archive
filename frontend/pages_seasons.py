@@ -44,6 +44,12 @@ BRACKET_HEADER_HEIGHT_PX = 40
 # chart" selectbox pattern as pages_history.py's MANAGER_STAT_COLUMNS.
 STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Streak", "Points For", "Points Against", "Point Difference"]
 
+# Shared red/green text-color scheme for any "positive is good" signed
+# stat (Point Difference, Rank Gained) across the Standings/Bracket
+# Standings/End of Postseason Standings tables.
+POINT_DIFFERENCE_COLOR_POSITIVE = "#2E7D32"
+POINT_DIFFERENCE_COLOR_NEGATIVE = "#C62828"
+
 TRANSACTIONS_PAGE_SIZE = 10
 # Explicit per-type colors requested by the user (not derived from the
 # shared manager-color map - these represent transaction TYPE, not manager).
@@ -454,7 +460,17 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
         color = "46, 125, 50" if value > 0 else "198, 40, 40"
         return f"background-color: rgba({color}, {alpha:.2f})"
 
-    styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Streak"])
+    # Same red/green text-color scheme as the Bracket Standings tab's
+    # Rank Gained column - flat color, no alpha scaling (unlike Streak's
+    # background tint above).
+    def _color_point_difference(value: float) -> str:
+        if value > 0:
+            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+        if value < 0:
+            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+        return ""
+
+    styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Streak"]).map(_color_point_difference, subset=["Point Difference"])
 
     st.dataframe(
         styled_dataframe,
@@ -811,7 +827,7 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
 
     figure.update_layout(
         xaxis_title="Week",
-        yaxis_title="Cumulative Coaching Diff",
+        yaxis_title="Cumulative Coaching Difference",
         xaxis=dict(tickmode="linear", dtick=1),
         legend_title_text="Manager",
         height=450,
@@ -1296,6 +1312,12 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
                 # numeric column's blank/NaN rendering.
                 "Points For": f"{stats['points_for']:.2f}" if stats else "—",
                 "Points Against": f"{stats['points_against']:.2f}" if stats else "—",
+                # Kept as a real float (pd.NA if no post-season stats),
+                # not text like Points For/Against above - a text "+"/"-"
+                # column sorts alphabetically ("+21.00" before "+3.00"),
+                # not numerically. The display formatter below still
+                # shows "—" for missing values same as those columns.
+                "Point Difference": (stats["points_for"] - stats["points_against"]) if stats else float("nan"),
             }
         )
 
@@ -1310,12 +1332,28 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
 
     def _color_rank_gained(value: int) -> str:
         if value > 0:
-            return "color: #2E7D32"
+            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
         if value < 0:
-            return "color: #C62828"
+            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
         return ""
 
-    styled_dataframe = dataframe.style.format({"Rank Gained": _format_rank_gained}).map(_color_rank_gained, subset=["Rank Gained"])
+    def _format_point_difference(value: float) -> str:
+        return "—" if pd.isna(value) else f"{value:+.2f}"
+
+    def _color_point_difference(value: float) -> str:
+        if pd.isna(value):
+            return ""
+        if value > 0:
+            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+        if value < 0:
+            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+        return ""
+
+    styled_dataframe = (
+        dataframe.style.format({"Rank Gained": _format_rank_gained, "Point Difference": _format_point_difference})
+        .map(_color_rank_gained, subset=["Rank Gained"])
+        .map(_color_point_difference, subset=["Point Difference"])
+    )
 
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(dataframe)))
 
@@ -1421,12 +1459,25 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
                 "Win %": win_pct,
                 "Points For": points_for,
                 "Points Against": points_against,
+                "Point Difference": points_for - points_against,
             }
         )
 
     dataframe = pd.DataFrame(rows).sort_values("Rank")
+
+    # Same red/green text-color scheme as the Standings/Bracket Standings
+    # tabs' Point Difference (and Bracket Standings' Rank Gained).
+    def _color_point_difference(value: float) -> str:
+        if value > 0:
+            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+        if value < 0:
+            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+        return ""
+
+    styled_dataframe = dataframe.style.map(_color_point_difference, subset=["Point Difference"])
+
     st.dataframe(
-        dataframe,
+        styled_dataframe,
         hide_index=True,
         width="stretch",
         height=_full_table_height(len(dataframe)),
@@ -1434,6 +1485,7 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
             "Win %": st.column_config.NumberColumn(format="%.3f"),
             "Points For": st.column_config.NumberColumn(format="%.2f"),
             "Points Against": st.column_config.NumberColumn(format="%.2f"),
+            "Point Difference": st.column_config.NumberColumn(format="%+.2f"),
         },
     )
 

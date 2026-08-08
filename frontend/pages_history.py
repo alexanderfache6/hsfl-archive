@@ -253,6 +253,14 @@ def _go_to_game(entry: dict) -> None:
     st.switch_page(st.session_state["_games_page"])
 
 
+def _go_to_season(season: int) -> None:
+    """Jumps to the Seasons page with that season pre-selected - same
+    st.switch_page() pattern as _go_to_game, must be called from the main
+    script body rather than a button's on_click callback."""
+    st.session_state["seasons_season"] = season
+    st.switch_page(st.session_state["_seasons_page"])
+
+
 def _best_worst_finish_by_manager() -> dict[str, tuple[int, int]]:
     """{manager_id: (best final rank, worst final rank)} - the FINAL
     (post-season) standings rank each season, i.e.
@@ -350,6 +358,7 @@ def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[s
 
 def _render_champions_table(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     st.subheader("Wall of Champions")
+    st.caption("Select row to go to season's page.")
     rows = []
     champion_manager_ids = []
     for season_entry in sorted(champions_data["champions"], key=lambda c: c["season"], reverse=True):
@@ -384,7 +393,29 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
         return styles
 
     styled_dataframe = dataframe.style.apply(_highlight_champion_column, axis=0)
-    st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(rows)))
+    # st.dataframe can't put a real button inside a cell - row selection
+    # is the native equivalent: clicking anywhere on a season's row
+    # selects it (same visual table, no layout change), which we read
+    # below via at.selection and use to jump straight to that season on
+    # the Seasons page.
+    selection_state = st.dataframe(
+        styled_dataframe,
+        hide_index=True,
+        width="stretch",
+        height=_full_table_height(len(rows)),
+        on_select="rerun",
+        selection_mode="single-row",
+        key="champions_table",
+    )
+    selected_rows = selection_state["selection"]["rows"]
+    if selected_rows:
+        selected_season = int(dataframe.iloc[selected_rows[0]]["Season"])
+        # Clear the persisted selection before navigating away - otherwise
+        # it's still "selected" the next time this widget mounts (same
+        # key), which would silently re-trigger this same navigation with
+        # no further click from the user.
+        del st.session_state["champions_table"]
+        _go_to_season(selected_season)
 
 
 def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
