@@ -34,7 +34,7 @@ GITHUB_API_BASE = "https://api.github.com"
 FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
 REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
 KNOWN_PAGES = {*REAL_PAGES, "Other"}
-TITLE_MAX_CHARS = 50
+TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
 
 ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["feature"]}
@@ -223,7 +223,7 @@ def _render_feedback_form() -> None:
     selected_page = st.radio("Page", page_options, key=page_widget_key, horizontal=True)
 
     title = st.text_input("Title", max_chars=TITLE_MAX_CHARS, key=versioned_key("feedback_title"))
-    description = st.text_input("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
+    description = st.text_area("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
 
     st.session_state["feedback_type"] = feedback_type
     st.session_state["feedback_page"] = selected_page
