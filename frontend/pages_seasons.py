@@ -1600,7 +1600,7 @@ def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> N
     settings = metadata.get("settings", {})
 
     settings_column, _ = st.columns(2)
-    with settings_column, st.expander("League Settings", expanded=True):
+    with settings_column, st.expander("League Settings", expanded=False):
         # Value is stringified - these settings mix ints (num_teams) with
         # plain text (trade_deadline, etc), and a mixed-type column
         # doesn't serialize to Arrow cleanly (Streamlit papers over it
@@ -1617,12 +1617,12 @@ def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> N
         st.dataframe(pd.DataFrame(flat_settings), hide_index=True, width="stretch", height=_full_table_height(len(flat_settings)))
 
     draft_column, _ = st.columns(2)
-    with draft_column, st.expander("Draft Info", expanded=True):
+    with draft_column, st.expander("Draft Info", expanded=False):
         draft_rows = [{"Setting": key.replace("_", " ").title(), "Value": value} for key, value in metadata.get("draft_info", {}).items()]
         st.dataframe(pd.DataFrame(draft_rows), hide_index=True, width="stretch", height=_full_table_height(len(draft_rows)))
 
     teams_column, _ = st.columns(2)
-    with teams_column, st.expander("Teams", expanded=True):
+    with teams_column, st.expander("Teams", expanded=False):
         team_rows = []
         for team in metadata.get("teams", []):
             manager_name = resolve_manager_name(team.get("manager_id", ""), name_resolver, team.get("manager_display_name", ""))
@@ -1636,12 +1636,12 @@ def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> N
     roster_settings = settings.get("roster_settings", {})
     if roster_settings:
         roster_column, _ = st.columns(2)
-        with roster_column, st.expander("Roster Settings", expanded=True):
+        with roster_column, st.expander("Roster Settings", expanded=False):
             roster_rows = [{"Slot": slot, "Count": count} for slot, count in roster_settings.items()]
             st.dataframe(pd.DataFrame(roster_rows), hide_index=True, width="stretch", height=_full_table_height(len(roster_rows)))
 
     scoring_column, _ = st.columns(2)
-    with scoring_column, st.expander("Scoring Rules", expanded=True):
+    with scoring_column, st.expander("Scoring Rules", expanded=False):
         scoring_rows = [{"Rule": rule, "Value": value} for rule, value in metadata.get("scoring_rules", {}).items()]
         st.dataframe(pd.DataFrame(scoring_rows), hide_index=True, width="stretch", height=_full_table_height(len(scoring_rows)))
 

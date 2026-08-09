@@ -93,14 +93,14 @@ def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
 
 def _format_pacific(iso_timestamp: str | None) -> str:
     """GitHub's timestamps are ISO 8601 UTC ("...Z") - converted to
-    Pacific wall-clock time here, but always labeled "PST" per request
-    (not a dynamic PST/PDT label based on whether daylight saving is
-    actually in effect for that date)."""
+    Pacific wall-clock time here (so the date shown matches the Pacific
+    calendar day, not UTC's) and truncated to just yyyy-mm-dd, no
+    time-of-day."""
     if not iso_timestamp:
         return "—"
     utc_time = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
     pacific_time = utc_time.astimezone(PACIFIC_TIMEZONE)
-    return pacific_time.strftime("%Y-%m-%d %H:%M:%S") + " PST"
+    return pacific_time.strftime("%Y-%m-%d")
 
 
 def _parse_issue(issue: dict) -> dict:
