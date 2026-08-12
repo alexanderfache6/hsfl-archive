@@ -237,11 +237,16 @@ def _render_feedback_form() -> None:
         st.session_state["feedback_description"] = ""
         st.session_state["feedback_form_generation"] = generation + 1
 
-    submit_column, clear_column, _ = st.columns([1, 1, 3])
+    # gap=0 AND use_container_width=True on both buttons - gap=0 alone
+    # still leaves the columns' own width wider than each button's
+    # hug-content size, so the buttons wouldn't actually touch; stretching
+    # each button to fill its whole column (same as how the filter
+    # selectboxes above already fill theirs) is what closes that gap.
+    submit_column, clear_column, _ = st.columns([1, 1, 6])
     with submit_column:
-        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()))
+        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()), use_container_width=True)
     with clear_column:
-        if st.button("Clear Feedback"):
+        if st.button("Clear Feedback", use_container_width=True):
             _reset_form_fields()
             st.rerun()
 

@@ -281,15 +281,20 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     st.session_state["games_team2_manager_id"] = team2_manager_id
     st.session_state["games_matchup_type"] = matchup_type
 
-    apply_col, clear_col, _ = st.columns([1, 1, 3])
+    # gap=0 AND use_container_width=True on both buttons - gap=0 alone
+    # still leaves the columns' own width wider than each button's
+    # hug-content size, so the buttons wouldn't actually touch; stretching
+    # each button to fill its whole column (same as how the filter
+    # selectboxes above already fill theirs) is what closes that gap.
+    apply_col, clear_col, _ = st.columns([1, 1, 6])
     with apply_col:
-        applied = st.button(
-            "Apply Filters",
+        applied = st.button("Apply Filters",
             disabled=team1_manager_id is None,
             help="Select Manager 1 first" if team1_manager_id is None else None,
+            use_container_width=True
         )
     with clear_col:
-        if st.button("Clear Filters"):
+        if st.button("Clear Filters", use_container_width=True):
             for base_key in FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("games_applied_filters", None)
