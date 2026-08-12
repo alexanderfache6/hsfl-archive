@@ -575,11 +575,19 @@ def render_players_page() -> None:
     st.session_state["player_selected_player_id"] = selected_player_id
     st.session_state["player_season_filter"] = selected_season
 
-    apply_column, clear_column, _ = st.columns([1, 1, 3])
+    # use_container_width=True fills container
+    # don't use gap=0, otherwise no padding between buttons
+    # NOTE use same `apply_column, clear_column, _ = st.columns([1, 1, 6])` for any filtering pages
+    apply_column, clear_column, _ = st.columns([1, 1, 6])
     with apply_column:
-        applied = st.button("Apply Filters", disabled=selected_player_id is None, help="Select a player first" if selected_player_id is None else None)
+        applied = st.button(
+            "Apply Filters",
+            disabled=selected_player_id is None,
+            help="Select a player first" if selected_player_id is None else None,
+            use_container_width=True,
+        )
     with clear_column:
-        if st.button("Clear Filters"):
+        if st.button("Clear Filters", use_container_width=True):
             for base_key in PLAYER_FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("player_applied_filters", None)
