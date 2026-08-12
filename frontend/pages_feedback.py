@@ -192,12 +192,6 @@ def _issues_with_pending_merged() -> list[dict] | None:
 def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
 
-    viewer_email = _viewer_email()
-    if viewer_email:
-        st.caption(f"Submitting as {viewer_email}")
-    else:
-        st.caption("Submitting anonymously (no Streamlit Cloud login detected - expected in local dev).")
-
     # Same versioned-widget-key pattern as the Matchups/Players tabs'
     # Clear Filters - Clear Feedback (and a successful Submit) bumps this
     # counter instead of just deleting session_state, forcing Streamlit
@@ -274,7 +268,6 @@ def _render_feedback_form() -> None:
             f"**Page:** {selected_page}",
             f"**Title:** {title}",
             f"**Description:** {description}",
-            f"**Submitted by:** {viewer_email or '_unknown (local/dev)_'}",
         ]
 
         try:
