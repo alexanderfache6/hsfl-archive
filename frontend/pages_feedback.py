@@ -31,13 +31,23 @@ PACIFIC_TIMEZONE = ZoneInfo("America/Los_Angeles")
 GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
-FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
+FEEDBACK_TYPES = ["Bug", "Enhancement", "New Feature"]
 REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
 KNOWN_PAGES = {*REAL_PAGES, "Other"}
 TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
 
-ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["feature"]}
+ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Feature": ["new feature"]}
+
+# Issues filed before this type was renamed from "Improvement" to
+# "Enhancement" still have "**Type:** Improvement" in their body -
+# normalized on read so old and new issues filter/display identically.
+ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
+
+# Same colors as this repo's actual GitHub labels, for the Issues
+# table's Type pill.
+ISSUE_TYPE_COLORS = {"Bug": "#b60205", "Enhancement": "#0e8a16", "New Feature": "#0052cc"}
+# TODO don't hardcode this
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
 
@@ -109,6 +119,7 @@ def _parse_issue(issue: dict) -> dict:
     body = issue.get("body") or ""
     type_match = ISSUE_TYPE_PATTERN.search(body)
     issue_type = type_match.group(1).strip() if type_match else ""
+    issue_type = ISSUE_TYPE_ALIASES.get(issue_type, issue_type)
     if bracket in KNOWN_PAGES:
         page = bracket
     else:
@@ -155,6 +166,47 @@ def _all_issues() -> list[dict]:
     )
     response.raise_for_status()
     return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
+
+
+@st.cache_data(ttl=300)
+def _all_releases() -> list[dict]:
+    """Every PUBLISHED GitHub Release (a bare git tag with no Release
+    object - e.g. one that hasn't been "published" yet - is NOT included,
+    since it has no published_at to compare an issue's closed_at
+    against), oldest first, as {"tag", "published_at", "url"}."""
+    token = _github_token()
+    headers = {"Accept": "application/vnd.github+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    response = requests.get(
+        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/releases",
+        headers=headers,
+        params={"per_page": 100},
+        timeout=10,
+    )
+    response.raise_for_status()
+    releases = [
+        {"tag": release["tag_name"], "published_at": release["published_at"], "url": release["html_url"]}
+        for release in response.json()
+        if release.get("published_at")
+    ]
+    releases.sort(key=lambda release: release["published_at"])
+    return releases
+
+
+def _version_for_issue(issue: dict, releases: list[dict]) -> dict | None:
+    """The earliest published release whose published_at comes after this
+    issue's closed_at - i.e. the first release that could actually have
+    shipped it. None (shown as "Pending") for open issues, or closed
+    issues that closed more recently than every release published so
+    far."""
+    closed_at = issue.get("closed_at_raw")
+    if not closed_at:
+        return None
+    for release in releases:
+        if release["published_at"] > closed_at:
+            return release
+    return None
 
 
 def _pacific_date(iso_timestamp: str | None) -> str | None:
@@ -302,13 +354,33 @@ def _render_issues_table(issues: list[dict]) -> None:
         st.info("No issues yet.")
         return
 
-    state_column, type_column, page_column = st.columns(3)
-    with state_column:
-        selected_state = st.selectbox("State", ["Open", "Closed"], index=None, placeholder="Any", key="feedback_filter_state")
+    try:
+        releases = _all_releases()
+    except requests.RequestException:
+        releases = []
+
+    type_column, state_column, release_column, page_column = st.columns(4)
     with type_column:
         selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key="feedback_filter_type")
+    with state_column:
+        selected_state = st.selectbox("Issue State", ["Open", "Closed"], index=None, placeholder="Any", key="feedback_filter_state")
+    with release_column:
+        # "-" (open/ongoing issues - see the rows loop below) is
+        # deliberately not one of the filterable options here, only a
+        # display value - there's nothing to "filter to '-'" since that's
+        # not a real release state, just "not applicable yet".
+        release_options = [release["tag"] for release in releases] + ["Pending"]
+        release_labels = {release["tag"]: f"{release['tag']} released on {release['published_at'][:10]}" for release in releases}
+        selected_release = st.selectbox(
+            "Release Version",
+            release_options,
+            index=None,
+            placeholder="Any",
+            format_func=lambda tag: release_labels.get(tag, tag),
+            key="feedback_filter_release",
+        )
     with page_column:
-        selected_page = st.selectbox("Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key="feedback_filter_page")
+        selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key="feedback_filter_page")
 
     # Same searchable-selectbox pattern as the Players tab's player
     # search - typing narrows the list via Streamlit's own built-in
@@ -318,14 +390,14 @@ def _render_issues_table(issues: list[dict]) -> None:
     with search_column:
         title_options = sorted({issue["title"] for issue in issues})
         searched_title = st.selectbox(
-            "Search titles", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
+            "Search Issue Title(s)", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
         )
 
     # Any filter change (including unchecking one back to "Any") jumps
     # back to page 1 of the results - otherwise a filter narrowing the
     # list while the user is on, say, page 3 can land them on a page that
     # no longer makes sense for the new result set.
-    filter_signature = (selected_state, selected_type, selected_page, searched_title)
+    filter_signature = (selected_state, selected_type, selected_release, selected_page, searched_title)
     if st.session_state.get("feedback_issues_filter_signature") != filter_signature:
         st.session_state["feedback_issues_filter_signature"] = filter_signature
         st.session_state["feedback_issues_page"] = 1
@@ -340,15 +412,35 @@ def _render_issues_table(issues: list[dict]) -> None:
             continue
         if searched_title and issue["title"] != searched_title:
             continue
+
+        # Release only applies to CLOSED issues - an open issue hasn't
+        # shipped at all yet, so "Pending" (which implies "closed, just
+        # not released yet") would be misleading; "-" makes clear it's
+        # simply not applicable while the issue is still open.
+        if issue["state"] == "closed":
+            version = _version_for_issue(issue, releases)
+            release_tag = version["tag"] if version else "Pending"
+        else:
+            release_tag = "-"
+        # Plain text, not a LinkColumn - LinkColumn styles EVERY value in
+        # the column with link coloring/underline regardless of whether
+        # it's actually clickable, which made "Pending"/"-" look like
+        # dead links. The issue's own Link column already covers
+        # click-through; this is just the release tag as plain text.
+        release_display = release_tag
+        if selected_release and release_tag != selected_release:
+            continue
+
         rows.append(
             {
                 "Issue #": issue["number"],
-                "State": issue["state"].capitalize(),
                 "Type": issue["issue_type"],
                 "Page": issue["page"],
                 "Title": issue["title"],
                 "Submission Date": issue["submitted_at"],
                 "Closed Date": issue["closed_at"],
+                "State": issue["state"].capitalize(),
+                "Release": release_display,
                 "URL": issue["url"],
             }
         )
@@ -377,6 +469,16 @@ def _render_issues_table(issues: list[dict]) -> None:
     page_rows = rows[start_index : start_index + ISSUES_PAGE_SIZE]
 
     dataframe = pd.DataFrame(page_rows)
+
+    # GitHub-label-style color chip for Type - st.dataframe's grid is
+    # canvas-rendered (not real HTML/DOM), so only background-color/color
+    # actually apply here; there's no border-radius/padding to get a true
+    # rounded "pill" shape, but the solid color block with white bold
+    # text reads the same way at a glance.
+    def _color_issue_type(value: str) -> str:
+        color = ISSUE_TYPE_COLORS.get(value)
+        return f"background-color: {color}; color: white; font-weight: 600;" if color else ""
+
     # LinkColumn's display_text can only be a fixed string or a regex
     # capturing a substring of the URL itself - "Issue #{n}" mixes in
     # literal text alongside the number, which needs a real per-cell
@@ -384,7 +486,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     # unset on the LinkColumn config below, since column_config text
     # formatting - i.e. an explicit display_text - would otherwise take
     # precedence over the Styler's).
-    styled_dataframe = dataframe.style.format({"URL": lambda url: f"Issue #{url.rsplit('/', 1)[-1]}"})
+    styled_dataframe = dataframe.style.format({"URL": lambda url: f"Issue #{url.rsplit('/', 1)[-1]}"}).map(_color_issue_type, subset=["Type"])
     st.dataframe(
         styled_dataframe,
         hide_index=True,
