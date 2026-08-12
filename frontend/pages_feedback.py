@@ -383,15 +383,14 @@ def _render_issues_table(issues: list[dict]) -> None:
         selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key="feedback_filter_page")
 
     # Same searchable-selectbox pattern as the Players tab's player
-    # search - typing narrows the list via Streamlit's own built-in
-    # substring matching in the dropdown. Page counter shares this row,
-    # to its right - same layout as the Seasons page's Transactions table.
+    # search - a plain text_input with substring matching below, not a
+    # selectbox (which requires picking one exact full title from its
+    # dropdown before it actually filters anything). Page counter shares
+    # this row, to its right - same layout as the Seasons page's
+    # Transactions table.
     search_column, page_counter_column = st.columns([3, 1])
     with search_column:
-        title_options = sorted({issue["title"] for issue in issues})
-        searched_title = st.selectbox(
-            "Search Issue Title(s)", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
-        )
+        searched_title = st.text_input("Search Issue Title(s)", placeholder="Type to search titles...", key="feedback_search_title")
 
     # Any filter change (including unchecking one back to "Any") jumps
     # back to page 1 of the results - otherwise a filter narrowing the
@@ -410,7 +409,7 @@ def _render_issues_table(issues: list[dict]) -> None:
             continue
         if selected_page and issue["page"] != selected_page:
             continue
-        if searched_title and issue["title"] != searched_title:
+        if searched_title and searched_title.strip().lower() not in issue["title"].lower():
             continue
 
         # Release only applies to CLOSED issues - an open issue hasn't
