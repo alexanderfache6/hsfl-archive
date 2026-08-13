@@ -123,6 +123,15 @@ NON_STARTING_ROSTER_SETTINGS_KEYS = {"BENCH", "RESERVE"}
 CHART_YAXIS_MAX_TICKS = 10
 CHART_XAXIS_MAX_TICKS = 20
 
+# This archive's own nfl_team abbreviations (e.g. matchup data's
+# "nfl_team": "WAS") -> the lowercase abbreviation
+# code/raw-parsing/nfl/nfl_bye_weeks.json is keyed by (ESPN's team-page
+# URL slug). Every other team's code is identical once lowercased -
+# confirmed by diffing this archive's DEF_TEAM_ABBREVIATIONS values
+# against nfl_bye_weeks.json's full team list - Washington is the only
+# real mismatch (ESPN uses "wsh", this archive uses "WAS").
+NFL_TEAM_TO_ESPN_ABBR = {"WAS": "wsh"}
+
 # ========================================
 # FUNCTIONS
 # ========================================
@@ -322,6 +331,60 @@ def load_nfl_season_lengths() -> dict[str, int]:
     deliberately NOT the same number as this league's own fantasy
     regular-season week count)."""
     return _read_json(ARCHIVE_DIRECTORY / "nfl_season_lengths.json")["nfl_regular_season_games"]
+
+
+@st.cache_resource
+def load_nfl_bye_weeks() -> dict:
+    """{"2022": {"status": "32 / 32", "teams": [{"team": "ne", "bye":
+    10}, ...]}, ...} - see code/raw-parsing/nfl/nfl_bye_weeks.json's own
+    docstring. A team entry's "bye" can be None (with a "comment"
+    explaining why - e.g. 2017's Miami/Tampa Bay, whose Week 1 game was
+    postponed by Hurricane Irma and made up later that season using what
+    would've been their bye - genuinely no bye that year, not a fetch
+    gap) - get_bye_week() below treats that the same as "no bye to
+    mark," not "unknown"."""
+    return _read_json(ARCHIVE_DIRECTORY / "nfl_bye_weeks.json")
+
+
+def get_bye_week(season: int, nfl_team: str) -> int | None:
+    """None covers both "not found" (e.g. a future season with no
+    schedule out yet) and "found, but this team genuinely had no bye
+    that season" - callers only care whether there's a week number to
+    mark, not which of those two applies."""
+    season_entry = load_nfl_bye_weeks().get(str(season))
+    if not season_entry:
+        return None
+    espn_team = NFL_TEAM_TO_ESPN_ABBR.get(nfl_team, nfl_team.lower())
+    for team_entry in season_entry["teams"]:
+        if team_entry["team"] == espn_team:
+            return team_entry["bye"]
+    return None
+
+
+@st.cache_resource
+def player_nfl_team_by_season(player_id: str) -> dict[int, str]:
+    """{season: nfl_team} for whichever seasons this player appears in
+    ANY matchup's starters/bench list - there's no direct per-week NFL
+    team field in player_ownership.json (only which FANTASY team, if
+    any, owned them), so this scans the already-cached full matchup list
+    instead. A player who changes NFL teams mid-season (rare) gets
+    whichever team appears most often that season - a real, deliberately
+    unhandled edge case, same as pages_players.py's "NFL Games" bye
+    assumption. A season with zero matchup appearances (never once
+    rostered a real week the archive has a box score for) simply isn't a
+    key in the returned dict - callers treat that season as "unknown
+    team, no bye to mark" rather than guessing."""
+    from collections import Counter
+
+    teams_by_season: dict[int, Counter] = {}
+    for matchup in _load_all_matchups_enriched():
+        for side in (matchup["home"], matchup["away"]):
+            for player in side["starters"] + side["bench"]:
+                if player.get("player_id") != player_id or not player.get("nfl_team"):
+                    continue
+                teams_by_season.setdefault(matchup["season"], Counter())[player["nfl_team"]] += 1
+
+    return {season: counts.most_common(1)[0][0] for season, counts in teams_by_season.items()}
 
 
 @st.cache_resource
