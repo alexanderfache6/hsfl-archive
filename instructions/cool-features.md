@@ -44,7 +44,8 @@
 # feedback
 - [x] feedback for new features/bugs/improvements, see github issues in table and chart
 
-
+# global
+- [ ] search/jump/filter to manager/season/player
 
 
 History
@@ -81,5 +82,4 @@ Games / Matchups
 - Margin-of-victory distribution chart (are games trending closer or more lopsided over the years).
 
 Cross-page
-- Global "jump to" search (manager, season, or player name) that routes to the right page/filter, extending the st.switch_page pattern already used for records and champions.
 - Retroactive trade grader: compare a trade's two players' rest-of-season point totals to grade who "won" the trade.
