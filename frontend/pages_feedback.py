@@ -10,6 +10,7 @@ execution-plan.md Phase G.
 # IMPORTS
 # ========================================
 
+import base64
 import re
 import time
 from datetime import datetime
@@ -31,15 +32,43 @@ PACIFIC_TIMEZONE = ZoneInfo("America/Los_Angeles")
 GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
-FEEDBACK_TYPES = ["Bug", "Improvement", "New Feature"]
+FEEDBACK_TYPES = ["Bug", "Enhancement", "New Feature"]
 REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
 KNOWN_PAGES = {*REAL_PAGES, "Other"}
-TITLE_MAX_CHARS = 50
+TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
 
-ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Improvement": ["enhancement"], "New Feature": ["feature"]}
+ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Feature": ["new feature"]}
+
+# GitHub's create-issue REST endpoint has no attachment field (the
+# drag-and-drop upload used at github.com itself goes through a
+# separate, private, undocumented endpoint) - a submitted screenshot is
+# instead committed to the repo under this directory via the Contents
+# API, then linked as a markdown image at the bottom of the issue body
+# using that commit's public raw-content URL.
+FEEDBACK_ATTACHMENTS_DIRECTORY = "feedback-attachments"
+MAX_SCREENSHOT_COUNT = 3
+MAX_SCREENSHOT_MB = 1 # real screenshots run well under this
+
+# Issues filed before this type was renamed from "Improvement" to
+# "Enhancement" still have "**Type:** Improvement" in their body -
+# normalized on read so old and new issues filter/display identically.
+ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
+
+# Same colors as this repo's actual GitHub labels, for the Issues
+# table's Type pill.
+ISSUE_TYPE_COLORS = {"Bug": "#b60205", "Enhancement": "#0e8a16", "New Feature": "#0052cc"}
+# TODO don't hardcode this
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
+
+ISSUES_FILTER_WIDGET_BASE_KEYS = (
+    "feedback_filter_type",
+    "feedback_filter_state",
+    "feedback_filter_release",
+    "feedback_filter_page",
+    "feedback_search_title",
+)
 
 # Issues filed by this form always have "**Type:**"/"**Page:**"/
 # "**Description:**" lines in the body (see _render_feedback_form).
@@ -65,17 +94,20 @@ ISSUES_CLOSED_COLOR = "#1E88E5"
 # ========================================
 
 
-def _viewer_email() -> str:
-    """The Streamlit Cloud-authenticated viewer's email - only populated
-    when actually running on Community Cloud with viewer access control
-    enabled (empty in local dev, since there's no login to read)."""
-    user = getattr(st, "user", None) or getattr(st, "experimental_user", None)
-    return getattr(user, "email", "") or ""
-
-
-def _github_token() -> str:
+def _github_issues_token() -> str:
     try:
         return st.secrets.get("GITHUB_ISSUES_TOKEN", "")
+    except Exception:
+        return ""
+
+
+def _github_feedback_token() -> str:
+    """A separate, narrower-scoped token (Contents: Read and write only -
+    no Issues access) used just for committing feedback screenshots via
+    the Contents API - kept apart from _github_issues_token() so the
+    issue-creation token never needs contents-write permission."""
+    try:
+        return st.secrets.get("GITHUB_FEEDBACK_TOKEN", "")
     except Exception:
         return ""
 
@@ -83,12 +115,34 @@ def _github_token() -> str:
 def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
     response = requests.post(
         f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
-        headers={"Authorization": f"Bearer {_github_token()}", "Accept": "application/vnd.github+json"},
+        headers={"Authorization": f"Bearer {_github_issues_token()}", "Accept": "application/vnd.github+json"},
         json={"title": title, "body": body, "labels": labels},
         timeout=10,
     )
     response.raise_for_status()
     return response.json()
+
+
+def _slugify(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "issue"
+
+
+def _upload_feedback_screenshot(file_bytes: bytes, title: str, index: int) -> str:
+    """Commits one uploaded PNG to FEEDBACK_ATTACHMENTS_DIRECTORY (the
+    filename is timestamped, plus this screenshot's position in the
+    submission's own attachment list, so neither two submissions with the
+    same title nor two screenshots in the same submission ever collide)
+    and returns its public raw-content download_url, embeddable directly
+    as a markdown image."""
+    filename = f"{int(time.time())}-{index}-{_slugify(title)}.png"
+    response = requests.put(
+        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/contents/{FEEDBACK_ATTACHMENTS_DIRECTORY}/{filename}",
+        headers={"Authorization": f"Bearer {_github_feedback_token()}", "Accept": "application/vnd.github+json"},
+        json={"message": f"feedback attachment: {filename}", "content": base64.b64encode(file_bytes).decode("ascii")},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()["content"]["download_url"]
 
 
 def _format_pacific(iso_timestamp: str | None) -> str:
@@ -109,6 +163,7 @@ def _parse_issue(issue: dict) -> dict:
     body = issue.get("body") or ""
     type_match = ISSUE_TYPE_PATTERN.search(body)
     issue_type = type_match.group(1).strip() if type_match else ""
+    issue_type = ISSUE_TYPE_ALIASES.get(issue_type, issue_type)
     if bracket in KNOWN_PAGES:
         page = bracket
     else:
@@ -143,7 +198,7 @@ def _all_issues() -> list[dict]:
     own Type/Page/Description fields. Cached for 60s so a page rerun
     doesn't refetch every time - issues don't change that fast outside of
     right after a fresh submission (see the cache-clear above)."""
-    token = _github_token()
+    token = _github_issues_token()
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -155,6 +210,47 @@ def _all_issues() -> list[dict]:
     )
     response.raise_for_status()
     return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
+
+
+@st.cache_data(ttl=300)
+def _all_releases() -> list[dict]:
+    """Every PUBLISHED GitHub Release (a bare git tag with no Release
+    object - e.g. one that hasn't been "published" yet - is NOT included,
+    since it has no published_at to compare an issue's closed_at
+    against), oldest first, as {"tag", "published_at", "url"}."""
+    token = _github_issues_token()
+    headers = {"Accept": "application/vnd.github+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    response = requests.get(
+        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/releases",
+        headers=headers,
+        params={"per_page": 100},
+        timeout=10,
+    )
+    response.raise_for_status()
+    releases = [
+        {"tag": release["tag_name"], "published_at": release["published_at"], "url": release["html_url"]}
+        for release in response.json()
+        if release.get("published_at")
+    ]
+    releases.sort(key=lambda release: release["published_at"])
+    return releases
+
+
+def _version_for_issue(issue: dict, releases: list[dict]) -> dict | None:
+    """The earliest published release whose published_at comes after this
+    issue's closed_at - i.e. the first release that could actually have
+    shipped it. None (shown as "Pending") for open issues, or closed
+    issues that closed more recently than every release published so
+    far."""
+    closed_at = issue.get("closed_at_raw")
+    if not closed_at:
+        return None
+    for release in releases:
+        if release["published_at"] > closed_at:
+            return release
+    return None
 
 
 def _pacific_date(iso_timestamp: str | None) -> str | None:
@@ -184,6 +280,9 @@ def _issues_with_pending_merged() -> list[dict] | None:
     return issues + still_pending
 
 
+def _mb_to_bytes(mb):
+    return mb * 1024 * 1024
+
 # ========================================
 # RENDER
 # ========================================
@@ -191,12 +290,6 @@ def _issues_with_pending_merged() -> list[dict] | None:
 
 def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
-
-    viewer_email = _viewer_email()
-    if viewer_email:
-        st.caption(f"Submitting as {viewer_email}")
-    else:
-        st.caption("Submitting anonymously (no Streamlit Cloud login detected - expected in local dev).")
 
     # Same versioned-widget-key pattern as the Matchups/Players tabs'
     # Clear Filters - Clear Feedback (and a successful Submit) bumps this
@@ -223,7 +316,36 @@ def _render_feedback_form() -> None:
     selected_page = st.radio("Page", page_options, key=page_widget_key, horizontal=True)
 
     title = st.text_input("Title", max_chars=TITLE_MAX_CHARS, key=versioned_key("feedback_title"))
-    description = st.text_input("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
+    description = st.text_area("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
+    # st.file_uploader's own drop zone already accepts a dragged
+    # screenshot, not just a browsed file - no separate "drag" affordance
+    # needed. Not round-tripped through the plain-key copy-back loop
+    # above like the other fields (a file object isn't something a later
+    # generation could meaningfully reseed) - a fresh, empty uploader
+    # simply appears each time feedback_form_generation bumps, same as
+    # every other field ends up blank after a reset.
+    uploaded_screenshots = st.file_uploader(
+        f"Attach screenshots (optional, up to {MAX_SCREENSHOT_COUNT} files)",
+        type=["png"],
+        accept_multiple_files=True,
+        key=versioned_key("feedback_screenshot"),
+        max_upload_size=MAX_SCREENSHOT_MB # per file
+    )
+
+    # st.file_uploader has no built-in cap on file COUNT (only the
+    # per-file "type" filter) or SIZE beyond Streamlit's own generous
+    # global default (200MB) - both are enforced here instead, blocking
+    # Submit rather than silently truncating/uploading an oversized file.
+    screenshot_error = None
+    if uploaded_screenshots:
+        if len(uploaded_screenshots) > MAX_SCREENSHOT_COUNT:
+            screenshot_error = f"Attach at most {MAX_SCREENSHOT_COUNT} screenshots ({len(uploaded_screenshots)} selected)."
+        else:
+            oversized = [f.name for f in uploaded_screenshots if f.size > _mb_to_bytes(MAX_SCREENSHOT_MB)] # NOTE f.size is checking bytes
+            if oversized:
+                screenshot_error = f"Screenshot(s) over {MAX_SCREENSHOT_MB}MB: {', '.join(oversized)}."
+    if screenshot_error:
+        st.error(screenshot_error)
 
     st.session_state["feedback_type"] = feedback_type
     st.session_state["feedback_page"] = selected_page
@@ -237,11 +359,18 @@ def _render_feedback_form() -> None:
         st.session_state["feedback_description"] = ""
         st.session_state["feedback_form_generation"] = generation + 1
 
-    submit_column, clear_column, _ = st.columns([1, 1, 3])
+    # gap=0 AND use_container_width=True on both buttons - gap=0 alone
+    # still leaves the columns' own width wider than each button's
+    # hug-content size, so the buttons wouldn't actually touch; stretching
+    # each button to fill its whole column (same as how the filter
+    # selectboxes above already fill theirs) is what closes that gap.
+    submit_column, clear_column, _ = st.columns([1, 1, 6])
     with submit_column:
-        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()))
+        submit_clicked = st.button(
+            "Submit", disabled=not (title.strip() and description.strip()) or screenshot_error is not None, use_container_width=True
+        )
     with clear_column:
-        if st.button("Clear Feedback"):
+        if st.button("Clear Feedback", use_container_width=True):
             _reset_form_fields()
             st.rerun()
 
@@ -259,21 +388,38 @@ def _render_feedback_form() -> None:
         message_placeholder.empty()
 
     if submit_clicked:
-        if not _github_token():
-            st.error("GitHub integration isn't configured (missing the 'github_token' secret) - can't submit right now.")
+        if not _github_issues_token():
+            st.error("GitHub integration isn't configured - can't submit right now.")
+            return
+        if uploaded_screenshots and not _github_feedback_token():
+            st.error("Screenshot uploads aren't configured - remove the attachment or try again later.")
             return
 
+        attachment_urls = []
+        for index, screenshot in enumerate(uploaded_screenshots or []):
+            try:
+                attachment_urls.append(_upload_feedback_screenshot(screenshot.getvalue(), title, index))
+            except requests.RequestException as error:
+                st.error(f"Couldn't upload screenshot '{screenshot.name}' - GitHub API error: {error}")
+                return
+
         issue_title = f"[{selected_page}] {title}"
+        # A tight bullet list (single "\n" between items) - not the
+        # blank-line-separated paragraphs used before - so GitHub renders
+        # every field as one compact row instead of spacing them out like
+        # separate paragraphs.
         body_lines = [
-            f"**Type:** {feedback_type}",
-            f"**Page:** {selected_page}",
-            f"**Title:** {title}",
-            f"**Description:** {description}",
-            f"**Submitted by:** {viewer_email or '_unknown (local/dev)_'}",
+            f"- **Type:** {feedback_type}",
+            f"- **Page:** {selected_page}",
+            f"- **Title:** {title}",
+            f"- **Description:** {description}",
         ]
+        if attachment_urls:
+            images = " ".join(f"![screenshot]({url})" for url in attachment_urls)
+            body_lines.append(f"- **Attachments:** {images}")
 
         try:
-            issue = _create_github_issue(issue_title, "\n\n".join(body_lines), ISSUE_LABELS_BY_TYPE[feedback_type])
+            issue = _create_github_issue(issue_title, "\n".join(body_lines), ISSUE_LABELS_BY_TYPE[feedback_type])
         except requests.RequestException as error:
             st.error(f"Couldn't submit feedback - GitHub API error: {error}")
             return
@@ -304,30 +450,84 @@ def _render_issues_table(issues: list[dict]) -> None:
         st.info("No issues yet.")
         return
 
-    state_column, type_column, page_column = st.columns(3)
-    with state_column:
-        selected_state = st.selectbox("State", ["Open", "Closed"], index=None, placeholder="Any", key="feedback_filter_state")
+    try:
+        releases = _all_releases()
+    except requests.RequestException:
+        releases = []
+
+    # Same versioned-widget-key pattern as the Matchups/Players tabs'
+    # Clear Filters - the Clear Filters button below bumps this counter
+    # instead of just deleting session_state, forcing Streamlit to mount
+    # brand-new widget instances (deleting session_state alone can leave
+    # a widget showing its old value in some browsers, since the
+    # component itself never actually remounts).
+    generation = st.session_state.setdefault("feedback_issues_filters_generation", 0)
+
+    def versioned_key(base_key: str) -> str:
+        return f"{base_key}_gen{generation}"
+
+    for base_key in ISSUES_FILTER_WIDGET_BASE_KEYS:
+        widget_key = versioned_key(base_key)
+        if widget_key not in st.session_state and base_key in st.session_state:
+            st.session_state[widget_key] = st.session_state[base_key]
+
+    type_column, state_column, release_column, page_column = st.columns(4)
     with type_column:
-        selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key="feedback_filter_type")
+        selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key=versioned_key("feedback_filter_type"))
+    with state_column:
+        selected_state = st.selectbox(
+            "Issue State", ["Open", "Closed"], index=None, placeholder="Any", key=versioned_key("feedback_filter_state")
+        )
+    with release_column:
+        # "-" (open/ongoing issues - see the rows loop below) is
+        # deliberately not one of the filterable options here, only a
+        # display value - there's nothing to "filter to '-'" since that's
+        # not a real release state, just "not applicable yet".
+        release_options = [release["tag"] for release in releases] + ["Pending"]
+        release_labels = {release["tag"]: f"{release['tag']} released on {release['published_at'][:10]}" for release in releases}
+        selected_release = st.selectbox(
+            "Release Version",
+            release_options,
+            index=None,
+            placeholder="Any",
+            format_func=lambda tag: release_labels.get(tag, tag),
+            key=versioned_key("feedback_filter_release"),
+        )
     with page_column:
-        selected_page = st.selectbox("Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key="feedback_filter_page")
+        selected_page = st.selectbox(
+            "App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page")
+        )
 
     # Same searchable-selectbox pattern as the Players tab's player
-    # search - typing narrows the list via Streamlit's own built-in
-    # substring matching in the dropdown. Page counter shares this row,
-    # to its right - same layout as the Seasons page's Transactions table.
+    # search - a plain text_input with substring matching below, not a
+    # selectbox (which requires picking one exact full title from its
+    # dropdown before it actually filters anything). Page counter shares
+    # this row, to its right - same layout as the Seasons page's
+    # Transactions table.
     search_column, page_counter_column = st.columns([3, 1])
     with search_column:
-        title_options = sorted({issue["title"] for issue in issues})
-        searched_title = st.selectbox(
-            "Search titles", title_options, index=None, placeholder="Type to search titles...", key="feedback_search_title"
+        searched_title = st.text_input(
+            "Search Issue Title(s)", placeholder="Type to search titles...", key=versioned_key("feedback_search_title")
         )
+
+    st.session_state["feedback_filter_type"] = selected_type
+    st.session_state["feedback_filter_state"] = selected_state
+    st.session_state["feedback_filter_release"] = selected_release
+    st.session_state["feedback_filter_page"] = selected_page
+    st.session_state["feedback_search_title"] = searched_title
+
+    if st.button("Clear Filters"):
+        for base_key in ISSUES_FILTER_WIDGET_BASE_KEYS:
+            st.session_state.pop(base_key, None)
+        st.session_state["feedback_issues_filters_generation"] = generation + 1
+        st.session_state["feedback_issues_page"] = 1
+        st.rerun()
 
     # Any filter change (including unchecking one back to "Any") jumps
     # back to page 1 of the results - otherwise a filter narrowing the
     # list while the user is on, say, page 3 can land them on a page that
     # no longer makes sense for the new result set.
-    filter_signature = (selected_state, selected_type, selected_page, searched_title)
+    filter_signature = (selected_state, selected_type, selected_release, selected_page, searched_title)
     if st.session_state.get("feedback_issues_filter_signature") != filter_signature:
         st.session_state["feedback_issues_filter_signature"] = filter_signature
         st.session_state["feedback_issues_page"] = 1
@@ -340,17 +540,37 @@ def _render_issues_table(issues: list[dict]) -> None:
             continue
         if selected_page and issue["page"] != selected_page:
             continue
-        if searched_title and issue["title"] != searched_title:
+        if searched_title and searched_title.strip().lower() not in issue["title"].lower():
             continue
+
+        # Release only applies to CLOSED issues - an open issue hasn't
+        # shipped at all yet, so "Pending" (which implies "closed, just
+        # not released yet") would be misleading; "-" makes clear it's
+        # simply not applicable while the issue is still open.
+        if issue["state"] == "closed":
+            version = _version_for_issue(issue, releases)
+            release_tag = version["tag"] if version else "Pending"
+        else:
+            release_tag = "-"
+        # Plain text, not a LinkColumn - LinkColumn styles EVERY value in
+        # the column with link coloring/underline regardless of whether
+        # it's actually clickable, which made "Pending"/"-" look like
+        # dead links. The issue's own Link column already covers
+        # click-through; this is just the release tag as plain text.
+        release_display = release_tag
+        if selected_release and release_tag != selected_release:
+            continue
+
         rows.append(
             {
                 "Issue #": issue["number"],
-                "State": issue["state"].capitalize(),
                 "Type": issue["issue_type"],
                 "Page": issue["page"],
                 "Title": issue["title"],
                 "Submission Date": issue["submitted_at"],
                 "Closed Date": issue["closed_at"],
+                "State": issue["state"].capitalize(),
+                "Release": release_display,
                 "URL": issue["url"],
             }
         )
@@ -379,6 +599,16 @@ def _render_issues_table(issues: list[dict]) -> None:
     page_rows = rows[start_index : start_index + ISSUES_PAGE_SIZE]
 
     dataframe = pd.DataFrame(page_rows)
+
+    # GitHub-label-style color chip for Type - st.dataframe's grid is
+    # canvas-rendered (not real HTML/DOM), so only background-color/color
+    # actually apply here; there's no border-radius/padding to get a true
+    # rounded "pill" shape, but the solid color block with white bold
+    # text reads the same way at a glance.
+    def _color_issue_type(value: str) -> str:
+        color = ISSUE_TYPE_COLORS.get(value)
+        return f"background-color: {color}; color: white; font-weight: 600;" if color else ""
+
     # LinkColumn's display_text can only be a fixed string or a regex
     # capturing a substring of the URL itself - "Issue #{n}" mixes in
     # literal text alongside the number, which needs a real per-cell
@@ -386,7 +616,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     # unset on the LinkColumn config below, since column_config text
     # formatting - i.e. an explicit display_text - would otherwise take
     # precedence over the Styler's).
-    styled_dataframe = dataframe.style.format({"URL": lambda url: f"Issue #{url.rsplit('/', 1)[-1]}"})
+    styled_dataframe = dataframe.style.format({"URL": lambda url: f"Issue #{url.rsplit('/', 1)[-1]}"}).map(_color_issue_type, subset=["Type"])
     st.dataframe(
         styled_dataframe,
         hide_index=True,

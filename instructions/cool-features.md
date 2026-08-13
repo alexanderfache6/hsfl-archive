@@ -27,6 +27,7 @@
 - [x] below fantasy points per game chart show stats per game
 - [x] show all weeks as 0 if player not on fantasy roster across full nfl season
 - [x] filter player stats per season
+- [ ] complement fantasy-roster availability with REAL NFL stats/roster data for weeks a player wasn't on any fantasy roster - currently a week with no fantasy owner just shows as a flat red "unrostered" 0, even if the player actually played (or was on their real NFL team's bye) that week; pulling in real NFL play-by-play/roster status would let the chart distinguish "genuinely unrostered but played" from "bye week" from "actually inactive/injured," and would also let "NFL Games"/bye-week logic handle a mid-season NFL trade correctly (two different real byes in one season) instead of the current one-bye-per-season assumption (see pages_players.py's _render_summary_metrics)
 
 # matchups
 - [x] fix defenses not having (TEAM)
@@ -42,11 +43,9 @@
 
 # feedback
 - [x] feedback for new features/bugs/improvements, see github issues in table and chart
-- [ ] Public changelog view generated from recently closed issues, so users can see what shipped from their feedback.
 
-
-
-
+# global
+- [ ] search/jump/filter to manager/season/player
 
 
 History
@@ -83,5 +82,4 @@ Games / Matchups
 - Margin-of-victory distribution chart (are games trending closer or more lopsided over the years).
 
 Cross-page
-- Global "jump to" search (manager, season, or player name) that routes to the right page/filter, extending the st.switch_page pattern already used for records and champions.
 - Retroactive trade grader: compare a trade's two players' rest-of-season point totals to grade who "won" the trade.

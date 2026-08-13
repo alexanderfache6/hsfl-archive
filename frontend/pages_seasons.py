@@ -382,25 +382,26 @@ def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> di
     return top_three
 
 
-def _go_to_game_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
-    """Jumps to the Games page pre-filtered to this exact matchup, same
-    st.switch_page pattern as the History tab's _go_to_game - must be
-    called from the main script body (not a button's on_click callback),
-    since st.switch_page is a no-op/error from within a callback."""
-    st.session_state["games_team1_manager_id"] = team1_manager_id
-    st.session_state["games_season"] = season
-    st.session_state["games_week"] = week
-    st.session_state["games_team2_manager_id"] = team2_manager_id
-    st.session_state["games_matchup_type"] = "regular"
-    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
-    st.session_state["games_applied_filters"] = {
+def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
+    """Jumps to the Matchups page pre-filtered to this exact matchup,
+    same st.switch_page pattern as the History tab's _go_to_matchup -
+    must be called from the main script body (not a button's on_click
+    callback), since st.switch_page is a no-op/error from within a
+    callback."""
+    st.session_state["matchups_team1_manager_id"] = team1_manager_id
+    st.session_state["matchups_season"] = season
+    st.session_state["matchups_week"] = week
+    st.session_state["matchups_team2_manager_id"] = team2_manager_id
+    st.session_state["matchups_matchup_type"] = "regular"
+    st.session_state["matchups_filters_generation"] = st.session_state.get("matchups_filters_generation", 0) + 1
+    st.session_state["matchups_applied_filters"] = {
         "season": season,
         "week": week,
         "team1_manager_id": team1_manager_id,
         "team2_manager_id": team2_manager_id,
         "matchup_type": "regular",
     }
-    st.switch_page(st.session_state["_games_page"])
+    st.switch_page(st.session_state["_matchups_page"])
 
 
 # ========================================
@@ -450,7 +451,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
         )
     dataframe = pd.DataFrame(rows).sort_values("Rank")
 
-    # Same green/red used elsewhere in the app (Games tab's optimal-lineup
+    # Same green/red used elsewhere in the app (Matchups tab's optimal-lineup
     # gains/losses). Alpha scales with streak length instead of a flat
     # tint - a 1-game streak stays light, longer streaks get
     # progressively darker, capped so text stays legible even at very
@@ -1502,7 +1503,7 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
 
 def _render_schedule_highlight(team: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str], align: str) -> None:
     """Manager name/team name/score in one colored block - same styling
-    as the Games tab's matchup card (background = that manager's color,
+    as the Matchups tab's matchup card (background = that manager's color,
     text = contrasting_text_color against it) - so a team reads the same
     way in both places."""
     manager_name = resolve_manager_name(team.get("manager_id", ""), name_resolver, team.get("display_name", ""))
@@ -1568,7 +1569,7 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                     _render_schedule_highlight(home, name_resolver, manager_color_map, align="left")
                 with button_column:
                     if st.button("View Matchup", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
-                        _go_to_game_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
+                        _go_to_matchup_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
                 with team2_highlight_column:
                     _render_schedule_highlight(away, name_resolver, manager_color_map, align="right")
 

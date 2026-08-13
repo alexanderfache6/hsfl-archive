@@ -20,10 +20,12 @@ from data_loader import (
     CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
+    get_bye_week,
     load_nfl_season_lengths,
     load_player_ownership,
     load_players,
     load_stat_id_labels,
+    player_nfl_team_by_season,
     resolve_manager_name,
 )
 
@@ -36,9 +38,12 @@ STARTER_COLOR = "#4C78A8"
 BENCH_COLOR = "#B0B0B0"
 STAT_CHART_COLOR = "#6B7280"
 
+MARKER_SIZE = 8
+
 NODE_X_SPACING = 260
 
-ZERO_POINT_GAMES_HELP = "Excludes 0-point games, assuming those are injuries/inactives rather than a real scoring outcome that should drag the average down."
+ZERO_POINT_GAMES_HELP = "Excludes bye weeks and 0-point games."
+ZERO_POINT_COUNT_HELP = "Excludes bye weeks. An indication that (1) player was injured or (2) player delivered no fantasy points." # NOTE future should take into account injury games
 
 # Yardage stats (stat_id_labels.json's "Pass/Rush/Rec Yds") can run into
 # the hundreds in a single game, so the shared nticks cap alone gives a
@@ -49,10 +54,11 @@ ZERO_POINT_GAMES_HELP = "Excludes 0-point games, assuming those are injuries/ina
 YARDAGE_STAT_LABELS = {"Pass Yds", "Rush Yds", "Rec Yds"}
 
 UNROSTERED_GAME_COLOR = "#D32F2F"
+BYE_WEEK_COLOR = "#1E88E5"
 
 NFL_GAMES_HELP = (
-    "Real NFL games this player was ELIGIBLE to appear in (that season's actual NFL regular-season length minus 1 bye week, "
-    "or however many fantasy weeks they were actually rostered for if that's higher - e.g. a deep playoff run), summed across "
+    "Real NFL games this player was eligible to appear in (that season's actual NFL regular-season length minus 1 bye week, "
+    "or however many fantasy weeks they were actually rostered for if that's higher, summed across "
     "every season they show up in the archive. Compare against Games (below) to see how many eligible games they went "
     "completely unrostered for - same count as the red 'Not on a Fantasy Roster' bars on the Fantasy Points per Game chart."
 )
@@ -116,17 +122,21 @@ def _stint_week_range_label(stint: dict) -> str:
 def _build_full_game_list(timeline: list[dict], nfl_season_lengths: dict[str, int]) -> list[dict]:
     """timeline only has an entry for weeks SOME manager rostered this
     player - this fills in every other NFL-eligible week (that season's
-    real game count minus 1 bye, same assumption as the "NFL Games"
-    metric) as a synthetic {"unrostered": True, "week": N} placeholder, so
-    the chart can show them as a distinct red 0 rather than silently
-    omitting them. Placeholder week numbers are whichever numbers in
-    1..eligible_weeks the real entries DIDN'T use - this is exact when
-    the missing-week count matches placeholder_count (the typical case),
-    but if a player has more gaps than the 1-bye assumption accounts for,
-    only the first placeholder_count of those missing numbers get used
-    (we can't tell which specific gap week is the "true" bye vs a real
-    unrostered week, so this just picks consistently rather than
-    guessing)."""
+    real game count minus 1 bye) as a synthetic {"unrostered": True,
+    "week": N} placeholder, so the chart can show them as a distinct red
+    0 rather than silently omitting them. Every week in 1..eligible_weeks
+    without a real entry gets a placeholder - not capped to a single
+    assumed bye's worth (eligible_weeks - real_week_count): a player can
+    have MORE than one real gap in a season (e.g. a rookie not added to
+    any roster until several weeks in - confirmed via J. Jefferson's 2020
+    player_ownership.json entries, which start at week 4, not week 1),
+    and capping the placeholder count to "just the bye" silently dropped
+    those extra gap weeks from the chart entirely instead of showing them
+    as unrostered. We still can't tell which specific missing week was
+    this player's own team's real bye vs a genuine unrostered gap (no bye
+    schedule data is archived), so a real bye week ends up shown as a red
+    "Not on a Fantasy Roster" placeholder same as any other gap - visible
+    but not perfectly labeled beats being silently dropped."""
     real_by_season_week: dict[tuple[int, int], dict] = {(entry["season"], entry["week"]): entry for entry in timeline}
     seasons_present = sorted({entry["season"] for entry in timeline})
 
@@ -134,21 +144,32 @@ def _build_full_game_list(timeline: list[dict], nfl_season_lengths: dict[str, in
     for season in seasons_present:
         eligible_weeks = nfl_season_lengths.get(str(season), 0) - 1
         real_weeks_this_season = sorted(week for (s, week) in real_by_season_week if s == season)
-        # Placeholders fill in whatever's left after the real weeks -
-        # e.g. 14 real weeks out of 15 eligible leaves exactly 1
-        # placeholder.
-        placeholder_count = max(0, eligible_weeks - len(real_weeks_this_season))
         missing_weeks = sorted(set(range(1, eligible_weeks + 1)) - set(real_weeks_this_season))
 
         # Merge real and placeholder weeks and sort by week number so
         # they appear in true chronological order within the season,
         # rather than all real weeks first followed by all placeholders.
         season_entries = [real_by_season_week[(season, week)] for week in real_weeks_this_season]
-        season_entries += [{"season": season, "week": week, "unrostered": True} for week in missing_weeks[:placeholder_count]]
+        season_entries += [{"season": season, "week": week, "unrostered": True} for week in missing_weeks]
         season_entries.sort(key=lambda entry: entry["week"])
         full_list.extend(season_entries)
 
     return full_list
+
+
+def _bye_weeks_by_season(player_id: str) -> dict[int, int]:
+    """{season: bye_week_number} for whichever seasons both this
+    player's real NFL team (player_nfl_team_by_season) AND that team's
+    real bye week (get_bye_week) are known - a season missing from
+    either lookup (never rostered in a real matchup box score that
+    season, or that team's bye week not yet published/archived) is
+    simply absent here, not a KeyError risk for callers."""
+    bye_weeks = {}
+    for season, nfl_team in player_nfl_team_by_season(player_id).items():
+        bye_week = get_bye_week(season, nfl_team)
+        if bye_week is not None:
+            bye_weeks[season] = bye_week
+    return bye_weeks
 
 
 # ========================================
@@ -156,19 +177,36 @@ def _build_full_game_list(timeline: list[dict], nfl_season_lengths: dict[str, in
 # ========================================
 
 
-def _render_flow_chart(stints: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], flow_key: str) -> None:
+def _render_flow_chart(
+    stints: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], flow_key: str, player_id: str
+) -> None:
     st.subheader("Transfers")
+    bye_weeks_by_season = _bye_weeks_by_season(player_id)
     nodes = []
     edges = []
     for index, stint in enumerate(stints):
         starts = sum(1 for w in stint["weeks"] if w["status"] == "starter")
         bench = sum(1 for w in stint["weeks"] if w["status"] == "bench")
 
+        # A stint never spans more than one season (_build_ownership_stints
+        # builds them per-season) - a bye is a single week, so at most one
+        # can ever fall inside any given stint's own week range. The Bye
+        # segment is only included when a bye actually falls within THIS
+        # stint - omitted entirely both when unknown (that team's bye not
+        # archived, or this player's NFL team that season couldn't be
+        # determined) and when it's known but simply doesn't land in this
+        # stint's own week range, rather than showing a "Bye: Unknown" or
+        # "Bye: —" placeholder either way.
+        bye_week = bye_weeks_by_season.get(stint["season"])
+        bye_segment = ""
+        if bye_week is not None and stint["start_week"] <= bye_week <= stint["end_week"]:
+            bye_segment = f" · Bye: Wk{bye_week}"
+
         if stint["team_id"] is None:
-            content = f"**Unrostered**\n\n{stint['season']} {_stint_week_range_label(stint)}"
+            content = f"**Unrostered**\n\n{stint['season']} {_stint_week_range_label(stint)}\n\nStarts: 0 · Bench: 0{bye_segment}"
         else:
             manager_name = resolve_manager_name(stint["manager_id"], name_resolver, stint["display_name"])
-            content = f"**{manager_name}**\n\n{stint['season']} {_stint_week_range_label(stint)}\n\nStarts: {starts} · Bench: {bench}"
+            content = f"**{manager_name}**\n\n{stint['season']} {_stint_week_range_label(stint)}\n\nStarts: {starts} · Bench: {bench}{bye_segment}"
 
         nodes.append(
             StreamlitFlowNode(
@@ -262,14 +300,28 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     st.plotly_chart(figure, width="stretch")
 
 
-def _render_points_metrics(timeline: list[dict]) -> None:
+def _render_points_metrics(timeline: list[dict], player_id: str) -> None:
     # 0-point games (starter or bench) are assumed to be injuries/
     # inactives rather than a real scoring outcome, so both averages
-    # exclude them rather than letting them drag the average down.
+    # exclude them rather than letting them drag the average down - a
+    # bye-week 0 is already excluded here too, same as any other 0.
     starter_points = [entry["points"] for entry in timeline if entry["status"] == "starter" and entry["points"] != 0]
     bench_points = [entry["points"] for entry in timeline if entry["status"] == "bench" and entry["points"] != 0]
-    zero_point_starts = sum(1 for entry in timeline if entry["status"] == "starter" and entry["points"] == 0)
-    zero_point_bench = sum(1 for entry in timeline if entry["status"] == "bench" and entry["points"] == 0)
+
+    # The 0-Point Starts/Bench COUNTS below are meant to flag genuine
+    # injuries/inactives - a real bye week's 0 isn't that, so it's
+    # excluded from the count too (not just the averages above).
+    bye_weeks_by_season = _bye_weeks_by_season(player_id)
+    zero_point_starts = sum(
+        1
+        for entry in timeline
+        if entry["status"] == "starter" and entry["points"] == 0 and bye_weeks_by_season.get(entry["season"]) != entry["week"]
+    )
+    zero_point_bench = sum(
+        1
+        for entry in timeline
+        if entry["status"] == "bench" and entry["points"] == 0 and bye_weeks_by_season.get(entry["season"]) != entry["week"]
+    )
 
     points_per_start = sum(starter_points) / len(starter_points) if starter_points else 0.0
     points_per_bench = sum(bench_points) / len(bench_points) if bench_points else 0.0
@@ -277,34 +329,41 @@ def _render_points_metrics(timeline: list[dict]) -> None:
     start_column, bench_column, zero_start_column, zero_bench_column = st.columns(4)
     start_column.metric("Points per Fantasy Start", f"{points_per_start:.2f}", help=ZERO_POINT_GAMES_HELP)
     bench_column.metric("Points per Fantasy Bench", f"{points_per_bench:.2f}", help=ZERO_POINT_GAMES_HELP)
-    zero_start_column.metric("0-Point Starts", zero_point_starts)
-    zero_bench_column.metric("0-Point Bench", zero_point_bench)
+    zero_start_column.metric("0-Point Starts", zero_point_starts, help=ZERO_POINT_COUNT_HELP)
+    zero_bench_column.metric("0-Point Bench", zero_point_bench, help=ZERO_POINT_COUNT_HELP)
 
 
 def _render_fantasy_points_per_game_chart(
-    timeline: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], nfl_season_lengths: dict[str, int]
+    timeline: list[dict],
+    name_resolver: dict[str, str],
+    manager_color_map: dict[str, str],
+    nfl_season_lengths: dict[str, int],
+    player_id: str,
 ) -> None:
     """One bar per NFL-eligible game that season (see
     _build_full_game_list) - solid in that week's manager color if
     started, flat gray (same BENCH_COLOR as the starts-vs-bench chart) if
     benched, flat red if the player was eligible but not on ANY fantasy
     roster that week. Same x-axis/season-boundary-line treatment as the
-    Games tab's Point Differential chart, since this is the same "one bar
+    Matchups tab's Point Differential chart, since this is the same "one bar
     per game, chronological" shape."""
     st.subheader("Fantasy Points per Game")
 
     full_game_list = _build_full_game_list(timeline, nfl_season_lengths)
+    bye_weeks_by_season = _bye_weeks_by_season(player_id)
 
-    x_labels, points, colors, hover_text = [], [], [], []
+    x_labels, points, colors, hover_text, is_bye_week, bye_hover_text = [], [], [], [], [], []
     legend_entries: dict[str, str] = {}  # manager display name -> color, insertion-ordered
     has_bench = False
     has_unrostered = False
     for entry in full_game_list:
+        is_bye_week.append(bye_weeks_by_season.get(entry["season"]) == entry["week"])
         if entry.get("unrostered"):
             x_labels.append(f"{entry['season']} Wk{entry['week']}")
             points.append(0.0)
             colors.append(UNROSTERED_GAME_COLOR)
             hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Not on a fantasy roster")
+            bye_hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Bye Week")
             has_unrostered = True
             continue
 
@@ -315,6 +374,7 @@ def _render_fantasy_points_per_game_chart(
         bar_color = manager_color_map.get(entry["manager_id"], STARTER_COLOR) if is_starter else BENCH_COLOR
         colors.append(bar_color)
         hover_text.append(f"{entry['season']} · Week {entry['week']}<br>{manager_name}<br>{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}")
+        bye_hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Bye Week")
         if is_starter:
             legend_entries.setdefault(manager_name, bar_color)
         else:
@@ -324,7 +384,7 @@ def _render_fantasy_points_per_game_chart(
 
     # One centered tick label per season (its year) rather than a label
     # per week - a career-spanning player has far too many weeks for
-    # per-week ticks to stay readable, same treatment as the Games tab's
+    # per-week ticks to stay readable, same treatment as the Matchups tab's
     # Point Differential chart when no single season is selected.
     positions_by_season: dict[int, list[int]] = {}
     for index, entry in enumerate(full_game_list):
@@ -345,6 +405,8 @@ def _render_fantasy_points_per_game_chart(
         figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=color), name=manager_name, showlegend=True)
     if has_bench:
         figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=BENCH_COLOR), name="Bench", showlegend=True)
+    if any(is_bye_week):
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=BYE_WEEK_COLOR), name="Bye Week", showlegend=True)
     if has_unrostered:
         figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=UNROSTERED_GAME_COLOR), name="Not on a Fantasy Roster", showlegend=True)
 
@@ -352,15 +414,34 @@ def _render_fantasy_points_per_game_chart(
     # unreachable - a marker dot at y=0 (same color/hover text as the bar
     # it sits on) keeps every game hoverable regardless of score. This
     # covers both genuine 0-point games (gray/manager-colored, per their
-    # actual bar color) and unrostered placeholders (red).
-    zero_indices = [index for index, value in enumerate(points) if value == 0]
+    # actual bar color) and unrostered placeholders (red). Bye weeks are
+    # excluded here entirely - they get their own distinct blue marker
+    # below instead of this one sitting underneath it.
+    zero_indices = [index for index, value in enumerate(points) if value == 0 and not is_bye_week[index]]
     if zero_indices:
         figure.add_scatter(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker=dict(size=8, color=[colors[i] for i in zero_indices], line=dict(width=1, color="#333333")),
+            marker=dict(size=MARKER_SIZE, color=[colors[i] for i in zero_indices], line=dict(width=1, color="#333333")),
             customdata=[hover_text[i] for i in zero_indices],
+            hovertemplate="%{customdata}<extra></extra>",
+            showlegend=False,
+        )
+
+    # Bye-week marker - a blue dot at the player's own NFL team's real
+    # bye week that season (see _bye_weeks_by_season), distinct from a
+    # genuinely-mysterious red "unrostered" 0: this one's explained. Its
+    # own hover is deliberately just "{season}-{week}, {manager if any},
+    # Bye Week" - no point value, since the bye itself is the point.
+    bye_indices = [index for index, flag in enumerate(is_bye_week) if flag]
+    if bye_indices:
+        figure.add_scatter(
+            x=[x_positions[i] for i in bye_indices],
+            y=[points[i] for i in bye_indices],
+            mode="markers",
+            marker=dict(size=MARKER_SIZE, color=BYE_WEEK_COLOR, line=dict(width=1, color="#333333")),
+            customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
         )
@@ -381,7 +462,9 @@ def _render_fantasy_points_per_game_chart(
     st.plotly_chart(figure, width="stretch")
 
 
-def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl_season_lengths: dict[str, int]) -> None:
+def _render_stat_chart(
+    timeline: list[dict], stat_id_labels: dict[str, str], nfl_season_lengths: dict[str, int], player_id: str, name_resolver: dict[str, str]
+) -> None:
     """A dropdown-selected raw stat (Pass Yds, Rush TD, etc, decoded via
     archive/stat_id_labels.json) charted the same way as Fantasy Points
     per Game above - one bar per NFL-eligible game that season (see
@@ -414,20 +497,24 @@ def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl
 
     stat_label = stat_id_labels.get(selected_stat_id, selected_stat_id)
     full_game_list = _build_full_game_list(timeline, nfl_season_lengths)
+    bye_weeks_by_season = _bye_weeks_by_season(player_id)
 
-    values, colors, hover_text = [], [], []
+    values, colors, hover_text, is_bye_week, bye_hover_text = [], [], [], [], []
     has_unrostered = False
     for entry in full_game_list:
+        is_bye_week.append(bye_weeks_by_season.get(entry["season"]) == entry["week"])
         if entry.get("unrostered"):
             values.append(0.0)
             colors.append(UNROSTERED_GAME_COLOR)
             hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Not on a fantasy roster")
+            bye_hover_text.append(f"{entry['season']}-{entry['week']}, Bye Week")
             has_unrostered = True
             continue
         value = float(entry.get("stats", {}).get(selected_stat_id, 0) or 0)
         values.append(value)
         colors.append(STAT_CHART_COLOR)
         hover_text.append(f"{entry['season']} · Week {entry['week']}<br>{stat_label}: {value:g}")
+        bye_hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Bye Week")
 
     x_positions = list(range(len(full_game_list)))
     positions_by_season: dict[int, list[int]] = {}
@@ -446,6 +533,8 @@ def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl
     figure = go.Figure(
         go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False)
     )
+    if any(is_bye_week):
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=BYE_WEEK_COLOR), name="Bye Week", showlegend=True)
     if has_unrostered:
         figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=UNROSTERED_GAME_COLOR), name="Not on a Fantasy Roster", showlegend=True)
     figure.update_layout(
@@ -463,15 +552,34 @@ def _render_stat_chart(timeline: list[dict], stat_id_labels: dict[str, str], nfl
     # A 0-value bar has no height to hover over, so it's otherwise
     # unreachable - a marker dot at y=0 (same color/hover text) keeps
     # every game hoverable regardless of value, same treatment as the
-    # Fantasy Points per Game chart's zero-point/unrostered games.
-    zero_indices = [index for index, value in enumerate(values) if value == 0]
+    # Fantasy Points per Game chart's zero-point/unrostered games. Bye
+    # weeks are excluded here entirely - they get their own distinct blue
+    # marker below instead of this one sitting underneath it.
+    zero_indices = [index for index, value in enumerate(values) if value == 0 and not is_bye_week[index]]
     if zero_indices:
         figure.add_scatter(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker=dict(size=8, color=[colors[i] for i in zero_indices], line=dict(width=1, color="#333333")),
+            marker=dict(size=MARKER_SIZE, color=[colors[i] for i in zero_indices], line=dict(width=1, color="#333333")),
             customdata=[hover_text[i] for i in zero_indices],
+            hovertemplate="%{customdata}<extra></extra>",
+            showlegend=False,
+        )
+
+    # Bye-week marker - a blue dot at the player's own NFL team's real
+    # bye week that season (see _bye_weeks_by_season), distinct from a
+    # genuinely-mysterious red "unrostered" 0: this one's explained. Its
+    # own hover is deliberately just "{season}-{week}, {manager if any},
+    # Bye Week" - no stat value, since the bye itself is the point.
+    bye_indices = [index for index, flag in enumerate(is_bye_week) if flag]
+    if bye_indices:
+        figure.add_scatter(
+            x=[x_positions[i] for i in bye_indices],
+            y=[values[i] for i in bye_indices],
+            mode="markers",
+            marker=dict(size=MARKER_SIZE, color=BYE_WEEK_COLOR, line=dict(width=1, color="#333333")),
+            customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
         )
@@ -491,6 +599,19 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
     # naive "regular season - 1 bye" estimate (a deep fantasy playoff run
     # extends past that), and only a per-season-clamped, shared
     # computation stays consistent with the chart's actual placeholder count.
+    #
+    # Known limitation, not handled: this assumes exactly ONE bye week
+    # per season, uniformly. A player traded mid-season between two NFL
+    # teams could have two different real byes that year (or, in rare
+    # scheduling overlaps, effectively skip having one at all) - archive
+    # data doesn't currently track which NFL team a player belonged to
+    # week-by-week (only which FANTASY team, if any, rostered them), so
+    # there's no way to detect a mid-season NFL trade here. Left as a
+    # deliberate simplification, not a bug - see instructions/
+    # cool-features.md's "players" section for the related future
+    # improvement (complementing this with real NFL play-by-play/roster
+    # data so bye vs. genuinely-unrostered can be told apart exactly,
+    # not just approximated one-bye-per-season).
     nfl_games = len(_build_full_game_list(timeline, nfl_season_lengths))
 
     starts = sum(1 for entry in timeline if entry["status"] == "starter")
@@ -500,11 +621,11 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
 
     nfl_games_column, games_column, starts_column, bench_column, start_pct_column, managers_column = st.columns(6)
     nfl_games_column.metric("NFL Games", nfl_games, help=NFL_GAMES_HELP)
-    games_column.metric("Games", len(timeline))
-    starts_column.metric("Starts", starts)
-    bench_column.metric("Bench", bench)
-    start_pct_column.metric("Start %", f"{start_pct:.1%}")
-    managers_column.metric("Managers", managers)
+    games_column.metric("Fantasy Games", len(timeline))
+    starts_column.metric("Fantasy Starts", starts)
+    bench_column.metric("Fantasy Bench", bench)
+    start_pct_column.metric("Fantasy Start %", f"{start_pct:.1%}")
+    managers_column.metric("Fantasy Managers", managers)
 
 
 def render_players_page() -> None:
@@ -522,12 +643,12 @@ def render_players_page() -> None:
     player_names_by_id = {player_id: player["name"] for player_id, player in players_data.items()}
     sorted_player_ids = sorted(player_names_by_id, key=lambda player_id: player_names_by_id[player_id])
 
-    # Same versioned-widget-key pattern as the Games tab's Clear Filters:
+    # Same versioned-widget-key pattern as the Matchups tab's Clear Filters:
     # each filter's ACTUAL key includes a generation counter, so Clear
     # Filters can bump the counter and force brand-new widget instances
     # instead of relying on session_state deletion alone, which left
     # stale-looking dropdowns in some browsers even after the underlying
-    # value was cleared (see pages_games.py's _render_filters).
+    # value was cleared (see pages_matchups.py's _render_filters).
     generation = st.session_state.setdefault("player_filters_generation", 0)
 
     def versioned_key(base_key: str) -> str:
@@ -550,7 +671,7 @@ def render_players_page() -> None:
         )
 
     # Only seasons this specific player actually has data for - same
-    # "Any" (single season or all) treatment as the Games tab's Season
+    # "Any" (single season or all) treatment as the Matchups tab's Season
     # filter.
     player_seasons = sorted({entry["season"] for entry in ownership_data.get(selected_player_id, [])}) if selected_player_id else []
     season_widget_key = versioned_key("player_season_filter")
@@ -575,11 +696,19 @@ def render_players_page() -> None:
     st.session_state["player_selected_player_id"] = selected_player_id
     st.session_state["player_season_filter"] = selected_season
 
-    apply_column, clear_column, _ = st.columns([1, 1, 3])
+    # use_container_width=True fills container
+    # don't use gap=0, otherwise no padding between buttons
+    # NOTE use same `apply_column, clear_column, _ = st.columns([1, 1, 6])` for any filtering pages
+    apply_column, clear_column, _ = st.columns([1, 1, 6])
     with apply_column:
-        applied = st.button("Apply Filters", disabled=selected_player_id is None, help="Select a player first" if selected_player_id is None else None)
+        applied = st.button(
+            "Apply Filters",
+            disabled=selected_player_id is None,
+            help="Select a player first" if selected_player_id is None else None,
+            use_container_width=True,
+        )
     with clear_column:
-        if st.button("Clear Filters"):
+        if st.button("Clear Filters", use_container_width=True):
             for base_key in PLAYER_FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("player_applied_filters", None)
@@ -612,10 +741,10 @@ def render_players_page() -> None:
     st.divider()
     _render_manager_summary_chart(stints, name_resolver, manager_color_map)
     st.divider()
-    _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}")
+    _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}", player_id=selected_player_id)
     st.divider()
-    _render_points_metrics(timeline)
+    _render_points_metrics(timeline, selected_player_id)
     st.divider()
-    _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths)
+    _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id)
     st.divider()
-    _render_stat_chart(timeline, stat_id_labels, nfl_season_lengths)
+    _render_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)
