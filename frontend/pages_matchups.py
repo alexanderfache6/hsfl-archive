@@ -24,7 +24,6 @@ from data_loader import (
     build_manager_name_resolver,
     compute_optimal_lineup,
     contrasting_text_color,
-    discover_seasons,
     load_all_time_manager_stats,
     load_matchups,
     load_starting_slot_counts,
@@ -36,7 +35,7 @@ from player_modal import open_player_stats_modal
 # CONSTANTS
 # ========================================
 
-MAX_WEEK = 17
+MAX_WEEK = 17 # TODO this should be taken from /archive/nfl_season_lengths.json
 
 # Same neutral gray used for the "Bench" segment in the Players tab's
 # starts-vs-bench chart - reused here for a losing/negative-diff bar so
@@ -70,7 +69,7 @@ DEF_TEAM_ABBREVIATIONS = {
     "Rams": "LAR", "Ravens": "BAL", "Redskins": "WAS", "Saints": "NO",
     "Seahawks": "SEA", "Steelers": "PIT", "Texans": "HOU", "Titans": "TEN",
     "Vikings": "MIN",
-}
+} # TODO move to /archive/nfl_team_abbreviations.json
 
 # ========================================
 # FUNCTIONS
@@ -579,18 +578,21 @@ def _render_roster_table(
     if sort_by_position:
         players = sorted(players, key=_bench_sort_key)
 
-    column_ratios = [1, 3, 1, 1] if optimal_gains is not None else [1, 3, 1]
+    column_ratios = [1, 4, 1, 1] if optimal_gains is not None else [1, 4, 1]
 
-    # st.columns(vertical_alignment="center") centers each column's own
-    # content box within the row, but a markdown <div>'s tightly-padded
-    # box is much shorter than a real st.button's rendered height, so
-    # "centered" still visually floats away from the button's own text
-    # baseline. Same fix as the All-Time Records rows on the History page
-    # (_render_record_row): give every cell an explicit height matching
-    # the button's actual rendered height, with its own content centered
-    # inside that height via flex - now all cells share one true height
-    # to align against instead of each other's very different natural sizes.
-    ROSTER_ROW_HEIGHT = "2.5rem"
+    # Same fix as the All-Time Records rows on the History page
+    # (_render_record_row): st.columns(vertical_alignment="center") was
+    # tried here before, but it centers each column independently within
+    # Streamlit's own (inconsistent) per-column height - a markdown
+    # <div>'s tightly-padded box renders shorter than a real st.button's
+    # box, so "centered" still floats above the button's own center line.
+    # _render_record_row's actual fix is simpler: use the DEFAULT
+    # (top-aligned) st.columns, and give every non-button cell's own div
+    # an explicit height matching the button's real rendered height, with
+    # its content centered inside that height via flex. Two top-aligned
+    # boxes of the SAME height always share the same center line,
+    # regardless of what Streamlit does internally with either box.
+    ROSTER_ROW_HEIGHT = "2.4rem"
 
     def _cell(text: str, align: str = "left", color: str = "inherit", weight: str = "400") -> str:
         return (
@@ -616,7 +618,7 @@ def _render_roster_table(
     )
     with st.container(border=show_border, key=container_key):
         for index, player in enumerate(players):
-            columns = st.columns(column_ratios, vertical_alignment="center")
+            columns = st.columns(column_ratios)
             columns[0].markdown(_cell(player["position"], color="#666666"), unsafe_allow_html=True)
 
             if player.get("is_empty_slot"):
@@ -646,9 +648,22 @@ def _render_roster_table(
                 else:
                     columns[3].markdown(_cell(f"+{gain:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
 
+        if optimal_total_points is None:
+            # Streamlit's own default vertical gap sits ABOVE the first
+            # row (between the expander header/rule and row 1, ~21px -
+            # untouched by the negative-margin row-tightening CSS above,
+            # which only pulls rows together against each other) but
+            # there's no such gap below the LAST row (CSS flex `gap` only
+            # applies BETWEEN siblings, so a trailing child gets none) -
+            # only the expanderDetails' own small padding-bottom (4px).
+            # Measured live via Playwright against the real rendered
+            # page (2026-08-13): 21px top vs 4px bottom. This spacer adds
+            # the missing ~17px back so the bottom padding matches the top.
+            st.markdown("<div style='height:1.0625rem;'></div>", unsafe_allow_html=True)
+
         if optimal_total_points is not None:
             st.markdown("<hr style='margin:4px 0; border-color:#CCCCCC;'>", unsafe_allow_html=True)
-            total_columns = st.columns(column_ratios, vertical_alignment="center")
+            total_columns = st.columns(column_ratios)
             total_columns[1].markdown(_cell("Optimal Lineup Total", weight="600"), unsafe_allow_html=True)
             total_columns[2].markdown(_cell(f"{optimal_total_points:.2f}", align="right", weight="600"), unsafe_allow_html=True)
             if optimal_gains is not None and actual_total_points is not None:
@@ -682,11 +697,7 @@ def _render_matchup_card(
                 # score and the bench table below, rather than solving
                 # the optimal lineup twice.
                 optimal_details = _optimal_lineup_details(side, matchup["season"]) if show_optimal else None
-                optimal_score_html = (
-                    f" <span style='font-size:0.5em; font-weight:400;'>({optimal_details['optimal_points']:.2f})</span>"
-                    if optimal_details
-                    else ""
-                )
+                optimal_score_html = f" <span style='font-size:0.5em; font-weight:400;'>({optimal_details['optimal_points']:.2f})</span>" if optimal_details else ""
                 # Name/team block aligns to its own side of the card; the
                 # score joins the same colored block but anchors to the
                 # OPPOSITE side - flex-direction reverses which child (name
@@ -746,12 +757,9 @@ def _render_matchup_card(
                         week=matchup["week"],
                         row_key_prefix=f"{row_key_prefix}_starters",
                         optimal_losses=optimal_details["losses"] if optimal_details else None,
-                        # No border here - the expander it's already
-                        # inside provides its own visual boundary, so a
-                        # second nested border just wastes vertical space.
                         show_border=False,
                     )
-                with card_container, st.expander(f"Bench ({len(side['bench'])})"):
+                with card_container, st.expander(f"Bench ({len(side['bench'])})", expanded=False):
                     _render_roster_table(
                         side["bench"],
                         season=matchup["season"],
