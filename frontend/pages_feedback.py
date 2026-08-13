@@ -109,6 +109,17 @@ def _github_token() -> str:
         return ""
 
 
+def _github_uploads_token() -> str:
+    """A separate, narrower-scoped token (Contents: Read and write only -
+    no Issues access) used just for committing feedback screenshots via
+    the Contents API - kept apart from _github_token() so the
+    issue-creation token never needs contents-write permission."""
+    try:
+        return st.secrets.get("GITHUB_UPLOADS_TOKEN", "")
+    except Exception:
+        return ""
+
+
 def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
     response = requests.post(
         f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
@@ -134,7 +145,7 @@ def _upload_feedback_screenshot(file_bytes: bytes, title: str, index: int) -> st
     filename = f"{int(time.time())}-{index}-{_slugify(title)}.png"
     response = requests.put(
         f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/contents/{FEEDBACK_ATTACHMENTS_DIRECTORY}/{filename}",
-        headers={"Authorization": f"Bearer {_github_token()}", "Accept": "application/vnd.github+json"},
+        headers={"Authorization": f"Bearer {_github_uploads_token()}", "Accept": "application/vnd.github+json"},
         json={"message": f"feedback attachment: {filename}", "content": base64.b64encode(file_bytes).decode("ascii")},
         timeout=10,
     )
@@ -386,7 +397,10 @@ def _render_feedback_form() -> None:
 
     if submit_clicked:
         if not _github_token():
-            st.error("GitHub integration isn't configured (missing the 'github_token' secret) - can't submit right now.")
+            st.error("GitHub integration isn't configured - can't submit right now.")
+            return
+        if uploaded_screenshots and not _github_uploads_token():
+            st.error("Screenshot uploads aren't configured - remove the attachment or try again later.")
             return
 
         attachment_urls = []
