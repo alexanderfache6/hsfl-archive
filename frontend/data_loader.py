@@ -28,7 +28,7 @@ PARSED_DIRECTORY = ARCHIVE_DIRECTORY / "parsed"
 
 # Reuses code/stats-aggregation's own optimal-lineup solver (the same
 # formula behind best_coaching_season/worst_coaching_season) instead of
-# reimplementing it here, so the Games tab's optimal-lineup column can
+# reimplementing it here, so the Matchups tab's optimal-lineup column can
 # never drift out of sync with the backend's own coaching-efficiency math.
 STATS_AGGREGATION_DIRECTORY = PROJECT_ROOT_DIRECTORY / "code" / "stats-aggregation"
 if str(STATS_AGGREGATION_DIRECTORY) not in sys.path:

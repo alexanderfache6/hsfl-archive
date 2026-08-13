@@ -220,10 +220,10 @@ def _record_context_line(entry: dict, name_resolver: dict[str, str]) -> str:
     return " · ".join(parts)
 
 
-def _go_to_game(entry: dict) -> None:
-    """Jumps to the Games page with Manager 1 (and Week, if this record
-    is week-specific rather than season-long) pre-filled to this record's
-    game, via st.switch_page() - the whole reason app.py uses
+def _go_to_matchup(entry: dict) -> None:
+    """Jumps to the Matchups page with Manager 1 (and Week, if this
+    record is week-specific rather than season-long) pre-filled to this
+    record's matchup, via st.switch_page() - the whole reason app.py uses
     st.navigation/st.Page instead of st.tabs, since st.tabs has no way to
     programmatically switch which tab is active. Must be called from the
     main script body, not a button's on_click callback - st.switch_page()
@@ -235,29 +235,29 @@ def _go_to_game(entry: dict) -> None:
     # result used to query matchups) so the Season/Week/Manager 2/Matchup
     # Type controls visually reflect the record's filters too, not just
     # the results below them.
-    st.session_state["games_team1_manager_id"] = manager_id
-    st.session_state["games_season"] = entry["season"]
-    st.session_state["games_week"] = entry.get("week")
-    st.session_state["games_team2_manager_id"] = None
-    st.session_state["games_matchup_type"] = "all"
+    st.session_state["matchups_team1_manager_id"] = manager_id
+    st.session_state["matchups_season"] = entry["season"]
+    st.session_state["matchups_week"] = entry.get("week")
+    st.session_state["matchups_team2_manager_id"] = None
+    st.session_state["matchups_matchup_type"] = "all"
     # Bump the same widget-key generation counter Clear Filters uses, so
-    # the Games page mounts brand-new filter widgets that pick up these
-    # values via their first-mount seeding, rather than showing whatever
-    # was left over from a previous visit to that page.
-    st.session_state["games_filters_generation"] = st.session_state.get("games_filters_generation", 0) + 1
-    st.session_state["games_applied_filters"] = {
+    # the Matchups page mounts brand-new filter widgets that pick up
+    # these values via their first-mount seeding, rather than showing
+    # whatever was left over from a previous visit to that page.
+    st.session_state["matchups_filters_generation"] = st.session_state.get("matchups_filters_generation", 0) + 1
+    st.session_state["matchups_applied_filters"] = {
         "season": entry["season"],
         "week": entry.get("week"),
         "team1_manager_id": manager_id,
         "team2_manager_id": None,
         "matchup_type": "all",
     }
-    st.switch_page(st.session_state["_games_page"])
+    st.switch_page(st.session_state["_matchups_page"])
 
 
 def _go_to_season(season: int) -> None:
     """Jumps to the Seasons page with that season pre-selected - same
-    st.switch_page() pattern as _go_to_game, must be called from the main
+    st.switch_page() pattern as _go_to_matchup, must be called from the main
     script body rather than a button's on_click callback."""
     st.session_state["seasons_season"] = season
     st.switch_page(st.session_state["_seasons_page"])
@@ -543,7 +543,7 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
         )
     button_label = "View Matchup" if "week" in entry else "View Season"
     if entry.get("manager_id") and button_column.button(button_label, key=f"record_link_{key}_{ordinal}", use_container_width=True):
-        _go_to_game(entry)
+        _go_to_matchup(entry)
 
 
 def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, str], label: str | None = None, widget_key: str | None = None) -> None:

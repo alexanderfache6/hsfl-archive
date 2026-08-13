@@ -1,7 +1,7 @@
 """
 Reusable "player stats for one week" modal (st.dialog) - triggered by
 clicking a player anywhere in the app that shows them for a specific
-(season, week), starting with the Games tab's roster tables. Player name/
+(season, week), starting with the Matchups tab's roster tables. Player name/
 position/team on the first row, that week's raw stat breakdown (decoded
 via archive/stat_id_labels.json) as a table below it. See
 execution-plan.md Phase G.
@@ -64,9 +64,7 @@ def _render_player_stats_dialog() -> None:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Fantasy Points is each stat line's own scoring contribution, decoded from that season's league rules - it won't "
-        "always sum to the game's total points, since some scoring components (e.g. PPR reception bonuses) aren't captured "
-        "as their own stat line in the archived box score data."
+        "Fantasy Points include each stat line's own scoring contribution, decoded from that season's league rules. Some components such as PPR are not yet integrated."
     )
 
 

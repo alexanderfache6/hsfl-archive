@@ -42,9 +42,6 @@
 
 # feedback
 - [x] feedback for new features/bugs/improvements, see github issues in table and chart
-- [ ] Public changelog view generated from recently closed issues, so users can see what shipped from their feedback.
-
-
 
 
 

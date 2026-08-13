@@ -16,7 +16,7 @@ BENCH_LIKE_SLOTS = {"BENCH", "RESERVE"}
 FLEX_ELIGIBLE_POSITIONS = {"RB", "WR"}
 
 
-def _points_of(player: dict) -> float:
+def _get_points(player: dict) -> float:
     return player.get("points") or 0.0
 
 
@@ -36,21 +36,24 @@ def solve_optimal_lineup(players: list[dict], roster_settings: dict) -> dict:
     execution-plan.md Phase F for the exchange-argument proof sketch.
     """
     starting_slot_counts = {slot: count for slot, count in roster_settings.items() if slot not in BENCH_LIKE_SLOTS}
-    flex_count = starting_slot_counts.pop("FLEX", 0)
+    flex_count = starting_slot_counts.pop("FLEX", 0) # remove flex instance as this will be handled after "main" positions
 
     available = list(players)
     optimal_starters = []
 
     for slot_name, count in starting_slot_counts.items():
-        candidates = sorted((p for p in available if p.get("position") == slot_name), key=_points_of, reverse=True)
+        # get players for current slot (ex QB) and sort points descending
+        candidates = sorted((p for p in available if p.get("position") == slot_name), key=_get_points, reverse=True)
+        # get top N players based on slot count (ex QB 1)
         for player in candidates[:count]:
             optimal_starters.append({**player, "optimal_slot": slot_name})
             available.remove(player)
 
-    flex_candidates = sorted((p for p in available if p.get("position") in FLEX_ELIGIBLE_POSITIONS), key=_points_of, reverse=True)
+    # get flex eligble candidates defined as RB/WR
+    flex_candidates = sorted((p for p in available if p.get("position") in FLEX_ELIGIBLE_POSITIONS), key=_get_points, reverse=True)
     for player in flex_candidates[:flex_count]:
         optimal_starters.append({**player, "optimal_slot": "FLEX"})
         available.remove(player)
 
-    optimal_points = sum(_points_of(p) for p in optimal_starters)
+    optimal_points = sum(_get_points(p) for p in optimal_starters)
     return {"optimal_starters": optimal_starters, "optimal_points": optimal_points}

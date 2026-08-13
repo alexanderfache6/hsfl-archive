@@ -304,3 +304,241 @@ Jeremy, 4-10 regular season; team 7 "Mom I peed the bed again"/Forrest,
   `[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2024, 2025]`: 0
   combined-sum mismatches, 0 head-to-head symmetry issues,
   `all_time_unresolved.json` still empty.
+
+### 8. [FIXED] Frontend Matchups tab's optimal-lineup "gains" understated the true diff, sometimes to zero (or cross-attributed between unrelated swaps)
+User-reported in two rounds against 2022 Jeremy vs Alex F matchups:
+1. Week 4 and Week 15 (Jeremy's side): the green per-player "+X.XX" gain
+   amounts didn't sum to the "Optimal Lineup Total" diff on the same
+   card - Week 4 showed +8.5 and +0.3 (sums to 8.8) next to a total of
+   +16.5; Week 15 showed a +13.8 total with **no players highlighted at
+   all**.
+2. After the first fix below, Week 13 (Alex F's side): a 49ers DEF
+   (18.0 pts) benched in favor of a starting Ravens DEF (6.0 pts) should
+   swap for exactly +12.0, and a separate C. Kmet TE (10.2 pts) for H.
+   Hurst TE (2.2 pts) swap should be +8.0 - instead the UI showed the DEF
+   swap as +15.8 and the TE swap as +4.2 (still summing correctly to the
+   true +20.0 total, but the individual numbers were wrong/"made up").
+
+- **Root cause 1 (original bug):** `_optimal_lineup_details()`
+  (`frontend/pages_matchups.py`) tried to explain each bench player's
+  gain as a simple 1-for-1 swap: find the weakest ACTUAL starter at that
+  same position (or FLEX-eligible position, if the bench player's
+  optimal slot was FLEX) who isn't in the optimal lineup, and attribute
+  the point difference to that pair. This breaks whenever the true
+  optimal lineup reshuffles an EXISTING starter into a different slot
+  rather than benching them outright - both Wk4 and Wk15 had the same
+  pattern: the optimizer moves a starting RB (J. Conner) from his own RB
+  slot into the FLEX slot to make room for a stronger bench RB (R.
+  Stevenson) in the now-open RB slot. Since Conner is still a starter in
+  the optimal lineup (just relocated), the heuristic's search for "a real
+  RB starter who dropped out of the lineup" finds nobody at RB, so
+  Stevenson's entire contribution (10.9 pts in Wk4, 23.8 pts in Wk15) was
+  silently dropped from `gains` - fully in Wk4 (leaving only the two
+  genuine simple swaps, summing to 8.8 instead of 16.5) and completely in
+  Wk15 (leaving `gains` empty entirely, since that week's ENTIRE diff was
+  this one chain move).
+- **First fix attempt (introduced root cause 2 below):** replaced the
+  position/FLEX-eligibility matching entirely with a single rank-based
+  pass: `added` (optimal starters not in the actual lineup) sorted by
+  points descending, zipped against `removed` (actual starters not in
+  the optimal lineup) sorted ascending. Mathematically this always sums
+  to the true diff (see root cause 2's real counter-example, where it
+  still summed correctly, just wrongly distributed) - but it ignores
+  POSITION entirely, so it can cross-attribute value between two
+  genuinely INDEPENDENT same-position swaps happening in the same week.
+- **Root cause 2 (regression from the first fix, caught by the user's
+  Wk13 report):** Wk13 has two unrelated real swaps: DEF (49ers bench for
+  Ravens starter, true value +12.0) and TE (Kmet bench for Hurst starter,
+  true value +8.0). Rank-only pairing sorted `added` = [49ers DEF 18.0,
+  Kmet TE 10.2] and `removed` ascending = [Hurst TE 2.2, Ravens DEF 6.0],
+  then zipped index-for-index - pairing the DEF add against the TE
+  remove (18.0 - 2.2 = 15.8) and the TE add against the DEF remove
+  (10.2 - 6.0 = 4.2). The total (20.0) was still correct by construction,
+  but both individual numbers were attributed to the wrong swap entirely.
+- **File:** `frontend/pages_matchups.py`, `_optimal_lineup_details()`
+- **Final fix - two passes, combining both previous approaches'
+  strengths:**
+  - **Pass 1** matches each `added` player (biggest points first) against
+    a same-position (or FLEX-eligible) `removed` player (weakest first) -
+    this is the original heuristic's logic, which is exactly right for
+    genuinely independent same-position swaps like Wk13's DEF and TE.
+  - **Pass 2** takes whatever's left over after pass 1 (added players
+    with no same-position removed candidate) and pairs them by rank
+    (added descending vs removed ascending) - this is what correctly
+    catches Wk4/Wk15's chain-reassignment case, which pass 1 alone can't
+    explain (no starter "dropped out" at RB, since Conner just moved to
+    FLEX).
+  - Neither pass claims to reconstruct the TRUE swap chain in every
+    multi-swap week - this remains a display attribution convention, not
+    a literal step-by-step reconstruction - but pass 1 keeps genuinely
+    independent swaps correctly attributed, and pass 2 still guarantees
+    no real gain silently drops to zero.
+- **Verified:**
+  - Wk4 (Jeremy): gains now Woods +8.5, Gesicki +0.3, Stevenson +7.7 -
+    sums to 16.5, matching the true total exactly.
+  - Wk15 (Jeremy): Stevenson +13.8 alone, matching the true total exactly.
+  - Wk13 (Alex F): 49ers DEF +12.0, Kmet TE +8.0 - **exactly** the values
+    the user expected, both now correctly isolated to their own swap.
+  - Wk15 (Alex F): gains sum to 18.2, matching the true total exactly.
+  - Swept every matchup side across every fetched season (1954
+    team-weeks) comparing `sum(gains)` against the true
+    `optimal_points - actual_total` diff: **1909/1954 now match exactly**
+    (up from 1885/1954 after the first, flawed fix - pass 1 correctly
+    resolves several cases pass-2-only left as accidental mismatches
+    too). The remaining 45 mismatches split into two known, unrelated,
+    pre-existing edge cases where `added`/`removed` end up different
+    lengths (so pass 2's `zip()` stops at the shorter list and
+    understates `sum(gains)` slightly - `optimal_points`, the number
+    actually shown as the card's total, is unaffected either way):
+    1. Seasons carrying 2012's vestigial "Defensive Back" IDP roster slot
+       (already documented as "not a bug" under bug 5's footnote above) -
+       that slot's occupant has no real counterpart in the optimal
+       lineup, which has one fewer filled slot than the actual lineup.
+    2. A small number of individual weeks (seen in 2017/2018/2020/2021/
+       2022/2023/2024) where a team's ARCHIVED actual lineup has fewer
+       real starter entries than that season's roster settings call for
+       (e.g. one team fielded only 8 of 9 starting slots in
+       `archive/parsed/2022/matchups/week_13_9_10.json`'s away side) -
+       the optimal solver still fills every slot from the full player
+       pool, so `added` ends up longer than `removed`. Not investigated
+       further here (out of scope of the reported bug) - worth a
+       follow-up to determine whether this reflects a genuinely
+       unfilled/empty lineup slot that week or a parsing gap.
+
+3. User-reported (2022 Week 1, Alex F vs Forrest, Alex F's side): after
+   the two-pass fix above, the bench WR M. Thomas (20.2 pts) was shown as
+   gaining +13.4 against a benched RB (D. Harris, 6.8 pts), and separately
+   a bench RB (D. Singletary, 7.2 pts) was shown as gaining **-4.4**
+   (paired against WR D. Samuel, 11.6 pts) - a NEGATIVE "gain" rendered in
+   the same green-highlight style as a real improvement, which should be
+   structurally impossible (the optimizer never adds a player who scores
+   less than who they're replacing).
+   - **Root cause 3:** Pass 1's same-position search used the full
+     FLEX-eligible union (`{RB, WR}`) whenever a gained player's own
+     `optimal_slot` was "FLEX" - even though the player's own actual
+     `position` is a single concrete value (here, M. Thomas is a WR who
+     happened to be SOLVED into the FLEX slot). Searching the union let
+     Thomas's "weakest displaced" search grab D. Harris (RB, 6.8 pts) -
+     the weaker of the two candidates across both positions - instead of
+     D. Samuel (WR, 11.6 pts), who was the actual FLEX-slot occupant
+     Thomas effectively replaced. That left D. Singletary (RB, needing an
+     RB partner) with no same-position candidate remaining, so it fell
+     through to pass 2, which paired it against the only leftover -
+     Samuel (WR, 11.6 pts, who outscores Singletary's 7.2) - producing
+     the impossible negative "gain."
+   - **Fix:** pass 1 now tries an EXACT position match first (Thomas's
+     own position, "WR", against `removed` candidates) before falling
+     back to the broader FLEX-eligible union - only relevant when no
+     same-position candidate exists at all. `frontend/pages_matchups.py`,
+     `_optimal_lineup_details()`.
+   - **Verified:** Wk1 (Alex F) now shows M. Thomas +8.6 (correctly
+     paired against D. Samuel, the real FLEX occupant it replaced),
+     Buccaneers DEF +8.0, D. Singletary +0.4 (correctly paired against D.
+     Harris, the real RB it replaced) - sums to 17.0, matching the true
+     total exactly, no negative numbers. Re-verified every previously
+     reported case (Wk4/Wk13/Wk15) still correct after this change.
+     Re-swept all 1954 team-weeks: **1911/1954 now match exactly** (up
+     from 1909), **0 negative gains anywhere in the archive** (this is
+     the key invariant this fix specifically targets - checked
+     explicitly, not just the sum-matching check). The remaining 43
+     mismatches are the same two pre-existing, out-of-scope edge cases
+     from root cause 2's verification above (2012's vestigial DB slot;
+     weeks with a genuinely short archived lineup) - full itemized list
+     (season/week/team/manager/numbers/reason) generated at
+     `code/debugging/incorrect-matchups.csv` via
+     `code/debugging/build_incorrect_matchups.py` for manual review.
+
+4. Per explicit user direction: rather than continue chasing edge cases
+   caused by 2012's vestigial "Defensive Back" IDP slot (already known to
+   have no real candidate pool - bug 5's footnote), DB-position players
+   are now excluded from the optimizer entirely, on both sides of the
+   comparison. `_optimal_lineup_details()` filters `position == "DB"`
+   players out of BOTH the actual-starters list and the bench pool passed
+   to `compute_optimal_lineup()` before doing anything else - a DB
+   starter is left completely untouched (never a swap candidate, never
+   highlighted red/green), with their real points folded back into the
+   returned `optimal_points` unchanged so the card's displayed total
+   still matches the team's real score.
+   - **Verified:** re-ran the earlier vestigial-slot example
+     (`archive/parsed/2012/matchups/week_6_1_4.json`, home side) - gains
+     now sum to exactly 44.48, matching the true diff exactly (previously
+     understated by exactly the unfilled DB slot's absence), and the DB
+     starter's `player_id` confirmed absent from both `gains` and
+     `losses`. Re-swept all 1954 team-weeks: **1927/1954 now match
+     exactly** (up from 1911), **0 negative gains** (unchanged/still
+     holds). The remaining 27 mismatches were re-checked individually -
+     all are the OTHER known edge case (a genuinely short archived
+     lineup that week, unrelated to DB - see root cause 2 above), 0 are
+     DB-related. Regenerated `code/debugging/incorrect-matchups.csv` (down
+     to 27 rows, "Vestigial 'Defensive Back'..." reason category now
+     empty/obsolete).
+
+5. Per explicit user direction: the remaining 27 mismatches (a team's
+   ARCHIVED actual lineup genuinely short a starter that week - see root
+   cause 2 above) needed the missing slot treated as a real, legitimate
+   0-point starter - i.e. the optimizer should still consider the
+   next-best available bench player for it like any other slot, and (if
+   no eligible bench player exists either) it should just stay a 0-point
+   swap with nothing highlighted, rather than silently leaving `added`
+   longer than `removed`.
+   - **Fix:** `_optimal_lineup_details()` now calls the SAME
+     `_pad_missing_starters()` helper the roster table already uses for
+     display, inserting a `points: 0.0`, synthetic-`player_id` placeholder
+     for any slot the archived lineup is short on, and uses that PADDED
+     list (not the raw one) for the actual/removed side of the
+     comparison. Crucially, the solver itself (`compute_optimal_lineup`)
+     is still only ever given REAL players - the placeholders never enter
+     its candidate pool, so its own output (and thus `optimal_points`,
+     and backend `coaching.py`'s already-correct diff_sum) is completely
+     unaffected; padding only changes what the display-attribution
+     comparison treats as "already there." An empty FLEX slot's
+     placeholder carries the literal "W/R" slot label as its `position`
+     (matching what the roster table already shows for it) rather than a
+     guessed concrete RB/WR value, since it's genuinely eligible for
+     either - pass 1's same-position matching was extended with a
+     dedicated `_flex_empty` check so an RB or WR bench player can still
+     match it directly instead of falling through to pass 2.
+   - **Verified:** re-ran a previously-mismatched short-lineup example
+     (`archive/parsed/2012/matchups/week_2_1_3.json`, home side, 8 real
+     starters against a 9-slot lineup) - gains now sum to exactly 22.2,
+     matching the true diff exactly (previously 12.3, missing the empty
+     RB slot's swap entirely). Re-verified every previously reported case
+     (Wk1/Wk4/Wk13/Wk15) still correct. Re-swept all 1954 team-weeks:
+     **1954/1954 now match exactly, 0 negative gains anywhere in the
+     entire archive** - every previously-known edge case (2012's
+     vestigial DB slot, short archived lineups) is now fully resolved.
+     `code/debugging/incorrect-matchups.csv` regenerated - **0 rows**.
+
+6. Per explicit user direction (using
+   `archive/parsed/2012/matchups/week_2_2_4.json`'s away side, Jeremy vs
+   Michael, as the illustrating example - Jeremy's empty RB slot getting
+   filled by a 0.0-point bench RB was confirmed CORRECT/intentional, "NaN
+   -> 0.0" being a real change worth showing): a REAL, already-rostered
+   starter scoring 0.0 should never be shown swapped for an equally
+   0.0-point bench "replacement" - that's not a meaningful change (0.0 ->
+   0.0), unlike an empty slot going from no player at all to an actual
+   0.0-point player.
+   - **Fix:** `_optimal_lineup_details()` now collects every pass-1/
+     pass-2 pair before turning any of them into `gains`/`losses` entries,
+     then skips recording a pair where the computed gain is exactly 0.0
+     AND the displaced player is a REAL starter (`not is_empty_slot`) -
+     both sides simply stay un-highlighted. Since a skipped pair always
+     contributes exactly 0 to the sum either way, `sum(gains)` still
+     matches `optimal_points - actual_total` exactly even with pairs
+     excluded this way.
+   - **Verified:** re-ran the illustrating example
+     (`week_2_2_4.json`, away/Jeremy) - completely unchanged, the empty
+     RB slot's 0.0 swap is still shown exactly as before, confirming the
+     "real starter" exclusion doesn't touch the empty-slot case. Traced
+     every pair the two-pass algorithm considers across all 1954
+     team-weeks directly (before either pass turns anything into
+     `gains`/`losses`) looking for a pair matching this exact exclusion
+     condition: **0 found anywhere in the archive** - `solve_optimal_lineup`'s
+     stable sort already keeps a tied real starter in place by construction
+     (starters are ordered before bench in its candidate pool, so a tie
+     never favors swapping one out), so this fix doesn't change any
+     currently-displayed number; it's a correctness safeguard for a
+     combination that could theoretically arise from a different
+     candidate ordering, not an active bug in today's output. Re-swept
+     all 1954 team-weeks after the change: still 1954/1954 match exactly,
+     0 negative gains, `code/debugging/incorrect-matchups.csv` still 0 rows.

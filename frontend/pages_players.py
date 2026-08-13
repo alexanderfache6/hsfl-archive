@@ -289,7 +289,7 @@ def _render_fantasy_points_per_game_chart(
     started, flat gray (same BENCH_COLOR as the starts-vs-bench chart) if
     benched, flat red if the player was eligible but not on ANY fantasy
     roster that week. Same x-axis/season-boundary-line treatment as the
-    Games tab's Point Differential chart, since this is the same "one bar
+    Matchups tab's Point Differential chart, since this is the same "one bar
     per game, chronological" shape."""
     st.subheader("Fantasy Points per Game")
 
@@ -324,7 +324,7 @@ def _render_fantasy_points_per_game_chart(
 
     # One centered tick label per season (its year) rather than a label
     # per week - a career-spanning player has far too many weeks for
-    # per-week ticks to stay readable, same treatment as the Games tab's
+    # per-week ticks to stay readable, same treatment as the Matchups tab's
     # Point Differential chart when no single season is selected.
     positions_by_season: dict[int, list[int]] = {}
     for index, entry in enumerate(full_game_list):
@@ -522,12 +522,12 @@ def render_players_page() -> None:
     player_names_by_id = {player_id: player["name"] for player_id, player in players_data.items()}
     sorted_player_ids = sorted(player_names_by_id, key=lambda player_id: player_names_by_id[player_id])
 
-    # Same versioned-widget-key pattern as the Games tab's Clear Filters:
+    # Same versioned-widget-key pattern as the Matchups tab's Clear Filters:
     # each filter's ACTUAL key includes a generation counter, so Clear
     # Filters can bump the counter and force brand-new widget instances
     # instead of relying on session_state deletion alone, which left
     # stale-looking dropdowns in some browsers even after the underlying
-    # value was cleared (see pages_games.py's _render_filters).
+    # value was cleared (see pages_matchups.py's _render_filters).
     generation = st.session_state.setdefault("player_filters_generation", 0)
 
     def versioned_key(base_key: str) -> str:
@@ -550,7 +550,7 @@ def render_players_page() -> None:
         )
 
     # Only seasons this specific player actually has data for - same
-    # "Any" (single season or all) treatment as the Games tab's Season
+    # "Any" (single season or all) treatment as the Matchups tab's Season
     # filter.
     player_seasons = sorted({entry["season"] for entry in ownership_data.get(selected_player_id, [])}) if selected_player_id else []
     season_widget_key = versioned_key("player_season_filter")
