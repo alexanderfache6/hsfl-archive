@@ -51,6 +51,14 @@ ISSUE_TYPE_COLORS = {"Bug": "#b60205", "Enhancement": "#0e8a16", "New Feature": 
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
 
+ISSUES_FILTER_WIDGET_BASE_KEYS = (
+    "feedback_filter_type",
+    "feedback_filter_state",
+    "feedback_filter_release",
+    "feedback_filter_page",
+    "feedback_search_title",
+)
+
 # Issues filed by this form always have "**Type:**"/"**Page:**"/
 # "**Description:**" lines in the body (see _render_feedback_form).
 # Type is always parsed from the body, not labels, since "Improvement"
@@ -359,11 +367,29 @@ def _render_issues_table(issues: list[dict]) -> None:
     except requests.RequestException:
         releases = []
 
+    # Same versioned-widget-key pattern as the Matchups/Players tabs'
+    # Clear Filters - the Clear Filters button below bumps this counter
+    # instead of just deleting session_state, forcing Streamlit to mount
+    # brand-new widget instances (deleting session_state alone can leave
+    # a widget showing its old value in some browsers, since the
+    # component itself never actually remounts).
+    generation = st.session_state.setdefault("feedback_issues_filters_generation", 0)
+
+    def versioned_key(base_key: str) -> str:
+        return f"{base_key}_gen{generation}"
+
+    for base_key in ISSUES_FILTER_WIDGET_BASE_KEYS:
+        widget_key = versioned_key(base_key)
+        if widget_key not in st.session_state and base_key in st.session_state:
+            st.session_state[widget_key] = st.session_state[base_key]
+
     type_column, state_column, release_column, page_column = st.columns(4)
     with type_column:
-        selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key="feedback_filter_type")
+        selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key=versioned_key("feedback_filter_type"))
     with state_column:
-        selected_state = st.selectbox("Issue State", ["Open", "Closed"], index=None, placeholder="Any", key="feedback_filter_state")
+        selected_state = st.selectbox(
+            "Issue State", ["Open", "Closed"], index=None, placeholder="Any", key=versioned_key("feedback_filter_state")
+        )
     with release_column:
         # "-" (open/ongoing issues - see the rows loop below) is
         # deliberately not one of the filterable options here, only a
@@ -377,10 +403,12 @@ def _render_issues_table(issues: list[dict]) -> None:
             index=None,
             placeholder="Any",
             format_func=lambda tag: release_labels.get(tag, tag),
-            key="feedback_filter_release",
+            key=versioned_key("feedback_filter_release"),
         )
     with page_column:
-        selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key="feedback_filter_page")
+        selected_page = st.selectbox(
+            "App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page")
+        )
 
     # Same searchable-selectbox pattern as the Players tab's player
     # search - a plain text_input with substring matching below, not a
@@ -390,7 +418,22 @@ def _render_issues_table(issues: list[dict]) -> None:
     # Transactions table.
     search_column, page_counter_column = st.columns([3, 1])
     with search_column:
-        searched_title = st.text_input("Search Issue Title(s)", placeholder="Type to search titles...", key="feedback_search_title")
+        searched_title = st.text_input(
+            "Search Issue Title(s)", placeholder="Type to search titles...", key=versioned_key("feedback_search_title")
+        )
+
+    st.session_state["feedback_filter_type"] = selected_type
+    st.session_state["feedback_filter_state"] = selected_state
+    st.session_state["feedback_filter_release"] = selected_release
+    st.session_state["feedback_filter_page"] = selected_page
+    st.session_state["feedback_search_title"] = searched_title
+
+    if st.button("Clear Filters"):
+        for base_key in ISSUES_FILTER_WIDGET_BASE_KEYS:
+            st.session_state.pop(base_key, None)
+        st.session_state["feedback_issues_filters_generation"] = generation + 1
+        st.session_state["feedback_issues_page"] = 1
+        st.rerun()
 
     # Any filter change (including unchecking one back to "Any") jumps
     # back to page 1 of the results - otherwise a filter narrowing the
