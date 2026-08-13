@@ -10,6 +10,7 @@ execution-plan.md Phase G.
 # IMPORTS
 # ========================================
 
+import base64
 import re
 import time
 from datetime import datetime
@@ -38,6 +39,16 @@ TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
 
 ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Feature": ["new feature"]}
+
+# GitHub's create-issue REST endpoint has no attachment field (the
+# drag-and-drop upload used at github.com itself goes through a
+# separate, private, undocumented endpoint) - a submitted screenshot is
+# instead committed to the repo under this directory via the Contents
+# API, then linked as a markdown image at the bottom of the issue body
+# using that commit's public raw-content URL.
+FEEDBACK_ATTACHMENTS_DIRECTORY = "feedback-attachments"
+MAX_SCREENSHOT_COUNT = 3
+MAX_SCREENSHOT_MB = 1 # real screenshots run well under this
 
 # Issues filed before this type was renamed from "Improvement" to
 # "Enhancement" still have "**Type:** Improvement" in their body -
@@ -107,6 +118,28 @@ def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
     )
     response.raise_for_status()
     return response.json()
+
+
+def _slugify(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "issue"
+
+
+def _upload_feedback_screenshot(file_bytes: bytes, title: str, index: int) -> str:
+    """Commits one uploaded PNG to FEEDBACK_ATTACHMENTS_DIRECTORY (the
+    filename is timestamped, plus this screenshot's position in the
+    submission's own attachment list, so neither two submissions with the
+    same title nor two screenshots in the same submission ever collide)
+    and returns its public raw-content download_url, embeddable directly
+    as a markdown image."""
+    filename = f"{int(time.time())}-{index}-{_slugify(title)}.png"
+    response = requests.put(
+        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/contents/{FEEDBACK_ATTACHMENTS_DIRECTORY}/{filename}",
+        headers={"Authorization": f"Bearer {_github_token()}", "Accept": "application/vnd.github+json"},
+        json={"message": f"feedback attachment: {filename}", "content": base64.b64encode(file_bytes).decode("ascii")},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()["content"]["download_url"]
 
 
 def _format_pacific(iso_timestamp: str | None) -> str:
@@ -244,6 +277,9 @@ def _issues_with_pending_merged() -> list[dict] | None:
     return issues + still_pending
 
 
+def _mb_to_bytes(mb):
+    return mb * 1024 * 1024
+
 # ========================================
 # RENDER
 # ========================================
@@ -278,6 +314,35 @@ def _render_feedback_form() -> None:
 
     title = st.text_input("Title", max_chars=TITLE_MAX_CHARS, key=versioned_key("feedback_title"))
     description = st.text_area("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
+    # st.file_uploader's own drop zone already accepts a dragged
+    # screenshot, not just a browsed file - no separate "drag" affordance
+    # needed. Not round-tripped through the plain-key copy-back loop
+    # above like the other fields (a file object isn't something a later
+    # generation could meaningfully reseed) - a fresh, empty uploader
+    # simply appears each time feedback_form_generation bumps, same as
+    # every other field ends up blank after a reset.
+    uploaded_screenshots = st.file_uploader(
+        f"Attach screenshots (optional, up to {MAX_SCREENSHOT_COUNT} files)",
+        type=["png"],
+        accept_multiple_files=True,
+        key=versioned_key("feedback_screenshot"),
+        max_upload_size=MAX_SCREENSHOT_MB # per file
+    )
+
+    # st.file_uploader has no built-in cap on file COUNT (only the
+    # per-file "type" filter) or SIZE beyond Streamlit's own generous
+    # global default (200MB) - both are enforced here instead, blocking
+    # Submit rather than silently truncating/uploading an oversized file.
+    screenshot_error = None
+    if uploaded_screenshots:
+        if len(uploaded_screenshots) > MAX_SCREENSHOT_COUNT:
+            screenshot_error = f"Attach at most {MAX_SCREENSHOT_COUNT} screenshots ({len(uploaded_screenshots)} selected)."
+        else:
+            oversized = [f.name for f in uploaded_screenshots if f.size > _mb_to_bytes(MAX_SCREENSHOT_MB)] # NOTE f.size is checking bytes
+            if oversized:
+                screenshot_error = f"Screenshot(s) over {MAX_SCREENSHOT_MB}MB: {', '.join(oversized)}."
+    if screenshot_error:
+        st.error(screenshot_error)
 
     st.session_state["feedback_type"] = feedback_type
     st.session_state["feedback_page"] = selected_page
@@ -298,7 +363,9 @@ def _render_feedback_form() -> None:
     # selectboxes above already fill theirs) is what closes that gap.
     submit_column, clear_column, _ = st.columns([1, 1, 6])
     with submit_column:
-        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()), use_container_width=True)
+        submit_clicked = st.button(
+            "Submit", disabled=not (title.strip() and description.strip()) or screenshot_error is not None, use_container_width=True
+        )
     with clear_column:
         if st.button("Clear Feedback", use_container_width=True):
             _reset_form_fields()
@@ -322,16 +389,31 @@ def _render_feedback_form() -> None:
             st.error("GitHub integration isn't configured (missing the 'github_token' secret) - can't submit right now.")
             return
 
+        attachment_urls = []
+        for index, screenshot in enumerate(uploaded_screenshots or []):
+            try:
+                attachment_urls.append(_upload_feedback_screenshot(screenshot.getvalue(), title, index))
+            except requests.RequestException as error:
+                st.error(f"Couldn't upload screenshot '{screenshot.name}' - GitHub API error: {error}")
+                return
+
         issue_title = f"[{selected_page}] {title}"
+        # A tight bullet list (single "\n" between items) - not the
+        # blank-line-separated paragraphs used before - so GitHub renders
+        # every field as one compact row instead of spacing them out like
+        # separate paragraphs.
         body_lines = [
-            f"**Type:** {feedback_type}",
-            f"**Page:** {selected_page}",
-            f"**Title:** {title}",
-            f"**Description:** {description}",
+            f"- **Type:** {feedback_type}",
+            f"- **Page:** {selected_page}",
+            f"- **Title:** {title}",
+            f"- **Description:** {description}",
         ]
+        if attachment_urls:
+            images = " ".join(f"![screenshot]({url})" for url in attachment_urls)
+            body_lines.append(f"- **Attachments:** {images}")
 
         try:
-            issue = _create_github_issue(issue_title, "\n\n".join(body_lines), ISSUE_LABELS_BY_TYPE[feedback_type])
+            issue = _create_github_issue(issue_title, "\n".join(body_lines), ISSUE_LABELS_BY_TYPE[feedback_type])
         except requests.RequestException as error:
             st.error(f"Couldn't submit feedback - GitHub API error: {error}")
             return
