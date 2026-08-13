@@ -94,28 +94,20 @@ ISSUES_CLOSED_COLOR = "#1E88E5"
 # ========================================
 
 
-def _viewer_email() -> str:
-    """The Streamlit Cloud-authenticated viewer's email - only populated
-    when actually running on Community Cloud with viewer access control
-    enabled (empty in local dev, since there's no login to read)."""
-    user = getattr(st, "user", None) or getattr(st, "experimental_user", None)
-    return getattr(user, "email", "") or ""
-
-
-def _github_token() -> str:
+def _github_issues_token() -> str:
     try:
         return st.secrets.get("GITHUB_ISSUES_TOKEN", "")
     except Exception:
         return ""
 
 
-def _github_uploads_token() -> str:
+def _github_feedback_token() -> str:
     """A separate, narrower-scoped token (Contents: Read and write only -
     no Issues access) used just for committing feedback screenshots via
-    the Contents API - kept apart from _github_token() so the
+    the Contents API - kept apart from _github_issues_token() so the
     issue-creation token never needs contents-write permission."""
     try:
-        return st.secrets.get("GITHUB_UPLOADS_TOKEN", "")
+        return st.secrets.get("GITHUB_FEEDBACK_TOKEN", "")
     except Exception:
         return ""
 
@@ -123,7 +115,7 @@ def _github_uploads_token() -> str:
 def _create_github_issue(title: str, body: str, labels: list[str]) -> dict:
     response = requests.post(
         f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
-        headers={"Authorization": f"Bearer {_github_token()}", "Accept": "application/vnd.github+json"},
+        headers={"Authorization": f"Bearer {_github_issues_token()}", "Accept": "application/vnd.github+json"},
         json={"title": title, "body": body, "labels": labels},
         timeout=10,
     )
@@ -145,7 +137,7 @@ def _upload_feedback_screenshot(file_bytes: bytes, title: str, index: int) -> st
     filename = f"{int(time.time())}-{index}-{_slugify(title)}.png"
     response = requests.put(
         f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/contents/{FEEDBACK_ATTACHMENTS_DIRECTORY}/{filename}",
-        headers={"Authorization": f"Bearer {_github_uploads_token()}", "Accept": "application/vnd.github+json"},
+        headers={"Authorization": f"Bearer {_github_feedback_token()}", "Accept": "application/vnd.github+json"},
         json={"message": f"feedback attachment: {filename}", "content": base64.b64encode(file_bytes).decode("ascii")},
         timeout=10,
     )
@@ -206,7 +198,7 @@ def _all_issues() -> list[dict]:
     own Type/Page/Description fields. Cached for 60s so a page rerun
     doesn't refetch every time - issues don't change that fast outside of
     right after a fresh submission (see the cache-clear above)."""
-    token = _github_token()
+    token = _github_issues_token()
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -226,7 +218,7 @@ def _all_releases() -> list[dict]:
     object - e.g. one that hasn't been "published" yet - is NOT included,
     since it has no published_at to compare an issue's closed_at
     against), oldest first, as {"tag", "published_at", "url"}."""
-    token = _github_token()
+    token = _github_issues_token()
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -396,10 +388,10 @@ def _render_feedback_form() -> None:
         message_placeholder.empty()
 
     if submit_clicked:
-        if not _github_token():
+        if not _github_issues_token():
             st.error("GitHub integration isn't configured - can't submit right now.")
             return
-        if uploaded_screenshots and not _github_uploads_token():
+        if uploaded_screenshots and not _github_feedback_token():
             st.error("Screenshot uploads aren't configured - remove the attachment or try again later.")
             return
 
