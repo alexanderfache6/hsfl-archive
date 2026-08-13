@@ -542,3 +542,43 @@ User-reported in two rounds against 2022 Jeremy vs Alex F matchups:
      candidate ordering, not an active bug in today's output. Re-swept
      all 1954 team-weeks after the change: still 1954/1954 match exactly,
      0 negative gains, `code/debugging/incorrect-matchups.csv` still 0 rows.
+
+### 9. [NOT A BUG IN THIS CODEBASE - upstream source data error] Justin Fields' 2023 season is mislabeled "PIT" (Pittsburgh) instead of "CHI" (Chicago) throughout NFL.com's own fantasy site data, breaking the new bye-week overlay
+User-reported: the Players tab's bye-week feature (the blue "Bye Week"
+marker on the Fantasy Points/NFL Stats per Game charts, backed by
+`pages_players.py`'s `_bye_weeks_by_season`) flags Justin Fields' 2023
+Week 6 as his NFL team's bye week, but he's ALSO shown as a fantasy
+STARTER that week with real points (4.92) - a real player can't score
+points during his own team's bye, so these two facts directly contradict
+each other on screen.
+- **Root cause, confirmed via the actual archived data (not
+  speculation):** every single one of Justin Fields' 17 real
+  `archive/parsed/2023/matchups/week_*.json` entries that season -
+  all 17 weeks, no exceptions - has `"nfl_team": "PIT"`. He was
+  genuinely on the Chicago Bears for all of 2023 (real-world fact - he
+  was only traded to Pittsburgh in 2024), so this is wrong for the
+  entire season, not just a stray week or two. Confirmed this is
+  NFL.com's OWN fantasy site data being wrong, not a scraping/parsing
+  bug in this project: the archived `"opp"` field for his week 6 entry
+  even literally says `"Bye"` - fully self-consistent with treating him
+  as a Pittsburgh player (Pittsburgh's real 2023 bye WAS week 6, per
+  `archive/nfl_bye_weeks.json`), just wrong about which team he was
+  actually on. Chicago's real 2023 bye was week 13, not 6.
+- **Why this broke the new feature specifically:**
+  `data_loader.player_nfl_team_by_season()` derives a player's NFL team
+  per season from the most-common `nfl_team` value across their real
+  matchup appearances that season - with Fields' entire 2023 unanimously
+  (17/17) saying "PIT", there's no ambiguity for that function to get
+  "right" from this input; it faithfully reports what the archived data
+  says. The bug is entirely upstream, in what NFL.com's fantasy site
+  itself recorded for this player that season.
+- **Not fixed - deliberately left as-is:** there's no reliable way to
+  detect or correct this kind of single-player, whole-season mislabeling
+  from data already IN the archive (it's internally self-consistent, not
+  contradictory in a way a validation pass could flag). This is exactly
+  the class of problem `instructions/cool-features.md`'s "players"
+  section future-feature note already anticipates - real NFL
+  play-by-play/roster data (an actual per-week team assignment,
+  independent of this league's own fantasy site) would be needed to
+  catch and correct this kind of source error. Filed here for the
+  record rather than silently patched with a one-player special case.
