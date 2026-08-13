@@ -27,6 +27,7 @@
 - [x] below fantasy points per game chart show stats per game
 - [x] show all weeks as 0 if player not on fantasy roster across full nfl season
 - [x] filter player stats per season
+- [ ] complement fantasy-roster availability with REAL NFL stats/roster data for weeks a player wasn't on any fantasy roster - currently a week with no fantasy owner just shows as a flat red "unrostered" 0, even if the player actually played (or was on their real NFL team's bye) that week; pulling in real NFL play-by-play/roster status would let the chart distinguish "genuinely unrostered but played" from "bye week" from "actually inactive/injured," and would also let "NFL Games"/bye-week logic handle a mid-season NFL trade correctly (two different real byes in one season) instead of the current one-bye-per-season assumption (see pages_players.py's _render_summary_metrics)
 
 # matchups
 - [x] fix defenses not having (TEAM)
