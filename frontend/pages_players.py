@@ -935,6 +935,8 @@ def render_players_page() -> None:
         if widget_key not in st.session_state and base_key in st.session_state:
             st.session_state[widget_key] = st.session_state[base_key]
 
+    st.warning(body="Note - stats are incomplete when a player was not on a fantasy roster (nfl/fantasy data not yet available). also missing are stats on injuries/suspensions", icon="ℹ️")
+
     player_column, season_column = st.columns(2)
     with player_column:
         selected_player_id = st.selectbox(
@@ -1012,7 +1014,6 @@ def render_players_page() -> None:
 
     st.subheader(f"{player_names_by_id[selected_player_id]} ({players_data[selected_player_id]['position']})")
 
-    st.warning(body="Note - stats are incomplete when a player was not on a fantasy roster. also missing are stats on injuries/suspensions", icon="ℹ️")
 
     fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
