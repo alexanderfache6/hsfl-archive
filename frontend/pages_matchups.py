@@ -489,7 +489,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     manager1_name = resolve_manager_name(team1_manager_id, name_resolver)
     manager1_color = manager_color_map.get(team1_manager_id, "#4C78A8")
 
-    x_labels, diffs, colors, hover_text = [], [], [], []
+    x_labels, diffs, hover_text = [], [], []
     for matchup in matchups:
         home, away = matchup["home"], matchup["away"]
         team1_side, team2_side = (home, away) if home["manager_id"] == team1_manager_id else (away, home)
@@ -498,7 +498,6 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
 
         x_labels.append(f"{matchup['season']} Wk{matchup['week']}")
         diffs.append(diff)
-        colors.append(manager1_color if diff > 0 else BENCH_COLOR)
         hover_text.append(
             f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b>"
             f"<br>{manager1_name} vs {manager2_name}"
@@ -531,14 +530,30 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         tick_text = x_labels[::tick_step]
         tick_angle = 0
 
-    figure = go.Figure(
-        go.Bar(x=x_positions, y=diffs, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>")
+    # Split into two REAL traces (not one bar trace + dummy legend
+    # markers) so clicking "Win"/"Loss/Tie" in the legend actually
+    # toggles those bars - a single trace's legend entry can only
+    # show/hide that whole trace, and a dummy marker trace has no bars
+    # of its own to hide. Both traces share the same x_positions/win_diff
+    # is None (bar just doesn't render) for the other trace's indices, so
+    # they still line up on the shared x-axis.
+    win_diffs = [diff if diff > 0 else None for diff in diffs]
+    loss_diffs = [diff if diff <= 0 else None for diff in diffs]
+    figure = go.Figure()
+    figure.add_bar(
+        x=x_positions, y=win_diffs, marker_color=manager1_color, name="Win",
+        customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
+    )
+    figure.add_bar(
+        x=x_positions, y=loss_diffs, marker_color=BENCH_COLOR, name="Loss/Tie",
+        customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
         title="Point Differential",
         xaxis=dict(title="Season / Week", tickangle=tick_angle, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
         yaxis_title="Point Differential",
         yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
         margin=dict(t=40, b=0, l=0, r=0),
     )
 
