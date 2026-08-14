@@ -306,7 +306,7 @@ def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, yea
     scoring_rules = load_metadata(year)["scoring_rules"]
 
     if stat_id == "stat_54" and position == "DEF":
-        for upper_bound, tier_key in POINTS_ALLOWED_TIERS:
+        for upper_bound, tier_key in POINTS_ALLOWED_TIERS: # DEF points allowed
             if value <= upper_bound:
                 rule_key = tier_key
                 break

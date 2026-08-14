@@ -17,6 +17,7 @@ from data_loader import (
     CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
+    compute_stat_fantasy_points,
     get_bye_week,
     load_nfl_season_lengths,
     load_player_ownership,
@@ -58,6 +59,14 @@ NODE_X_SPACING = 260
 NONZERO_POINT_GAMES_HELP = "Excludes bye weeks and 0-point games. Qualifed game count in `()`."
 ZERO_POINT_COUNT_HELP = "Excludes bye weeks. An indication that (1) player was injured or (2) player delivered no fantasy points." # TODO future should take into account injury games
 NFL_POINTS_GAME_HELP = "Excludes bye weeks. Qualified game count in `()`."
+
+# "Big play" = any touchdown-scoring stat line (passing/rushing/receiving/
+# return/defensive TDs) - used for the Fantasy Points per Game chart's
+# "Big Play Fantasy Points %" view (that week's TD-derived fantasy points
+# as a % of the player's total fantasy points that week).
+TOUCHDOWN_STAT_IDS = {"stat_6", "stat_15", "stat_22", "stat_50", "stat_53", "stat_76", "stat_77", "stat_78"} # NOTE from archive/stat_id_labels.json
+POINTS_CHART_VIEW_LABELS = {"points": "Fantasy Points", "big_play_percentage": "Big Play Fantasy Points %"}
+BIG_PLAY_PERCENTAGE_HELP = "Excludes bye weeks and 0-point games. Share of that week's fantasy points that came from touchdown-scoring stats. Qualified game count in `()`."
 
 # Yardage stats (stat_id_labels.json's "Pass/Rush/Rec Yds") can run into
 # the hundreds in a single game, so the shared nticks cap alone gives a
@@ -315,7 +324,31 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     st.plotly_chart(figure, width="stretch")
 
 
-def _render_points_metrics(timeline: list[dict], player_id: str) -> None:
+def _touchdown_fantasy_points(entry: dict, position: str) -> float:
+    stats = entry.get("stats") or {}
+    total = 0.0
+    for stat_id, raw_value in stats.items():
+        if stat_id not in TOUCHDOWN_STAT_IDS:
+            continue
+        stat_points = compute_stat_fantasy_points(stat_id, raw_value, position, entry["season"])
+        if stat_points:
+            total += stat_points
+    return total
+
+
+def _big_play_percentage(entry: dict, position: str) -> tuple[float, float] | tuple[None, None]:
+    """(percentage, points_from_touchdowns) - (None, None) (not 0) when
+    there are no fantasy points that week to take a share of. A real
+    percentage here, even negative or over 100%, is still a real
+    reflection of that week's stat line."""
+    if not entry.get("points"):
+        return None, None
+
+    points_from_touchdowns = _touchdown_fantasy_points(entry, position)
+    return points_from_touchdowns / entry["points"] * 100, points_from_touchdowns
+
+
+def _render_points_metrics(timeline: list[dict], player_id: str, position: str, view_mode: str) -> None:
     # 0-point games (starter or bench) are assumed to be injuries/
     # inactives rather than a real scoring outcome, so both averages
     # exclude them rather than letting them drag the average down - a
@@ -338,12 +371,23 @@ def _render_points_metrics(timeline: list[dict], player_id: str) -> None:
         if entry["status"] == "bench" and entry["points"] == 0 and bye_weeks_by_season.get(entry["season"]) != entry["week"]
     )
 
-    points_per_start = sum(starter_points) / len(starter_points) if starter_points else 0.0
-    points_per_bench = sum(bench_points) / len(bench_points) if bench_points else 0.0
-
     start_column, bench_column, zero_start_column, zero_bench_column = st.columns(4)
-    start_column.metric("Points per Fantasy Start", f"{points_per_start:.2f} ({len(starter_points)})", help=NONZERO_POINT_GAMES_HELP)
-    bench_column.metric("Points per Fantasy Bench", f"{points_per_bench:.2f} ({len(bench_points)})", help=NONZERO_POINT_GAMES_HELP)
+    if view_mode == "big_play_percentage":
+        starter_entries_nonzero = [entry for entry in timeline if entry["status"] == "starter" and entry["points"] != 0]
+        starter_percentages = [pct for entry in starter_entries_nonzero for pct, _ in [_big_play_percentage(entry, position)] if pct is not None]
+        big_play_pct_per_start = sum(starter_percentages) / len(starter_percentages) if starter_percentages else 0.0
+        start_column.metric("Big Play % per Fantasy Start", f"{big_play_pct_per_start:.1f}% ({len(starter_percentages)})", help=BIG_PLAY_PERCENTAGE_HELP)
+
+        bench_entries_nonzero = [entry for entry in timeline if entry["status"] == "bench" and entry["points"] != 0]
+        bench_percentages = [pct for entry in bench_entries_nonzero for pct, _ in [_big_play_percentage(entry, position)] if pct is not None]
+        big_play_pct_per_bench = sum(bench_percentages) / len(bench_percentages) if bench_percentages else 0.0
+        bench_column.metric("Big Play % per Fantasy Bench", f"{big_play_pct_per_bench:.1f}% ({len(bench_percentages)})", help=BIG_PLAY_PERCENTAGE_HELP)
+    else:
+        points_per_start = sum(starter_points) / len(starter_points) if starter_points else 0.0
+        start_column.metric("Points per Fantasy Start", f"{points_per_start:.2f} ({len(starter_points)})", help=NONZERO_POINT_GAMES_HELP)
+
+        points_per_bench = sum(bench_points) / len(bench_points) if bench_points else 0.0
+        bench_column.metric("Points per Fantasy Bench", f"{points_per_bench:.2f} ({len(bench_points)})", help=NONZERO_POINT_GAMES_HELP)
     zero_start_column.metric("0-Point Starts", zero_point_starts, help=ZERO_POINT_COUNT_HELP)
     zero_bench_column.metric("0-Point Bench", zero_point_bench, help=ZERO_POINT_COUNT_HELP)
 
@@ -354,6 +398,8 @@ def _render_fantasy_points_per_game_chart(
     manager_color_map: dict[str, str],
     nfl_season_lengths: dict[str, int],
     player_id: str,
+    position: str,
+    view_mode: str,
 ) -> None:
     """One bar per NFL-eligible game that season (see
     _build_full_game_list) - solid in that week's manager color if
@@ -376,18 +422,41 @@ def _render_fantasy_points_per_game_chart(
             x_labels.append(f"{entry['season']} Wk{entry['week']}")
             points.append(0.0)
             colors.append(UNROSTERED_GAME_COLOR)
-            hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Not on a fantasy roster")
-            bye_hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Bye Week")
+            hover_text.append(
+                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
+                "Not on a fantasy roster"
+            )
+            bye_hover_text.append(
+                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
+                "Bye Week"
+            )
             has_unrostered = True
             continue
 
         manager_name = resolve_manager_name(entry["manager_id"], name_resolver, entry.get("display_name", ""))
         is_starter = entry["status"] == "starter"
         x_labels.append(f"{entry['season']} Wk{entry['week']}")
-        points.append(entry["points"])
+        if view_mode == "big_play_percentage":
+            big_play_percentage, big_play_points = _big_play_percentage(entry, position)
+            points.append(big_play_percentage or 0.0)
+        else:
+            points.append(entry["points"])
         bar_color = manager_color_map.get(entry["manager_id"], STARTER_COLOR) if is_starter else BENCH_COLOR
         colors.append(bar_color)
-        hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>{manager_name}<br>{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}")
+        if view_mode == "big_play_percentage":
+            hover_text.append(
+                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
+                f"{manager_name}<br>{'Starter' if is_starter else 'Bench'}<br>"
+                f"Points: {entry['points']:.2f}<br>"
+                f"Points from Big Plays: {big_play_points or 0.0:.2f}<br>"
+                f"Big Play Points %: {big_play_percentage or 0.0:.1f}%"
+            )
+        else:
+            hover_text.append(
+                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
+                f"{manager_name}<br>{'Starter' if is_starter else 'Bench'}<br>"
+                f"Points: {entry['points']:.2f}<br>"
+            )
         bye_hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>Bye Week")
         if is_starter:
             legend_entries.setdefault(manager_name, bar_color)
@@ -460,11 +529,18 @@ def _render_fantasy_points_per_game_chart(
             showlegend=False,
         )
 
+    if view_mode == "big_play_percentage":
+        chart_title, yaxis_title = "Big Play Fantasy Points % per Game", "Big Play Fantasy Points %"
+        yaxis = {"nticks": CHART_YAXIS_MAX_TICKS, "range": [-5, 100]}
+    else:
+        chart_title, yaxis_title = "Fantasy Points per Game", "Fantasy Points"
+        yaxis = {"nticks": CHART_YAXIS_MAX_TICKS}
+
     figure.update_layout(
-        title="Fantasy Points per Game",
+        title=chart_title,
         xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
-        yaxis_title="Fantasy Points",
-        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        yaxis_title=yaxis_title,
+        yaxis=yaxis,
         legend=CHART_LEGEND_TOP_RIGHT,
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
@@ -673,8 +749,14 @@ def _render_nfl_stat_chart(
         if entry.get("unrostered"):
             values.append(0.0)
             colors.append(UNROSTERED_GAME_COLOR)
-            hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Not on a fantasy roster")
-            bye_hover_text.append(f"{entry['season']}-{entry['week']}, Bye Week")
+            hover_text.append(
+                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
+                "Not on a fantasy roster"
+            )
+            bye_hover_text.append(
+                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
+                "Bye Week"
+            )
             has_unrostered = True
             continue
         value = float(entry.get("stats", {}).get(selected_stat_id, 0) or 0)
@@ -909,8 +991,19 @@ def render_players_page() -> None:
 
     fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
-        _render_points_metrics(timeline, selected_player_id)
-        _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id)
+        selected_position = players_data[selected_player_id]["position"]
+        points_view_mode = st.selectbox(
+            "Select Fantasy Stat to View",
+            list(POINTS_CHART_VIEW_LABELS),
+            format_func=lambda value: POINTS_CHART_VIEW_LABELS[value],
+            key="player_points_chart_view_mode",
+        )
+        if points_view_mode == "big_play_percentage":
+            st.caption(body="Big Play % are the percent of points generated from TD plays (not the associated yards/reception). This is to highlight TD dependent players.")
+        _render_points_metrics(timeline, selected_player_id, selected_position, points_view_mode)
+        _render_fantasy_points_per_game_chart(
+            timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id, selected_position, points_view_mode
+        )
     with nfl_stats_tab:
         _render_nfl_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)
     with managers_tab:
