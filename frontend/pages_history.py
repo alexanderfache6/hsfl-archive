@@ -10,6 +10,7 @@ across every season in the archive. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from constants import RECORD_ROW_COLUMN_RATIOS
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -38,8 +39,8 @@ RUNNER_UP_COLOR = "#a7a7a7"
 THIRD_PLACE_COLOR = "#9f724b"
 
 RECORD_LABELS = {
-    "highest_weekly_score": "Highest Weekly Score",
-    "lowest_weekly_score": "Lowest Weekly Score",
+    "highest_weekly_score": "Highest Weekly Team Score",
+    "lowest_weekly_score": "Lowest Weekly Team Score",
     "highest_season_points_for": "Highest Season Points",
     "lowest_season_points_for": "Lowest Season Points",
     "longest_win_streak": "Longest Win Streak",
@@ -72,13 +73,6 @@ ORDINAL_WORDS = [
     "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
     "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
 ]
-
-# score | info | button - wide enough for the button column to fit
-# "View Matchup"/"View Season" on one line without wrapping (each record row
-# is itself in a half-width column, so this column only gets ~1/10 of
-# the page width) - same ratio every row so all three still align
-# vertically.
-RECORD_ROW_COLUMN_RATIOS = [1, 2.3, 1.7]
 
 MANAGER_STAT_COLUMN_FORMATS = {
     "Win %": "%.3f",
