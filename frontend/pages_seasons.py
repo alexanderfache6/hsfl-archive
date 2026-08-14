@@ -31,6 +31,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from pages_history import CHAMPION_COLOR, RUNNER_UP_COLOR, THIRD_PLACE_COLOR
+from pages_matchups import MATCHUP_TYPE_LABELS
 
 # ========================================
 # CONSTANTS
@@ -74,7 +75,7 @@ PODIUM_LOGO_GAP_PX = 10
 PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
 LAST_PLACE_EMOJI = "🥞"
 
-SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.2, 4]
+SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.8, 4]
 
 # ========================================
 # FUNCTIONS
@@ -1600,7 +1601,83 @@ def _render_schedule_record(standings_row: dict | None, align: str) -> None:
         f"Streak: {standings_row['win_streak'] or '—'}",
         f"Rank: {standings_row['rank']}",
     ]
-    st.markdown(f"<div style='text-align:{align};'>{'<br>'.join(lines)}</div>", unsafe_allow_html=True)
+    # Same 10px horizontal padding as _render_schedule_highlight's colored
+    # box above (and the same left/right-inset idea as the Matchups page's
+    # Starters/Bench roster-row cells, padding:0 8px) - without it this
+    # text sits flush against the column edge while the name/score box
+    # above it is inset, so "Record:" doesn't line up under the manager
+    # name.
+    st.markdown(f"<div style='text-align:{align}; padding:0 10px;'>{'<br>'.join(lines)}</div>", unsafe_allow_html=True)
+
+
+def _render_schedule_week_metrics(matchups: list[dict], week_table: dict | None, name_resolver: dict[str, str], metrics_key: str) -> None:
+    """Four league-wide "of the week" headline stats shown above this
+    week's schedule containers - Coach (least negative coaching diff,
+    i.e. closest to the 0 = perfectly-optimal lineup), Start (highest
+    single starter score across every team), Team (highest team score),
+    and Bye Team (most starters at points <= 0 - covers true byes,
+    actual 0-or-negative-point games, and any empty roster slot, which
+    all show up as points <= 0 in the parsed matchup data)."""
+    sides = [matchup[side] for matchup in matchups for side in ("home", "away")]
+
+    # These metrics' values are "score | name" text, not a bare number
+    # (st.metric's default size assumes) - scoped CSS shrinks just this
+    # row's value font so a long manager/player name doesn't force
+    # awkward wrapping or overflow. metrics_key is caller-supplied
+    # (season+week specific) since st.tabs renders every week's content
+    # into the DOM at once, not just the active tab - a fixed key here
+    # would collide across weeks.
+    with st.container(key=metrics_key):
+        st.markdown(
+            f"<style>.st-key-{metrics_key} [data-testid='stMetricValue'] {{ font-size: 1.5rem; }}</style>",
+            unsafe_allow_html=True,
+        )
+        team_column, start_column, coach_column, bye_column = st.columns(4)
+
+        with team_column:
+            best_team_side = max(sides, key=lambda side: side["score"])
+            manager_name = resolve_manager_name(best_team_side.get("manager_id", ""), name_resolver, best_team_side.get("display_name", ""))
+            st.metric("Team of the Week", f"{best_team_side['score']:.2f} ({manager_name})", help="Team with highest points total.")
+
+        with start_column:
+            best_starter, best_starter_side = None, None
+            for side in sides:
+                for player in side["starters"]:
+                    if best_starter is None or player["points"] > best_starter["points"]:
+                        best_starter, best_starter_side = player, side
+            if best_starter:
+                manager_name = resolve_manager_name(best_starter_side.get("manager_id", ""), name_resolver, best_starter_side.get("display_name", ""))
+                st.metric("Start of the Week", f"{best_starter['player_name']} {best_starter['points']:.2f} ({manager_name})", help="Starting player with highest points total.")
+            else:
+                st.metric("Start of the Week", "—")
+
+        with coach_column:
+            if week_table and week_table.get("coaching"):
+                best_coach_row = max(week_table["coaching"], key=lambda row: row["weekly"]["diff"])
+                manager_name = resolve_manager_name(*_manager_lookup_args(best_coach_row["team_id"], sides, name_resolver))
+                st.metric("Coach of the Week", f"{best_coach_row['weekly']['diff']:.2f} ({manager_name})", help="Manager with most optimal starting lineup.")
+            else:
+                st.metric("Coach of the Week", "—", help="Manager with most optimal starting lineup.")
+
+        with bye_column:
+            zero_point_counts = [(sum(1 for player in side["starters"] if player["points"] <= 0), side) for side in sides]
+            worst_count, worst_side = max(zero_point_counts, key=lambda pair: pair[0])
+            if worst_count > 0:
+                manager_name = resolve_manager_name(worst_side.get("manager_id", ""), name_resolver, worst_side.get("display_name", ""))
+                st.metric("Bye Team of the Week", f"{worst_count} ({manager_name})", help="Manager starting line up with most: empty slots, bye week slots, 0 point players, negative point players.")
+            else:
+                st.metric("Bye Team of the Week", "—", help="Manager starting line up with most: empty slots, bye week slots, 0 point players, negative point players.")
+
+
+def _manager_lookup_args(team_id: str, sides: list[dict], name_resolver: dict[str, str]) -> tuple[str, dict, str]:
+    """resolve_manager_name() needs a manager_id + display_name, but
+    week_table["coaching"] rows only carry a team_id - sides (this
+    week's home/away matchup dicts, already enriched with manager_id/
+    display_name) is the only place that week's team_id -> manager
+    mapping is available without a separate team_id_to_manager_map()
+    lookup."""
+    side = next((side for side in sides if side["team_id"] == team_id), {})
+    return side.get("manager_id", ""), name_resolver, side.get("display_name", "")
 
 
 def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -1613,30 +1690,46 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
     week_table = next((table for table in weekly_tables if table["week"] == week), None)
     standings_by_team = {row["team_id"]: row for row in week_table["standings"]} if week_table else {}
 
+    _render_schedule_week_metrics(matchups, week_table, name_resolver, f"schedule_week_metrics_{season}_{week}")
+
     # Scoped to this week's own key (the established st.container(key=...)
     # -> ".st-key-*" CSS-scoping technique used elsewhere in the app) so
     # tightening the gap between row containers doesn't leak into any
     # other vertical stack on the page.
     outer_key = f"schedule_week_{season}_{week}"
+    # Sorted by matchup_id (e.g. "2022_w1_1_2") rather than trusting
+    # load_matchups()'s own order, since that order ultimately traces back
+    # to a directory glob - not guaranteed stable across filesystems -
+    # and the "Matchup N" number below needs to be deterministic.
+    sorted_matchups = sorted(matchups, key=lambda matchup: matchup["matchup_id"])
     with st.container(key=outer_key):
         st.markdown(f"<style>.st-key-{outer_key} div[data-testid='stVerticalBlock'] {{ gap: 0.4rem; }}</style>", unsafe_allow_html=True)
-        for matchup in matchups:
+        for matchup_number, matchup in enumerate(sorted_matchups, start=1):
             home, away = matchup["home"], matchup["away"]
             # 1:6:1 outer split centers the actual row at exactly 75%
             # (6/8) of the available width, rather than stretching edge
             # to edge.
             _, row_area, _ = st.columns([1, 6, 1])
             with row_area, st.container(border=True):
+                st.caption(f"{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]} · Matchup {matchup_number}")
                 # Highlight row and record-stats row are two SEPARATE
-                # st.columns calls (not one column stacking both) so
-                # vertical_alignment="center" here centers the button
-                # against just the colored highlight blocks, not the
-                # highlight+record text combined.
-                team1_highlight_column, button_column, team2_highlight_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS, vertical_alignment="center")
+                # st.columns calls (not one column stacking both) so the
+                # button below is only ever centered against the colored
+                # highlight blocks, not the highlight+record text combined.
+                # vertical_alignment="center" alone still left the button a
+                # few px above true center (measured live: box center
+                # 565.17 vs button center 557.17px, an 8px gap) - not
+                # Streamlit's per-column height centering pattern's fault
+                # so much as the button's own element wrapper not being
+                # exactly its rendered height; a manual top spacer sized to
+                # the live-measured (box_height - button_height) / 2 offset
+                # closes that last gap directly rather than guessing.
+                team1_highlight_column, button_column, team2_highlight_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS, vertical_alignment="top")
 
                 with team1_highlight_column:
                     _render_schedule_highlight(home, name_resolver, manager_color_map, align="left")
                 with button_column:
+                    st.markdown("<div style='height:1.45rem;'></div>", unsafe_allow_html=True)
                     if st.button("View Matchup", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
                         _go_to_matchup_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
                 with team2_highlight_column:
@@ -1649,6 +1742,13 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                     _render_schedule_record(standings_by_team.get(home["team_id"]), align="left")
                 with team2_record_column:
                     _render_schedule_record(standings_by_team.get(away["team_id"]), align="right")
+
+                # The record row's plain text sits closer to the container's
+                # own bottom padding edge than the highlight row's colored
+                # blocks sit to the top edge (measured live: ~22px top vs
+                # ~3px bottom) - this spacer closes that gap so the visible
+                # whitespace matches on both sides.
+                st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
 
 
 def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> None:
