@@ -1,7 +1,6 @@
 """Shared constants used across multiple page modules."""
 
-# Standard upper-right, in-figure legend styling used by charts throughout
-# the app (Plotly `layout.legend`).
+# for consistent chart legend attributes
 CHART_LEGEND_TOP_RIGHT = {
     "x": 1,
     "y": 1,
@@ -12,8 +11,8 @@ CHART_LEGEND_TOP_RIGHT = {
     "borderwidth": 1,
 }
 
+# for consistent scatter plot marker size
 SCATTER_PLOT_MARKER_SIZE = 8
 
-# score | info | button - top-3 record-cell row layout shared by the
-# History tab's all-time records and the Seasons tab's per-season stats.
+# for consistent row record column size
 RECORD_ROW_COLUMN_RATIOS = [1.5, 4, 2]
