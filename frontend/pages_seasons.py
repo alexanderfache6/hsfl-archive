@@ -163,21 +163,43 @@ def _bracket_game_card_html(
     on_winning_path = bool(path_team_id) and path_team_id in (game["team_id_home"], game["team_id_away"])
     card_background = "background:#F0F0F0; " if on_winning_path else ""
 
-    lines_html = []
-    if round_label:
-        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
-
     # "Only one side present" (not the is_bye flag, which some brackets
     # leave False on a loser's "continues on" slot with an empty
     # opponent - see _bracket_effective_winner) is what actually
     # determines whether this is a single-team card.
-    if bool(game["team_id_home"]) != bool(game["team_id_away"]):
+    is_bye_card = bool(game["team_id_home"]) != bool(game["team_id_away"])
+
+    lines_html = []
+    if round_label:
+        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
+    elif is_bye_card:
+        # A bye whose game carries no round_label (only some rounds'
+        # bye slots have one - see _bracket_display_round_label) would
+        # otherwise start its team name higher than a labeled sibling
+        # card in the same row - an empty placeholder of the same
+        # height keeps every card's content starting at the same y.
+        lines_html.append('<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">&nbsp;</div>')
+
+    if is_bye_card:
         lone_team_id = game["team_id_home"] or game["team_id_away"]
         lone_seed = game["seed_home"] or game["seed_away"]
         lone_label = html.escape(_bracket_team_label(lone_team_id, lone_seed, team_info, name_resolver))
         lone_highlight = _bracket_highlight_style(lone_team_id, winner_team_id, team_info, manager_color_map)
-        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><strong>{lone_label}</strong></div>')
-        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.7; font-style:italic;">Bye</div>')
+        # Name + "Bye" text in ONE outer highlighted div (not two
+        # separately-styled divs) - same "one continuous highlighted box
+        # spanning both lines" convention the real-matchup branch below
+        # uses for a winner's name+score.
+        # No opacity dimming on "Bye" here (unlike the old two-div
+        # version) - same as the real-matchup branch's score line below,
+        # which also just inherits the wrapper's own contrasting
+        # text-color rather than separately fading itself, since this
+        # text now sits on the same colored highlight background as the
+        # name above it and opacity:0.7 there could wash out against a
+        # dark manager color.
+        lines_html.append(
+            f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><div><strong>{lone_label}</strong></div>'
+            f'<div style="font-style:italic;">Bye</div></div>'
+        )
     else:
         home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
         away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
@@ -383,24 +405,26 @@ def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> di
     return top_three
 
 
-def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
+def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str, matchup_type: str = "regular") -> None:
     """Jumps to the Matchups page pre-filtered to this exact matchup,
     same st.switch_page pattern as the History tab's _go_to_matchup -
     must be called from the main script body (not a button's on_click
     callback), since st.switch_page is a no-op/error from within a
-    callback."""
+    callback. matchup_type defaults to "regular" for the Schedule tab's
+    own call site, but the Bracket tab (see _render_bracket) passes
+    "championship"/"consolation" through the same function."""
     st.session_state["matchups_team1_manager_id"] = team1_manager_id
     st.session_state["matchups_season"] = season
     st.session_state["matchups_week"] = week
     st.session_state["matchups_team2_manager_id"] = team2_manager_id
-    st.session_state["matchups_matchup_type"] = "regular"
+    st.session_state["matchups_matchup_type"] = matchup_type
     st.session_state["matchups_filters_generation"] = st.session_state.get("matchups_filters_generation", 0) + 1
     st.session_state["matchups_applied_filters"] = {
         "season": season,
         "week": week,
         "team1_manager_id": team1_manager_id,
         "team2_manager_id": team2_manager_id,
-        "matchup_type": "regular",
+        "matchup_type": matchup_type,
     }
     st.switch_page(st.session_state["_matchups_page"])
 
@@ -1267,7 +1291,13 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
 
 
 def _render_bracket(
-    bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], is_consolation: bool, path_team_id: str
+    season: int,
+    bracket: dict,
+    team_info: dict[str, dict],
+    name_resolver: dict[str, str],
+    manager_color_map: dict[str, str],
+    is_consolation: bool,
+    path_team_id: str,
 ) -> None:
     rounds = bracket.get("rounds", [])
     if not any(round_entry["matchups"] for round_entry in rounds):
@@ -1291,32 +1321,84 @@ def _render_bracket(
             column_widths.append(1)
     columns = st.columns(column_widths)
 
+    bracket_key_prefix = "consolation" if is_consolation else "championship"
     column_index = 0
     for round_index, (round_order, round_name, games_with_rows) in enumerate(rounds_with_rows):
         with columns[column_index]:
-            # A fixed-pixel-height header div (not an st.container) so
-            # every column - round or connector - starts its canvas at
-            # exactly the same y=0, regardless of any inherent margin
-            # differences between bold text and an empty line.
-            st.markdown(
-                f'<div style="height:{BRACKET_HEADER_HEIGHT_PX}px; display:flex; align-items:center;"><strong>{html.escape(round_name)}</strong></div>',
-                unsafe_allow_html=True,
-            )
-            # All of this round's cards as one absolutely positioned
-            # canvas - no invisible st.container spacers between them.
-            cards_html = "".join(
-                _bracket_game_card_html(
-                    game,
-                    row * BRACKET_ROW_UNIT_PX,
-                    team_info,
-                    name_resolver,
-                    manager_color_map,
-                    _bracket_display_round_label(game, round_order, max_round_order, is_consolation),
-                    path_team_id,
+            round_key = f"bracket_{bracket_key_prefix}_round_{round_order}"
+            with st.container(key=round_key):
+                # The header div, the card canvas div, and the invisible
+                # click-overlay buttons below all need to share one
+                # coordinate space - this container is that shared
+                # position:relative root, so a button's top:{...}px lands
+                # on the exact same pixel as its card regardless of
+                # Streamlit's own wrapper divs in between.
+                st.markdown(f"<style>.st-key-{round_key} {{ position: relative; }}</style>", unsafe_allow_html=True)
+                # A fixed-pixel-height header div (not an st.container) so
+                # every column - round or connector - starts its canvas at
+                # exactly the same y=0, regardless of any inherent margin
+                # differences between bold text and an empty line.
+                st.markdown(
+                    f'<div style="height:{BRACKET_HEADER_HEIGHT_PX}px; display:flex; align-items:center;"><strong>{html.escape(round_name)}</strong></div>',
+                    unsafe_allow_html=True,
                 )
-                for game, row in games_with_rows
-            )
-            st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{cards_html}</div>', unsafe_allow_html=True)
+                # All of this round's cards as one absolutely positioned
+                # canvas - no invisible st.container spacers between them.
+                cards_html = "".join(
+                    _bracket_game_card_html(
+                        game,
+                        row * BRACKET_ROW_UNIT_PX,
+                        team_info,
+                        name_resolver,
+                        manager_color_map,
+                        _bracket_display_round_label(game, round_order, max_round_order, is_consolation),
+                        path_team_id,
+                    )
+                    for game, row in games_with_rows
+                )
+                st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{cards_html}</div>', unsafe_allow_html=True)
+
+                # One invisible, full-card-sized button per REAL matchup
+                # (skipped for byes - "only one side present" is the same
+                # test _bracket_game_card_html uses to decide bye vs real
+                # game), absolutely positioned over its card via the
+                # round_key position:relative root above - clicking
+                # anywhere on the card's area (not just a small button in
+                # the corner) jumps to that matchup on the Matchups page.
+                for game, row in games_with_rows:
+                    if bool(game["team_id_home"]) != bool(game["team_id_away"]):
+                        continue
+                    button_key = f"{round_key}_game_{game['bracket_position']}"
+                    top_px = BRACKET_HEADER_HEIGHT_PX + row * BRACKET_ROW_UNIT_PX
+                    st.markdown(
+                        f"<style>.st-key-{button_key} {{ position:absolute; top:{top_px}px; left:0; "
+                        f"width:100%; height:{BRACKET_CARD_HEIGHT_PX}px; z-index:1; }} "
+                        # A CSS height:100% only resolves if EVERY ancestor
+                        # in the chain down to the <button> itself also has
+                        # an explicit height - Streamlit wraps a button in
+                        # its own stElementContainer/stButton divs (both
+                        # height:auto by default), so each of those needs
+                        # height:100% too, or only the outer key div above
+                        # ends up correctly sized while the real clickable
+                        # <button> stays its tiny natural size (confirmed
+                        # live: outer div was the full 298x190 card, but
+                        # the button inside was still only 26x40).
+                        f".st-key-{button_key} div {{ height:100%; width:100%; }} "
+                        f".st-key-{button_key} button {{ width:100%; height:100%; opacity:0; cursor:pointer; }}</style>",
+                        unsafe_allow_html=True,
+                    )
+                    with st.container(key=button_key):
+                        if st.button(" ", key=f"{button_key}_button"):
+                            # game["week_label"] is "Week 15" - same
+                            # format data_loader.py's own (private,
+                            # module-local) _week_label_to_number parses,
+                            # not importable across modules, so parsed
+                            # inline here instead.
+                            week = int(game["week_label"].removeprefix("Week ").strip())
+                            team1_manager_id = team_info.get(game["team_id_home"], {}).get("manager_id", "")
+                            team2_manager_id = team_info.get(game["team_id_away"], {}).get("manager_id", "")
+                            matchup_type = "consolation" if is_consolation else "championship"
+                            _go_to_matchup_from_schedule(season, week, team1_manager_id, team2_manager_id, matchup_type)
         column_index += 1
 
         if round_index < len(rounds_with_rows) - 1:
@@ -1340,12 +1422,12 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
     championship_tab, consolation_tab = st.tabs(["Championship", "Consolation"])
     with championship_tab:
         _render_bracket(
-            championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
+            season, championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
             path_team_id=championship_bracket.get("champion_team_id", ""),
         )
     with consolation_tab:
         _render_bracket(
-            consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
+            season, consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
             path_team_id=consolation_bracket.get("consolation_winner_team_id", ""),
         )
 
