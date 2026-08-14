@@ -591,7 +591,8 @@ def _render_issues_table(issues: list[dict]) -> None:
     with page_counter_column:
         # Labeled "Pagination" (not "Page") to avoid reading like a
         # second "Page" filter alongside the actual Page dropdown above.
-        page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="feedback_issues_page")
+        page = st.number_input("Pagination", min_value=1, max_value=total_pages, step=1, key="feedback_issues_page")
+        # NOTE ^ removing `value=1` resolves "The widget with key "feedback_issues_page" was created with a default value but also had its value set via the Session State API." since value is passed in via session state
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} issues)")
 
     start_index = (page - 1) * ISSUES_PAGE_SIZE
