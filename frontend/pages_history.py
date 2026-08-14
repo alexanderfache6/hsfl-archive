@@ -143,7 +143,7 @@ PER_SEASON_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against", "Pla
 PER_GAME_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against"}
 
 NORMALIZATION_LABELS = {"all_time": "All Time", "per_season": "Per Season", "per_game": "Per Game"}
-NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against (Per Season also covers Players Started)."
+NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against, Players Started."
 
 # ========================================
 # FUNCTIONS
@@ -448,8 +448,12 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
                 marker=dict(colors=colors),
                 textinfo="label+value",
                 customdata=years_text,
-                hovertemplate="%{label}<br>Championships: %{value}<br>Years: %{customdata}<extra></extra>",
+                hovertemplate="<b>%{label}</b><br>Championships: %{value}<br>Years: %{customdata}<extra></extra>",
                 showlegend=False,
+                # Plotly centers each line of hover text by default -
+                # left-align it instead, since "Years: 2019, 2021, 2023"
+                # reads better ragged-right than centered.
+                hoverlabel=dict(align="left"),
             )
         )
         pie_figure.update_layout(title="Championships by Manager", margin=dict(t=40, b=0, l=0, r=0))
@@ -487,32 +491,58 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             x=names,
             y=[row["third_place_count"] for row in bar_rows],
             marker_color=THIRD_PLACE_COLOR,
-            customdata=[f"3rd Place: {_years_label(row['third_place_years'], '☹️')}" for row in bar_rows],
-            hovertemplate="%{customdata}<extra></extra>",
+            hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Runner-Up",
             x=names,
             y=[row["runner_up_count"] for row in bar_rows],
             marker_color=RUNNER_UP_COLOR,
-            customdata=[f"Runner-Up: {_years_label(row['runner_up_years'], '😢')}" for row in bar_rows],
-            hovertemplate="%{customdata}<extra></extra>",
+            hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Champion",
             x=names,
             y=[row["champion_count"] for row in bar_rows],
             marker_color=CHAMPION_COLOR,
-            customdata=[f"Champion: {_years_label(row['champion_years'], '😭')}" for row in bar_rows],
+            hoverinfo="skip",
+        )
+        # A fourth, fully transparent bar stacked on top of the real three -
+        # its height is the manager's own total (so it exactly covers the
+        # visible stack for hover purposes) and it alone owns the tooltip
+        # (the three real traces above have hoverinfo="skip"). This is a
+        # workaround for x unified's shared hoverlabel font: Plotly's own
+        # header/row styling can't be bolded selectively (confirmed live -
+        # a layout-level bold bolds every row, a trace-level bold on just
+        # one real trace bolds nothing), but a single trace's own
+        # hovertemplate can freely mix "<b>...</b>" with plain text.
+        bar_figure.add_bar(
+            x=names,
+            # Explicit base=0 opts this trace OUT of automatic stacking
+            # positioning (which would otherwise draw it starting from
+            # the top of the real stack, at height 2x total) - y is each
+            # manager's own full stack height, so it overlays exactly
+            # the visible colored bar for hover purposes.
+            y=[row["champion_count"] + row["runner_up_count"] + row["third_place_count"] for row in bar_rows],
+            base=[0] * len(bar_rows),
+            marker=dict(color="rgba(0,0,0,0)"),
+            customdata=[
+                f"<b>{row['name']}</b><br>"
+                f"Champion: {_years_label(row['champion_years'], '😭')}<br>"
+                f"Runner-Up: {_years_label(row['runner_up_years'], '😢')}<br>"
+                f"3rd Place: {_years_label(row['third_place_years'], '☹️')}"
+                for row in bar_rows
+            ],
             hovertemplate="%{customdata}<extra></extra>",
+            showlegend=False,
         )
         bar_figure.update_layout(
             title="Podiums by Manager",
             barmode="stack",
-            hovermode="x unified",
+            hovermode="x",
             xaxis_title="Manager",
             xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
-            yaxis_title="Count",
+            yaxis_title="Trophy Count",
             yaxis=dict(tickformat="d", nticks=CHART_YAXIS_MAX_TICKS),  # counts are integers - no fractional ticks
             legend=dict(traceorder="reversed"),  # keep legend reading Champion/Runner-Up/3rd Place despite reversed trace order above
             margin=dict(t=40, b=0, l=0, r=0),
@@ -580,7 +610,7 @@ def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, st
 def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> None:
     with st.container(border=True):
         variant_suffix = st.selectbox(
-            "Streak type",
+            "Select Streak Variant",
             list(STREAK_VARIANTS),
             format_func=lambda suffix: STREAK_VARIANTS[suffix],
             key="streak_variant",
@@ -632,16 +662,15 @@ def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
 
 
 def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[str, str]) -> None:
-    st.subheader("Stats to Chart")
-    selectbox_column, normalization_column, tooltip_column = st.columns([3, 1, 0.2])
+    selectbox_column, normalization_column = st.columns([3, 1])
     with selectbox_column:
         selected_stat = st.selectbox(
-            "Stat to chart",
+            "Select Stat to View",
             MANAGER_STAT_COLUMNS,
             format_func=lambda column: MANAGER_STAT_FULL_LABELS[column],
             index=0,
             key="manager_stat_chart_selection",
-            label_visibility="collapsed",
+            # label_visibility="collapsed",
         )
         # The widget always has index=0 as a fallback, but a stale
         # session_state value from a prior rerun (e.g. before a code
@@ -674,17 +703,9 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
             normalization_options,
             format_func=lambda value: NORMALIZATION_LABELS[value],
             key="manager_stat_normalization",
-            label_visibility="collapsed",
+            # label_visibility="collapsed",
+            help=NORMALIZATION_HELP
         )
-    with tooltip_column:
-        # st.selectbox's built-in help icon renders next to its LABEL,
-        # which is collapsed here for layout reasons - so it silently
-        # disappears rather than just moving. st.popover gives a proper
-        # native Streamlit icon button (not a raw unicode glyph) that
-        # opens the same explanation on click, placed in its own narrow
-        # column to the dropdown's right.
-        with st.popover("ℹ️", use_container_width=False):
-            st.markdown(NORMALIZATION_HELP)
 
     selected_stat_label = MANAGER_STAT_FULL_LABELS[selected_stat]
 

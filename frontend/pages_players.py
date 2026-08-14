@@ -272,7 +272,7 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     for row in rows:
         total_games = row["starts"] + row["bench"]
         start_pct = (row["starts"] / total_games * 100) if total_games else 0.0
-        hover_text.append(f"{row['name']}<br>Starts: {row['starts']}<br>Bench: {row['bench']}<br>Start %: {start_pct:.1f}%")
+        hover_text.append(f"<b>{row['name']}</b><br>Starts: {row['starts']}<br>Bench: {row['bench']}<br>Start %: {start_pct:.1f}%")
 
     # Starter segment uses each manager's own color (same map as the
     # History pie chart / flow-chart nodes); bench stays a flat neutral
@@ -289,13 +289,14 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     figure.add_bar(name="Bench", x=names, y=[row["bench"] for row in rows], marker_color=BENCH_COLOR, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>")
     figure.add_bar(name="Starter", x=names, y=[row["starts"] for row in rows], marker_color=starter_colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>")
     figure.update_layout(
-        title="Starts vs Bench by Manager",
+        title="Starter vs Bench by Manager",
         barmode="stack",
         xaxis_title="Manager",
         xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis_title="Games",
+        yaxis_title="Fantasy Games",
         yaxis=dict(dtick=y_dtick, tickformat="d"),
         margin=dict(t=40, b=0, l=0, r=0),
+        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
     )
     st.plotly_chart(figure, width="stretch")
 
@@ -347,7 +348,6 @@ def _render_fantasy_points_per_game_chart(
     roster that week. Same x-axis/season-boundary-line treatment as the
     Matchups tab's Point Differential chart, since this is the same "one bar
     per game, chronological" shape."""
-    st.subheader("Fantasy Points per Game")
 
     full_game_list = _build_full_game_list(timeline, nfl_season_lengths)
     bye_weeks_by_season = _bye_weeks_by_season(player_id)
@@ -373,8 +373,8 @@ def _render_fantasy_points_per_game_chart(
         points.append(entry["points"])
         bar_color = manager_color_map.get(entry["manager_id"], STARTER_COLOR) if is_starter else BENCH_COLOR
         colors.append(bar_color)
-        hover_text.append(f"{entry['season']} · Week {entry['week']}<br>{manager_name}<br>{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}")
-        bye_hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Bye Week")
+        hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>{manager_name}<br>{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}")
+        bye_hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>Bye Week")
         if is_starter:
             legend_entries.setdefault(manager_name, bar_color)
         else:
@@ -449,9 +449,9 @@ def _render_fantasy_points_per_game_chart(
     figure.update_layout(
         title="Fantasy Points per Game",
         xaxis=dict(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
-        yaxis_title="Points",
+        yaxis_title="Fantasy Points",
         yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.6)", bordercolor="#888888", borderwidth=1),
+        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
         margin=dict(t=40, b=0, l=0, r=0),
     )
 
@@ -462,7 +462,25 @@ def _render_fantasy_points_per_game_chart(
     st.plotly_chart(figure, width="stretch")
 
 
-def _render_stat_chart(
+def _render_nfl_stat_metrics(timeline: list[dict], selected_stat_id: str, stat_label: str) -> None:
+    """Same "per Fantasy Start"/"per Fantasy Bench" pair as
+    _render_points_metrics above, for whichever raw NFL stat is
+    currently selected - unlike that Points version, values here are
+    NOT filtered to non-zero (a 0 rush yards or 0 receptions game is
+    real, common box-score data for a raw counting stat, not a stand-in
+    for a bye/injury the way a 0.00 fantasy-points game is)."""
+    starter_values = [float(entry.get("stats", {}).get(selected_stat_id, 0) or 0) for entry in timeline if entry["status"] == "starter"]
+    bench_values = [float(entry.get("stats", {}).get(selected_stat_id, 0) or 0) for entry in timeline if entry["status"] == "bench"]
+
+    stat_per_start = sum(starter_values) / len(starter_values) if starter_values else 0.0
+    stat_per_bench = sum(bench_values) / len(bench_values) if bench_values else 0.0
+
+    start_column, bench_column = st.columns(2)
+    start_column.metric(f"{stat_label} per Fantasy Start", f"{stat_per_start:.2f}")
+    bench_column.metric(f"{stat_label} per Fantasy Bench", f"{stat_per_bench:.2f}")
+
+
+def _render_nfl_stat_chart(
     timeline: list[dict], stat_id_labels: dict[str, str], nfl_season_lengths: dict[str, int], player_id: str, name_resolver: dict[str, str]
 ) -> None:
     """A dropdown-selected raw stat (Pass Yds, Rush TD, etc, decoded via
@@ -475,7 +493,6 @@ def _render_stat_chart(
     the Fantasy Points chart. Year-only x-ticks, dashed season-boundary
     lines, single flat gray for real games - not manager-colored, since
     this isn't about who owned the player."""
-    st.subheader("NFL Stats per Game")
 
     # Only stats this specific player actually has data for, in
     # stat_id_labels.json's own order (roughly passing -> rushing ->
@@ -487,15 +504,16 @@ def _render_stat_chart(
         return
 
     selected_stat_id = st.selectbox(
-        "Stat to chart",
+        "Select NFL Stat to View",
         available_stat_ids,
         format_func=lambda stat_id: stat_id_labels.get(stat_id, stat_id),
         index=0,
         key="player_stat_chart_selection",
-        label_visibility="collapsed",
+        # label_visibility="collapsed",
     )
 
     stat_label = stat_id_labels.get(selected_stat_id, selected_stat_id)
+    _render_nfl_stat_metrics(timeline, selected_stat_id, stat_label)
     full_game_list = _build_full_game_list(timeline, nfl_season_lengths)
     bye_weeks_by_season = _bye_weeks_by_season(player_id)
 
@@ -513,8 +531,8 @@ def _render_stat_chart(
         value = float(entry.get("stats", {}).get(selected_stat_id, 0) or 0)
         values.append(value)
         colors.append(STAT_CHART_COLOR)
-        hover_text.append(f"{entry['season']} · Week {entry['week']}<br>{stat_label}: {value:g}")
-        bye_hover_text.append(f"{entry['season']} · Week {entry['week']}<br>Bye Week")
+        hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>{stat_label}: {value:g}")
+        bye_hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>Bye Week")
 
     x_positions = list(range(len(full_game_list)))
     positions_by_season: dict[int, list[int]] = {}
@@ -542,7 +560,7 @@ def _render_stat_chart(
         xaxis=dict(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
         yaxis_title=stat_label,
         yaxis=y_axis_config,
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.6)", bordercolor="#888888", borderwidth=1),
+        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
         margin=dict(t=40, b=0, l=0, r=0),
     )
     for index, entry in enumerate(full_game_list):
@@ -621,11 +639,11 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
 
     nfl_games_column, games_column, starts_column, bench_column, start_pct_column, managers_column = st.columns(6)
     nfl_games_column.metric("NFL Games", nfl_games, help=NFL_GAMES_HELP)
-    games_column.metric("Fantasy Games", len(timeline))
-    starts_column.metric("Fantasy Starts", starts)
-    bench_column.metric("Fantasy Bench", bench)
-    start_pct_column.metric("Fantasy Start %", f"{start_pct:.1%}")
-    managers_column.metric("Fantasy Managers", managers)
+    games_column.metric("Fantasy Games", len(timeline), help="Number of appearances on a fantasy roster.")
+    starts_column.metric("Fantasy Starts", starts, help="Number of fantasy appearances as a starter.")
+    bench_column.metric("Fantasy Bench", bench, help="Number fantasy appearances on bench.")
+    start_pct_column.metric("Fantasy Start %", f"{start_pct:.1%}", help="Fantasy start percentage.")
+    managers_column.metric("Fantasy Managers", managers, help="Number of fantasy managers who had player on roster.")
 
 
 def render_players_page() -> None:
@@ -736,15 +754,9 @@ def render_players_page() -> None:
     stints = _build_ownership_stints(timeline)
 
     st.subheader(f"{player_names_by_id[selected_player_id]} ({players_data[selected_player_id]['position']})")
-    st.divider()
     _render_summary_metrics(timeline, nfl_season_lengths)
-    st.divider()
     _render_manager_summary_chart(stints, name_resolver, manager_color_map)
-    st.divider()
     _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}", player_id=selected_player_id)
-    st.divider()
     _render_points_metrics(timeline, selected_player_id)
-    st.divider()
     _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id)
-    st.divider()
-    _render_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)
+    _render_nfl_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)

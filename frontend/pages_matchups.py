@@ -500,7 +500,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         diffs.append(diff)
         colors.append(manager1_color if diff > 0 else BENCH_COLOR)
         hover_text.append(
-            f"{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}"
+            f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b>"
             f"<br>{manager1_name} vs {manager2_name}"
             f"<br>{team1_side['team_name']} vs {team2_side['team_name']}"
             f"<br>{team1_side['score']:g} vs {team2_side['score']:g}"
@@ -795,9 +795,7 @@ def render_matchups_page() -> None:
         return
 
     _render_filter_description(applied_filters, name_resolver)
-    st.divider()
     _render_aggregate(matchups, applied_filters["team1_manager_id"])
-    st.divider()
     _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
     st.divider()
 

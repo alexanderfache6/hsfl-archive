@@ -649,7 +649,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         y=opened_values,
         marker_color=ISSUES_OPENED_COLOR,
         customdata=closed_values,
-        hovertemplate="Date: %{x}<br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
+        hovertemplate="<b>%{x}</b><br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
     figure.add_bar(
         name="Closed",
@@ -657,9 +657,10 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         y=closed_values,
         marker_color=ISSUES_CLOSED_COLOR,
         customdata=opened_values,
-        hovertemplate="Date: %{x}<br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
+        hovertemplate="<b>%{x}</b><br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
     figure.update_layout(
+        title="Number of Issues",
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",

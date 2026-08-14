@@ -533,7 +533,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
     if not weekly_tables:
         return
 
-    selected_stat = st.selectbox("Stat to chart", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
+    selected_stat = st.selectbox("Select Stat to View", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]
@@ -570,7 +570,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
                 customdata=custom_data,
                 hovertemplate=(
-                    "Manager: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "W-L-T: %{customdata[1]}<br>"
                     "Week Result: %{customdata[2]}<br>"
                     f"Cumulative {selected_stat}: " + "%{customdata[3]}"
@@ -580,6 +580,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
         )
 
     figure.update_layout(
+        title=f"Cumulative {selected_stat}",
         xaxis_title="Week",
         yaxis_title=f"Cumulative {selected_stat}",
         xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
@@ -707,7 +708,7 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
                 customdata=custom_data,
                 hovertemplate=(
-                    "Manager: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "Cumulative Breakdown: %{customdata[1]}<br>"
                     "Week Breakdown: %{customdata[2]}<br>"
                     "Breakdown %: %{customdata[3]}"
@@ -717,6 +718,7 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
         )
 
     figure.update_layout(
+        title="Cumulative Overall Breakdown %",
         xaxis_title="Week",
         yaxis_title="Overall Breakdown %",
         xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
@@ -822,7 +824,7 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
                 line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
                 customdata=custom_data,
                 hovertemplate=(
-                    "Manager: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "Cumulative Coach: %{customdata[1]}<br>"
                     "Week Coach: %{customdata[2]}"
                     "<extra></extra>"
@@ -831,6 +833,7 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
         )
 
     figure.update_layout(
+        title="Cumulative Coaching Difference",
         xaxis_title="Week",
         yaxis_title="Cumulative Coaching Difference",
         xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
@@ -869,7 +872,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
             scores.append(row["true_ranking_score"])
             custom_data.append(
                 [
-                    team_label,
+                    manager_name,
                     row["true_ranking_score"],
                     row["record_rank"],
                     row["points_for_rank"],
@@ -887,8 +890,9 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
                 customdata=custom_data,
                 hovertemplate=(
-                    "Team: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "True Rank: %{customdata[1]}<br>"
+                    "---"
                     "Record Rank: %{customdata[2]}<br>"
                     "Points For Rank: %{customdata[3]}<br>"
                     "Breakdown Rank: %{customdata[4]}<br>"
@@ -899,6 +903,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
         )
 
     figure.update_layout(
+        title="Cumulative True Ranking Score",
         xaxis_title="Week",
         yaxis_title="True Ranking Score",
         xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
@@ -1105,6 +1110,8 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         # Feedback tab's Issues table - keeps it distinct from any
         # "Page" filter elsewhere in the app.
         page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
+
+    _render_transactions_metrics(chart_rows)
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} transactions)")
 
     start_index = (page - 1) * TRANSACTIONS_PAGE_SIZE
@@ -1128,12 +1135,10 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         },
     )
 
-    _render_transactions_metrics(chart_rows)
     _render_transactions_chart(chart_rows)
 
 
 def _render_transactions_metrics(chart_rows: list[dict]) -> None:
-    st.divider()
     total_column, add_column, drop_column, lm_column, lineup_column, trade_column = st.columns(6)
     type_counts = pd.Series([row["type"] for row in chart_rows]).value_counts()
     total_column.metric("# Transactions", len(chart_rows))
@@ -1142,7 +1147,6 @@ def _render_transactions_metrics(chart_rows: list[dict]) -> None:
     lm_column.metric("# LM", int(type_counts.get("LM", 0)))
     lineup_column.metric("# Lineup", int(type_counts.get("Lineup", 0)))
     trade_column.metric("# Trade", int(type_counts.get("Trade", 0)))
-    st.divider()
 
 
 def _render_transactions_chart(chart_rows: list[dict]) -> None:
@@ -1169,6 +1173,7 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
         )
 
     figure.update_layout(
+        title="Transaction Count",
         barmode="stack",
         xaxis_title="Date",
         yaxis_title="Transaction Count",
@@ -1825,7 +1830,7 @@ def render_seasons_page() -> None:
     # Single mandatory season (not an "Any" filter like Players/Games -
     # this whole tab is inherently scoped to one season at a time),
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Season", seasons, index=len(seasons) - 1, key="seasons_season")
+    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")
 
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()

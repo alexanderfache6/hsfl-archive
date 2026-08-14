@@ -26,7 +26,7 @@ MODAL_CONTEXT_KEY = "_player_stats_modal_context"
 # ========================================
 
 
-@st.dialog("Player Stats")
+@st.dialog("Player Game Stats")
 def _render_player_stats_dialog() -> None:
     context = st.session_state.get(MODAL_CONTEXT_KEY)
     if not context:
@@ -64,7 +64,7 @@ def _render_player_stats_dialog() -> None:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Fantasy Points include each stat line's own scoring contribution, decoded from that season's league rules. Some components such as PPR are not yet integrated."
+        "*Fantasy Points include each stat line's own scoring contribution, decoded from that season's league rules. Some components such as PPR are not yet integrated."
     )
 
 
