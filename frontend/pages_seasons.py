@@ -975,8 +975,6 @@ def _render_true_ranking_table(season: int, name_resolver: dict[str, str]) -> No
 
 
 def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> None:
-    st.subheader("Transactions")
-
     transactions = load_transactions(season)["transactions"]
     if not transactions:
         st.info("No transactions recorded for this season.")
@@ -1166,6 +1164,59 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
         hoverlabel=dict(namelength=-1),
     )
     st.plotly_chart(figure, width="stretch")
+
+
+def _render_miscellaneous_table(season: int, name_resolver: dict[str, str]) -> None:
+    """Strength of Schedule: each manager's average opponent win% across
+    the regular season, aggregated cumulatively as more weeks are
+    played - each week's opponent win% is that opponent's own
+    cumulative win_pct through that week (weekly_tables.json's
+    standings rows are already running totals, same source
+    _render_standings_table uses), so a team's SoS updates week over
+    week as their schedule unfolds, exactly like the Standings tab's
+    other cumulative columns."""
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    if not weekly_tables:
+        st.info("No standings available for this season yet.")
+        return
+
+    win_pct_by_week_and_team = {week_table["week"]: {row["team_id"]: row["win_pct"] for row in week_table["standings"]} for week_table in weekly_tables}
+
+    regular_season_matchups = load_matchups(season, None, None, None, "regular")
+
+    opponent_win_pcts_by_team: dict[str, list[float]] = {}
+    for matchup in regular_season_matchups:
+        week_win_pcts = win_pct_by_week_and_team.get(matchup["week"], {})
+        home_team_id = matchup["home"]["team_id"]
+        away_team_id = matchup["away"]["team_id"]
+        home_win_pct = week_win_pcts.get(home_team_id)
+        away_win_pct = week_win_pcts.get(away_team_id)
+        if home_win_pct is None or away_win_pct is None:
+            continue
+        opponent_win_pcts_by_team.setdefault(home_team_id, []).append(away_win_pct)
+        opponent_win_pcts_by_team.setdefault(away_team_id, []).append(home_win_pct)
+
+    current_standings = weekly_tables[-1]["standings"]
+    team_info = team_id_to_manager_map(season)
+
+    rows = []
+    for row in current_standings:
+        info = team_info.get(row["team_id"], {})
+        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+        opponent_win_pcts = opponent_win_pcts_by_team.get(row["team_id"], [])
+        strength_of_schedule = sum(opponent_win_pcts) / len(opponent_win_pcts) if opponent_win_pcts else 0.0
+        rows.append({"Managers": manager_name, "Strength of Schedule": strength_of_schedule})
+    dataframe = pd.DataFrame(rows).sort_values("Strength of Schedule", ascending=False)
+
+    st.dataframe(
+        dataframe,
+        hide_index=True,
+        width="stretch",
+        height=_full_table_height(len(dataframe)),
+        column_config={
+            "Strength of Schedule": st.column_config.NumberColumn(format="%.3f"),
+        },
+    )
 
 
 def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
@@ -1684,8 +1735,8 @@ def render_seasons_page() -> None:
                     _render_schedule_week(selected_season, week, name_resolver, manager_color_map)
 
     with regular_season_tab:
-        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab = st.tabs(
-            ["Standings", "Breakdown", "Coach", "True Ranking", "Transactions"]
+        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab, miscellaneous_tab = st.tabs(
+            ["Standings", "Breakdown", "Coach", "True Ranking", "Transactions", "Miscellaneous"]
         )
         with standings_tab:
             _render_standings_table(selected_season, name_resolver)
@@ -1701,6 +1752,8 @@ def render_seasons_page() -> None:
             _render_true_ranking_chart(selected_season, name_resolver, manager_color_map)
         with transactions_tab:
             _render_transactions_table(selected_season, name_resolver)
+        with miscellaneous_tab:
+            _render_miscellaneous_table(selected_season, name_resolver)
 
     with post_season_tab:
         bracket_tab, final_standings_tab = st.tabs(["Bracket", "Bracket Standings"])
