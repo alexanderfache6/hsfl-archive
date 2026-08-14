@@ -11,3 +11,5 @@ CHART_LEGEND_TOP_RIGHT = {
     "bordercolor": "#888888",
     "borderwidth": 1,
 }
+
+SCATTER_PLOT_MARKER_SIZE = 8

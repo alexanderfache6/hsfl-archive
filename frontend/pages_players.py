@@ -11,7 +11,7 @@ starts vs bench per manager. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from constants import CHART_LEGEND_TOP_RIGHT
+from constants import CHART_LEGEND_TOP_RIGHT, SCATTER_PLOT_MARKER_SIZE
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -51,8 +51,6 @@ PERCENTILE_METRIC_LABELS = {"total": "Total Fantasy Points", "per_game": "Per Ga
 # for THIS player's own missed games (injury, suspension, etc) - a
 # player who missed real games still shows the full season length here.
 NFL_GAMES_PLAYED_HELP = "That season's NFL schedule length - not yet adjusted for this player's own injuries/missed games."
-
-MARKER_SIZE = 8
 
 NODE_X_SPACING = 260
 
@@ -485,13 +483,13 @@ def _render_fantasy_points_per_game_chart(
     # name/color key instead, one per manager who started this player at
     # least once, plus "Bench"/"Not on a Fantasy Roster" if applicable.
     for manager_name, color in legend_entries.items():
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": color}, name=manager_name, showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": color}, name=manager_name, showlegend=True)
     if has_bench:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": BENCH_COLOR}, name="Bench", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": BENCH_COLOR}, name="Bench", showlegend=True)
     if any(is_bye_week):
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": BYE_WEEK_COLOR}, name="Bye Week", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": BYE_WEEK_COLOR}, name="Bye Week", showlegend=True)
     if has_unrostered:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": UNROSTERED_GAME_COLOR}, name="Not on a Fantasy Roster", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": UNROSTERED_GAME_COLOR}, name="Not on a Fantasy Roster", showlegend=True)
 
     # A 0-height bar has no height to hover over, so it's otherwise
     # unreachable - a marker dot at y=0 (same color/hover text as the bar
@@ -506,7 +504,7 @@ def _render_fantasy_points_per_game_chart(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker={"size": MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": "#333333"}},
+            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": "#333333"}},
             customdata=[hover_text[i] for i in zero_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -523,7 +521,7 @@ def _render_fantasy_points_per_game_chart(
             x=[x_positions[i] for i in bye_indices],
             y=[points[i] for i in bye_indices],
             mode="markers",
-            marker={"size": MARKER_SIZE, "color": BYE_WEEK_COLOR, "line": {"width": 1, "color": "#333333"}},
+            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": BYE_WEEK_COLOR, "line": {"width": 1, "color": "#333333"}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -654,12 +652,12 @@ def _render_percentiles_tab(
     figure = go.Figure()
     figure.add_scatter(
         x=other_x, y=other_y, mode="markers", name="Other Players",
-        marker={"size": MARKER_SIZE, "color": PERCENTILE_OTHER_COLOR, "opacity": 0.5},
+        marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": PERCENTILE_OTHER_COLOR, "opacity": 0.5},
         customdata=other_hover, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.add_scatter(
         x=selected_x, y=selected_y, mode="markers", name=player_names_by_id[selected_player_id],
-        marker={"size": MARKER_SIZE, "color": PERCENTILE_SELECTED_COLOR, "line": {"width": 1, "color": "#333333"}},
+        marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": PERCENTILE_SELECTED_COLOR, "line": {"width": 1, "color": "#333333"}},
         customdata=selected_hover, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
@@ -782,10 +780,11 @@ def _render_nfl_stat_chart(
     figure = go.Figure(
         go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False)
     )
+    figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": STAT_CHART_COLOR}, name=stat_label, showlegend=True)
     if any(is_bye_week):
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": BYE_WEEK_COLOR}, name="Bye Week", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": BYE_WEEK_COLOR}, name="Bye Week", showlegend=True)
     if has_unrostered:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": UNROSTERED_GAME_COLOR}, name="Not on a Fantasy Roster", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": UNROSTERED_GAME_COLOR}, name="Not on a Fantasy Roster", showlegend=True)
     figure.update_layout(
         title=f"{stat_label} per Game",
         xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
@@ -810,7 +809,7 @@ def _render_nfl_stat_chart(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker={"size": MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": "#333333"}},
+            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": "#333333"}},
             customdata=[hover_text[i] for i in zero_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -827,7 +826,7 @@ def _render_nfl_stat_chart(
             x=[x_positions[i] for i in bye_indices],
             y=[values[i] for i in bye_indices],
             mode="markers",
-            marker={"size": MARKER_SIZE, "color": BYE_WEEK_COLOR, "line": {"width": 1, "color": "#333333"}},
+            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": BYE_WEEK_COLOR, "line": {"width": 1, "color": "#333333"}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
