@@ -33,7 +33,7 @@ PARSED_DIRECTORY = ARCHIVE_DIRECTORY / "parsed"
 STATS_AGGREGATION_DIRECTORY = PROJECT_ROOT_DIRECTORY / "code" / "stats-aggregation"
 if str(STATS_AGGREGATION_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(STATS_AGGREGATION_DIRECTORY))
-from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup  # noqa: E402
+from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup
 
 # Standard 12-color ColorBrewer "Paired" qualitative palette - not
 # available under plotly.express.colors.qualitative by this name (that

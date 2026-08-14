@@ -15,6 +15,7 @@ See execution-plan.md Phase G.
 
 import plotly.graph_objects as go
 import streamlit as st
+from constants import CHART_LEGEND_TOP_RIGHT
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -552,7 +553,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         xaxis={"title": "Season / Week", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
-        legend={"x": 1, "y": 1, "xanchor": "right", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.5)", "bordercolor": "#888888", "borderwidth": 1},
+        legend=CHART_LEGEND_TOP_RIGHT,
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
 
