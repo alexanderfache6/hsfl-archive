@@ -573,6 +573,18 @@ def _calculate_percentile(peer_rows, selected_row, metric):
     percentile = sum(1 for value in all_values if value <= selected_row[metric]) / len(all_values) * 100
     return percentile
 
+
+def _calculate_rank(peer_rows, selected_row, metric):
+    """1-indexed rank among peer_rows (ties share the best rank), 1 =
+    highest value at this metric."""
+    return sum(1 for row in peer_rows if row[metric] > selected_row[metric]) + 1
+
+
+def _format_rank(rank: int) -> str:
+    if rank > PERCENTILE_MAX_OTHER_DOTS_PER_SEASON:
+        return f"{PERCENTILE_MAX_OTHER_DOTS_PER_SEASON}+"
+    return str(rank)
+
 def _render_percentiles_tab(
     selected_player_id: str,
     seasons: list[int],
@@ -615,31 +627,45 @@ def _render_percentiles_tab(
         other_rows.sort(key=lambda row: row[metric], reverse=True)
         other_rows = other_rows[:PERCENTILE_MAX_OTHER_DOTS_PER_SEASON]
 
+        # Rank/percentile for every dot - even the capped/displayed
+        # "Other Players" ones - is computed against the FULL qualified
+        # peer_rows for that season, not just the capped top-100 subset.
         for row in other_rows:
             other_x.append(season)
             other_y.append(row[metric])
-            other_hover.append(f"<b>{row['name']}</b><br>{season}<br>{PERCENTILE_METRIC_LABELS[metric]}: {row[metric]:.2f}")
+            other_rank = _calculate_rank(peer_rows, row, metric)
+            other_percentile = _calculate_percentile(peer_rows, row, metric)
+            other_hover.append(
+                f"<b>{row['name']}</b><br>{season}<br>"
+                f"{PERCENTILE_METRIC_LABELS[metric]}: {row[metric]:.2f}<br>"
+                f"Rank: {_format_rank(other_rank)}/{len(peer_rows)}<br>"
+                f"Percentile: {other_percentile:.0f}"
+            )
 
         if selected_row:
             # Percentile rank against EVERY qualified peer that season
             # (not just the capped/displayed top 100) - the fraction of
             # peers this player's value is >= to.
             percentile = _calculate_percentile(peer_rows, selected_row, metric)
+            rank = _calculate_rank(peer_rows, selected_row, metric)
             selected_x.append(season)
             selected_y.append(selected_row[metric])
             selected_hover.append(
                 f"<b>{player_names_by_id[selected_player_id]}</b><br>"
                 f"{season}<br>"
                 f"{PERCENTILE_METRIC_LABELS[metric]}: {selected_row[metric]:.2f}<br>"
+                f"Rank: {_format_rank(rank)}/{len(peer_rows)}<br>"
                 f"Percentile: {percentile:.0f}"
             )
             table_rows.append(
                 {
                     "Season": season,
                     "Total Fantasy Points": selected_row["total"],
-                    "Total Fantasy Points Percentile": f"{_calculate_percentile(peer_rows, selected_row, 'total'):.0f}%",
+                    "Total Fantasy Points Rank": f"{_format_rank(_calculate_rank(peer_rows, selected_row, 'total'))}/{len(peer_rows)}",
+                    "Total Fantasy Points Percentile": f"{_calculate_percentile(peer_rows, selected_row, 'total'):.0f}",
                     "Per Game Fantasy Points": selected_row["per_game"],
-                    "Per Game Fantasy Points Percentile": f"{_calculate_percentile(peer_rows, selected_row, 'per_game'):.0f}%",
+                    "Per Game Fantasy Points Rank": f"{_format_rank(_calculate_rank(peer_rows, selected_row, 'per_game'))}/{len(peer_rows)}",
+                    "Per Game Fantasy Points Percentile": f"{_calculate_percentile(peer_rows, selected_row, 'per_game'):.0f}",
                     "Fantasy Games Started": sum(1 for entry in timeline if entry["season"] == season and entry["status"] == "starter"),
                     "NFL Games Played": nfl_season_lengths.get(str(season), 0),
                 }
@@ -909,6 +935,8 @@ def render_players_page() -> None:
         if widget_key not in st.session_state and base_key in st.session_state:
             st.session_state[widget_key] = st.session_state[base_key]
 
+    st.warning(body="Note - stats are incomplete when a player was not on a fantasy roster (nfl/fantasy data not yet available). also missing are stats on injuries/suspensions", icon="ℹ️")
+
     player_column, season_column = st.columns(2)
     with player_column:
         selected_player_id = st.selectbox(
@@ -986,7 +1014,6 @@ def render_players_page() -> None:
 
     st.subheader(f"{player_names_by_id[selected_player_id]} ({players_data[selected_player_id]['position']})")
 
-    st.warning(body="Note - stats are incomplete when a player was not on a fantasy roster. also missing are stats on injuries/suspensions", icon="ℹ️")
 
     fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
