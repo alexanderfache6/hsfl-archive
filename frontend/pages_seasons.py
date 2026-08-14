@@ -12,6 +12,7 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from constants import RECORD_ROW_COLUMN_RATIOS
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -431,6 +432,182 @@ def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, 
 # ========================================
 # RENDER
 # ========================================
+
+
+def _season_margin_of_victory_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 3 greatest margins of victory, top 3 smallest margins of
+    victory) for this season - one entry per real matchup across every
+    matchup type (regular season and postseason alike, same "all"
+    matchup_type scope as the Matchups tab's own default filter)."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        home, away = matchup["home"], matchup["away"]
+        winner, loser = (home, away) if home["score"] >= away["score"] else (away, home)
+        entries.append(
+            {
+                "value": abs(home["score"] - away["score"]),
+                "season": season,
+                "week": matchup["week"],
+                "matchup_type": matchup["matchup_type"],
+                "winner_manager_id": winner["manager_id"],
+                "winner_display_name": winner["display_name"],
+                "winner_score": winner["score"],
+                "loser_manager_id": loser["manager_id"],
+                "loser_display_name": loser["display_name"],
+                "loser_score": loser["score"],
+            }
+        )
+    greatest = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:3]
+    smallest = sorted(entries, key=lambda entry: entry["value"])[:3]
+    return greatest, smallest
+
+
+def _season_total_score_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 3 highest scoring games, top 3 lowest scoring games) for this
+    season - "scoring" here is the combined score of both teams in a
+    matchup, same "all" matchup_type scope (regular + postseason) as
+    _season_margin_of_victory_records."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        home, away = matchup["home"], matchup["away"]
+        winner, loser = (home, away) if home["score"] >= away["score"] else (away, home)
+        entries.append(
+            {
+                "value": home["score"] + away["score"],
+                "season": season,
+                "week": matchup["week"],
+                "matchup_type": matchup["matchup_type"],
+                "winner_manager_id": winner["manager_id"],
+                "winner_display_name": winner["display_name"],
+                "winner_score": winner["score"],
+                "loser_manager_id": loser["manager_id"],
+                "loser_display_name": loser["display_name"],
+                "loser_score": loser["score"],
+            }
+        )
+    highest = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:3]
+    lowest = sorted(entries, key=lambda entry: entry["value"])[:3]
+    return highest, lowest
+
+
+def _season_player_start_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 5 best individual starter performances, top 5 worst) for this
+    season - one entry per starter slot across every matchup (regular
+    season and postseason alike, same "all" matchup_type scope as the
+    other Season Stats records)."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        for side, opponent in ((matchup["home"], matchup["away"]), (matchup["away"], matchup["home"])):
+            for starter in side["starters"]:
+                entries.append(
+                    {
+                        "value": starter["points"],
+                        "season": season,
+                        "week": matchup["week"],
+                        "matchup_type": matchup["matchup_type"],
+                        "player_name": starter["player_name"],
+                        "position": starter["position"],
+                        "manager_id": side["manager_id"],
+                        "display_name": side["display_name"],
+                        "opponent_manager_id": opponent["manager_id"],
+                    }
+                )
+    best = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:5]
+    worst = sorted(entries, key=lambda entry: entry["value"])[:5]
+    return best, worst
+
+
+def _render_player_start_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+    score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
+    manager_name = resolve_manager_name(entry["manager_id"], name_resolver, entry["display_name"])
+    with score_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            unsafe_allow_html=True,
+        )
+    with info_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{info_size}; color:gray;'>"
+            f"{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
+            unsafe_allow_html=True,
+        )
+    if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
+        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["manager_id"], entry["opponent_manager_id"], entry["matchup_type"])
+
+
+def _render_player_start_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str]) -> None:
+    st.markdown(f"<div style='font-size:1.15em; font-weight:600;'>{title}</div>", unsafe_allow_html=True)
+    if not top_n:
+        st.metric(title, "-", label_visibility="collapsed")
+        return
+
+    _render_player_start_row(key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    for ordinal, entry in zip(("2nd", "3rd", "4th", "5th"), top_n[1:]):
+        _render_player_start_row(key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
+
+
+def _render_season_stat_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+    # Same score/info/button column layout as the History tab's
+    # _render_record_row (see pages_history.py) - independently
+    # implemented here since this record is a two-manager matchup event
+    # (winner + loser), not a single-manager record.
+    score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
+    winner_name = resolve_manager_name(entry["winner_manager_id"], name_resolver, entry["winner_display_name"])
+    loser_name = resolve_manager_name(entry["loser_manager_id"], name_resolver, entry["loser_display_name"])
+    with score_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            unsafe_allow_html=True,
+        )
+    with info_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{info_size}; color:gray;'>"
+            f"{winner_name} defeated {loser_name} · Wk {entry['week']}</span></div>",
+            unsafe_allow_html=True,
+        )
+    if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
+        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["winner_manager_id"], entry["loser_manager_id"], entry["matchup_type"])
+
+
+def _render_season_stat_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str]) -> None:
+    st.markdown(f"<div style='font-size:1.15em; font-weight:600;'>{title}</div>", unsafe_allow_html=True)
+    if not top_n:
+        st.metric(title, "-", label_visibility="collapsed")
+        return
+
+    _render_season_stat_row(key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    for ordinal, entry in zip(("2nd", "3rd"), top_n[1:]):
+        _render_season_stat_row(key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
+
+
+def _render_season_stats_tab(season: int, name_resolver: dict[str, str]) -> None:
+    greatest_margins, smallest_margins = _season_margin_of_victory_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_season_stat_cell("greatest_margin", "Greatest Margin of Victory", greatest_margins, name_resolver)
+        with right_column:
+            _render_season_stat_cell("smallest_margin", "Smallest Margin of Victory", smallest_margins, name_resolver)
+
+    highest_scoring, lowest_scoring = _season_total_score_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_season_stat_cell("highest_scoring_game", "Highest Scoring Game", highest_scoring, name_resolver)
+        with right_column:
+            _render_season_stat_cell("lowest_scoring_game", "Lowest Scoring Game", lowest_scoring, name_resolver)
+
+    best_starts, worst_starts = _season_player_start_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_player_start_cell("best_player_start", "Best Player Starts", best_starts, name_resolver)
+        with right_column:
+            _render_player_start_cell("worst_player_start", "Worst Player Starts", worst_starts, name_resolver)
 
 
 def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
@@ -1916,14 +2093,17 @@ def render_seasons_page() -> None:
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
 
-    season_summary_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
-        ["Season Summary", "Schedule", "Regular Season", "Post Season", "Season Settings"]
+    season_summary_tab, season_stats_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
+        ["Season Summary", "Season Stats", "Schedule", "Regular Season", "Post Season", "Season Settings"]
     )
 
     with season_summary_tab:
         _render_season_podium(selected_season, name_resolver)
         st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
         _render_season_summary_table(selected_season, name_resolver)
+
+    with season_stats_tab:
+        _render_season_stats_tab(selected_season, name_resolver)
 
     with schedule_tab:
         # weekly_tables.json is already built from load_regular_season_weeks

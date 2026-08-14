@@ -13,3 +13,7 @@ CHART_LEGEND_TOP_RIGHT = {
 }
 
 SCATTER_PLOT_MARKER_SIZE = 8
+
+# score | info | button - top-3 record-cell row layout shared by the
+# History tab's all-time records and the Seasons tab's per-season stats.
+RECORD_ROW_COLUMN_RATIOS = [1.5, 4, 2]
