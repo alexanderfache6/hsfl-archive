@@ -8,6 +8,7 @@ starts vs bench per manager. See execution-plan.md Phase G.
 # IMPORTS
 # ========================================
 
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_flow import streamlit_flow
@@ -37,6 +38,18 @@ UNROSTERED_COLOR = "#888888"
 STARTER_COLOR = "#4C78A8"
 BENCH_COLOR = "#B0B0B0"
 STAT_CHART_COLOR = "#6B7280"
+
+# Percentiles tab scatter - every other qualified same-position player's
+# dot vs the selected player's own dot.
+PERCENTILE_OTHER_COLOR = "#888888"
+PERCENTILE_SELECTED_COLOR = "#D32F2F"
+PERCENTILE_MAX_OTHER_DOTS_PER_SEASON = 100
+
+PERCENTILE_METRIC_LABELS = {"total": "Total Fantasy Points", "per_game": "Per Game Fantasy Points"}
+# TODO: this is just that season's raw NFL schedule length, not adjusted
+# for THIS player's own missed games (injury, suspension, etc) - a
+# player who missed real games still shows the full season length here.
+NFL_GAMES_PLAYED_HELP = "That season's NFL schedule length - not yet adjusted for this player's own injuries/missed games."
 
 MARKER_SIZE = 8
 
@@ -463,6 +476,137 @@ def _render_fantasy_points_per_game_chart(
     st.plotly_chart(figure, width="stretch")
 
 
+def _peer_season_totals(position: str, season: int, players_data: dict, ownership_data: dict) -> list[dict]:
+    """{player_id, name, total, games, per_game} for every OTHER player at
+    this position with at least one roster entry that season - "at least
+    one entry" (not "at least one non-zero entry") is what "qualified"
+    means here, same as ownership_data's own definition of being on a
+    roster at all that week."""
+    rows = []
+    for player_id, info in players_data.items():
+        if info["position"] != position:
+            continue
+        season_entries = [entry for entry in ownership_data.get(player_id, []) if entry["season"] == season]
+        if not season_entries:
+            continue
+        total = sum(entry["points"] for entry in season_entries)
+        games = len(season_entries)
+        rows.append({"player_id": player_id, "name": info["name"], "total": total, "games": games, "per_game": total / games})
+    return rows
+
+
+def _render_percentiles_tab(
+    selected_player_id: str,
+    seasons: list[int],
+    players_data: dict,
+    ownership_data: dict,
+    player_names_by_id: dict[str, str],
+    timeline: list[dict],
+    nfl_season_lengths: dict[str, int],
+) -> None:
+    """Scatter: one dot per qualified same-position player per season
+    (their total or per-game points that season, selected via the
+    metric toggle below), gray for every other player and red for the
+    selected player - x-axis is Season, same "grouped at season level"
+    shape as the other per-game charts on this page, just aggregated to
+    one point per player per season instead of one point per game."""
+    selected_position = players_data[selected_player_id]["position"]
+
+    metric = st.selectbox(
+        "Select Metric",
+        list(PERCENTILE_METRIC_LABELS),
+        format_func=lambda value: PERCENTILE_METRIC_LABELS[value],
+        key="player_percentile_metric",
+    )
+
+    other_x, other_y, other_hover = [], [], []
+    selected_x, selected_y, selected_hover = [], [], []
+    table_rows = []
+    for season in seasons:
+        peer_rows = _peer_season_totals(selected_position, season, players_data, ownership_data)
+        if not peer_rows:
+            continue
+
+        selected_row = next((row for row in peer_rows if row["player_id"] == selected_player_id), None)
+        other_rows = [row for row in peer_rows if row["player_id"] != selected_player_id]
+
+        # Cap the OTHER players' dots to the top 100 (by the selected
+        # metric) per season if there are more than that - the selected
+        # player's own dot is never capped/excluded, since showing it is
+        # the entire point of this chart.
+        other_rows.sort(key=lambda row: row[metric], reverse=True)
+        other_rows = other_rows[:PERCENTILE_MAX_OTHER_DOTS_PER_SEASON]
+
+        for row in other_rows:
+            other_x.append(season)
+            other_y.append(row[metric])
+            other_hover.append(f"<b>{row['name']}</b><br>{season}<br>{PERCENTILE_METRIC_LABELS[metric]}: {row[metric]:.2f}")
+
+        if selected_row:
+            # Percentile rank against EVERY qualified peer that season
+            # (not just the capped/displayed top 100) - the fraction of
+            # peers this player's value is >= to.
+            all_values = [row[metric] for row in peer_rows]
+            percentile = sum(1 for value in all_values if value <= selected_row[metric]) / len(all_values) * 100
+            selected_x.append(season)
+            selected_y.append(selected_row[metric])
+            selected_hover.append(
+                f"<b>{player_names_by_id[selected_player_id]}</b><br>"
+                f"{season}<br>"
+                f"{PERCENTILE_METRIC_LABELS[metric]}: {selected_row[metric]:.2f}<br>"
+                f"Percentile: {percentile:.0f}"
+            )
+            table_rows.append(
+                {
+                    "Season": season,
+                    "Total Fantasy Points": selected_row["total"],
+                    "Per Game Fantasy Points": selected_row["per_game"],
+                    "Percentile": percentile,
+                    "Fantasy Games Started": sum(1 for entry in timeline if entry["season"] == season and entry["status"] == "starter"),
+                    "NFL Games Played": nfl_season_lengths.get(str(season), 0),
+                }
+            )
+
+    if not other_x and not selected_x:
+        st.info("No qualified same-position players found for this player's season(s).")
+        return
+
+    figure = go.Figure()
+    figure.add_scatter(
+        x=other_x, y=other_y, mode="markers", name="Other Players",
+        marker=dict(size=MARKER_SIZE, color=PERCENTILE_OTHER_COLOR, opacity=0.5),
+        customdata=other_hover, hovertemplate="%{customdata}<extra></extra>",
+    )
+    figure.add_scatter(
+        x=selected_x, y=selected_y, mode="markers", name=player_names_by_id[selected_player_id],
+        marker=dict(size=MARKER_SIZE, color=PERCENTILE_SELECTED_COLOR, line=dict(width=1, color="#333333")),
+        customdata=selected_hover, hovertemplate="%{customdata}<extra></extra>",
+    )
+    figure.update_layout(
+        title=f"{selected_position} {PERCENTILE_METRIC_LABELS[metric]} by Season",
+        xaxis=dict(title="Season", tickmode="array", tickvals=seasons, ticktext=[str(season) for season in seasons]),
+        yaxis_title=PERCENTILE_METRIC_LABELS[metric],
+        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
+        margin=dict(t=40, b=0, l=0, r=0),
+    )
+    st.plotly_chart(figure, width="stretch")
+
+    table_rows.sort(key=lambda row: row["Season"])
+    st.dataframe(
+        pd.DataFrame(table_rows),
+        hide_index=True,
+        width="stretch",
+        height=38 + 35 * len(table_rows),
+        column_config={
+            "Total Fantasy Points": st.column_config.NumberColumn(format="%.2f"),
+            "Per Game Fantasy Points": st.column_config.NumberColumn(format="%.2f"),
+            "Percentile": st.column_config.NumberColumn(format="%.0f"),
+            "NFL Games Played": st.column_config.NumberColumn(help=NFL_GAMES_PLAYED_HELP),
+        },
+    )
+
+
 def _render_nfl_stat_metrics(timeline: list[dict], selected_stat_id: str, stat_label: str) -> None:
     """Same "per Fantasy Start"/"per Fantasy Bench" pair as
     _render_points_metrics above, for whichever raw NFL stat is
@@ -756,7 +900,7 @@ def render_players_page() -> None:
 
     st.subheader(f"{player_names_by_id[selected_player_id]} ({players_data[selected_player_id]['position']})")
 
-    fantasy_stats_tab, nfl_stats_tab, managers_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats"])
+    fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
         _render_points_metrics(timeline, selected_player_id)
         _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id)
@@ -766,3 +910,6 @@ def render_players_page() -> None:
         _render_summary_metrics(timeline, nfl_season_lengths)
         _render_manager_summary_chart(stints, name_resolver, manager_color_map)
         _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}", player_id=selected_player_id)
+    with percentiles_tab:
+        seasons = sorted({entry["season"] for entry in timeline})
+        _render_percentiles_tab(selected_player_id, seasons, players_data, ownership_data, player_names_by_id, timeline, nfl_season_lengths)
