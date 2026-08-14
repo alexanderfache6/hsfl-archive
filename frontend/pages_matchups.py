@@ -15,7 +15,7 @@ See execution-plan.md Phase G.
 
 import plotly.graph_objects as go
 import streamlit as st
-
+from constants import CHART_LEGEND_TOP_RIGHT
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -550,11 +550,11 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     )
     figure.update_layout(
         title="Point Differential",
-        xaxis=dict(title="Season / Week", tickangle=tick_angle, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
+        xaxis={"title": "Season / Week", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
-        margin=dict(t=40, b=0, l=0, r=0),
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        legend=CHART_LEGEND_TOP_RIGHT,
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
 
     # With every season shown together (no Season filter), mark each

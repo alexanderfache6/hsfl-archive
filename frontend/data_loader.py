@@ -33,7 +33,7 @@ PARSED_DIRECTORY = ARCHIVE_DIRECTORY / "parsed"
 STATS_AGGREGATION_DIRECTORY = PROJECT_ROOT_DIRECTORY / "code" / "stats-aggregation"
 if str(STATS_AGGREGATION_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(STATS_AGGREGATION_DIRECTORY))
-from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup  # noqa: E402
+from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup
 
 # Standard 12-color ColorBrewer "Paired" qualitative palette - not
 # available under plotly.express.colors.qualitative by this name (that
@@ -306,7 +306,7 @@ def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, yea
     scoring_rules = load_metadata(year)["scoring_rules"]
 
     if stat_id == "stat_54" and position == "DEF":
-        for upper_bound, tier_key in POINTS_ALLOWED_TIERS:
+        for upper_bound, tier_key in POINTS_ALLOWED_TIERS: # DEF points allowed
             if value <= upper_bound:
                 rule_key = tier_key
                 break

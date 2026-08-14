@@ -12,7 +12,6 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -97,7 +96,7 @@ def _parse_transaction_date(date_text: str, season: int) -> datetime:
     (Aug-Dec) uses the season's own year."""
     month_text = date_text.split(" ", 1)[0]
     year = season + 1 if month_text == "Jan" else season
-    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")
+    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")  # noqa: DTZ007
 
 
 def _bracket_effective_winner(game: dict) -> str:
@@ -534,7 +533,7 @@ def _standings_stat_value(row: dict, stat: str) -> float | int:
     return round(row["points_for"] - row["points_against"], 2)  # "Point Difference"
 
 
-def _standings_stat_display(value: float | int, stat: str) -> str:
+def _standings_stat_display(value: float, stat: str) -> str:
     if stat == "Win %":
         return f"{value:.1f}%"
     if stat == "Streak":
@@ -591,7 +590,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 y=values,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -607,11 +606,11 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
         title=f"Cumulative {selected_stat}",
         xaxis_title="Week",
         yaxis_title=f"Cumulative {selected_stat}",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
         # Rank is lower-is-better - reverse so the top of the chart
         # visually matches "doing well", consistent with the Rank column
         # itself (1 = best).
-        yaxis=dict(autorange="reversed", nticks=CHART_YAXIS_MAX_TICKS) if selected_stat == "Rank" else dict(nticks=CHART_YAXIS_MAX_TICKS),
+        yaxis={"autorange": "reversed", "nticks": CHART_YAXIS_MAX_TICKS} if selected_stat == "Rank" else {"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -729,7 +728,7 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 y=percentages,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -745,8 +744,8 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
         title="Cumulative Overall Breakdown %",
         xaxis_title="Week",
         yaxis_title="Overall Breakdown %",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -845,7 +844,7 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
                 y=totals,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -860,8 +859,8 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
         title="Cumulative Coaching Difference",
         xaxis_title="Week",
         yaxis_title="Cumulative Coaching Difference",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -911,7 +910,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 y=scores,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -930,8 +929,8 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
         title="Cumulative True Ranking Score",
         xaxis_title="Week",
         yaxis_title="True Ranking Score",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis=dict(range=[0, 40], nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
+        yaxis={"range": [0, 40], "nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -1203,13 +1202,13 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
         yaxis_title="Transaction Count",
         # nticks caps the y-axis at ~10 gridlines regardless of the max
         # stacked count - plotly still snaps to "nice" integer steps.
-        yaxis=dict(tickmode="auto", nticks=CHART_YAXIS_MAX_TICKS, tick0=0),
+        yaxis={"tickmode": "auto", "nticks": CHART_YAXIS_MAX_TICKS, "tick0": 0},
         # Same cap on the date axis - a season with many transaction
         # dates would otherwise show one label per date.
-        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         legend_title_text="Type",
         hovermode="x unified",
-        hoverlabel=dict(namelength=-1),
+        hoverlabel={"namelength": -1},
     )
     st.plotly_chart(figure, width="stretch")
 
