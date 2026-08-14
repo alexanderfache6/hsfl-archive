@@ -20,7 +20,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import requests
 import streamlit as st
-
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
 
 # ========================================
@@ -97,7 +96,7 @@ ISSUES_CLOSED_COLOR = "#1E88E5"
 def _github_issues_token() -> str:
     try:
         return st.secrets.get("GITHUB_ISSUES_TOKEN", "")
-    except Exception:
+    except Exception:  # noqa: BLE001
         return ""
 
 
@@ -108,7 +107,7 @@ def _github_feedback_token() -> str:
     issue-creation token never needs contents-write permission."""
     try:
         return st.secrets.get("GITHUB_FEEDBACK_TOKEN", "")
-    except Exception:
+    except Exception:  # noqa: BLE001
         return ""
 
 
@@ -664,8 +663,8 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",
-        xaxis=dict(type="category", nticks=CHART_XAXIS_MAX_TICKS),  # plain "yyyy-mm-dd" tick labels, no time-of-day
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"type": "category", "nticks": CHART_XAXIS_MAX_TICKS},  # plain "yyyy-mm-dd" tick labels, no time-of-day
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="",
     )
     st.plotly_chart(figure, width="stretch")

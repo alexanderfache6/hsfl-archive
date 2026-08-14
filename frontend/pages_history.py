@@ -10,7 +10,6 @@ across every season in the archive. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -445,7 +444,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
                 sort=False,  # preserve our own count-then-recency order, not plotly's default value sort
                 rotation=0,  # first slice starts at 12 o'clock
                 direction="clockwise",
-                marker=dict(colors=colors),
+                marker={"colors": colors},
                 textinfo="label+value",
                 customdata=years_text,
                 hovertemplate="<b>%{label}</b><br>Championships: %{value}<br>Years: %{customdata}<extra></extra>",
@@ -453,10 +452,10 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
                 # Plotly centers each line of hover text by default -
                 # left-align it instead, since "Years: 2019, 2021, 2023"
                 # reads better ragged-right than centered.
-                hoverlabel=dict(align="left"),
+                hoverlabel={"align": "left"},
             )
         )
-        pie_figure.update_layout(title="Championships by Manager", margin=dict(t=40, b=0, l=0, r=0))
+        pie_figure.update_layout(title="Championships by Manager", margin={"t": 40, "b": 0, "l": 0, "r": 0})
         st.plotly_chart(pie_figure, width="stretch")
 
     with bar_column:
@@ -525,7 +524,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             # the visible colored bar for hover purposes.
             y=[row["champion_count"] + row["runner_up_count"] + row["third_place_count"] for row in bar_rows],
             base=[0] * len(bar_rows),
-            marker=dict(color="rgba(0,0,0,0)"),
+            marker={"color": "rgba(0,0,0,0)"},
             customdata=[
                 f"<b>{row['name']}</b><br>"
                 f"Champion: {_years_label(row['champion_years'], '😭')}<br>"
@@ -541,11 +540,11 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             barmode="stack",
             hovermode="x",
             xaxis_title="Manager",
-            xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
+            xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
             yaxis_title="Trophy Count",
-            yaxis=dict(tickformat="d", nticks=CHART_YAXIS_MAX_TICKS),  # counts are integers - no fractional ticks
-            legend=dict(traceorder="reversed"),  # keep legend reading Champion/Runner-Up/3rd Place despite reversed trace order above
-            margin=dict(t=40, b=0, l=0, r=0),
+            yaxis={"tickformat": "d", "nticks": CHART_YAXIS_MAX_TICKS},  # counts are integers - no fractional ticks
+            legend={"traceorder": "reversed"},  # keep legend reading Champion/Runner-Up/3rd Place despite reversed trace order above
+            margin={"t": 40, "b": 0, "l": 0, "r": 0},
         )
         st.plotly_chart(bar_figure, width="stretch")
 
@@ -736,10 +735,10 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
     stat_figure.update_layout(
         title=f"{selected_stat_label} by Manager",
         xaxis_title="Manager",
-        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         yaxis_title=selected_stat_label,
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
-        margin=dict(t=40, b=0, l=0, r=0),
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     st.plotly_chart(stat_figure, width="stretch")
 
