@@ -997,6 +997,17 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     min_date, max_date = min(all_dates).date(), max(all_dates).date()
     transaction_types = sorted({t["type"] for t in transactions})
 
+    # Versioned widget keys (base name + a generation counter), same
+    # pattern/reasoning as pages_matchups.py's _render_filters - a plain
+    # session_state.pop() + rerun left these widgets visibly showing their
+    # old selections in some browsers, since the underlying component was
+    # never actually remounted. Clear Filters below bumps the counter
+    # instead, forcing brand-new widget instances.
+    generation = st.session_state.setdefault("seasons_transactions_filters_generation", 0)
+
+    def versioned_key(base_key: str) -> str:
+        return f"{base_key}_gen{generation}"
+
     team_column, type_column, date_column, page_column = st.columns(4)
     with team_column:
         selected_team = st.selectbox(
@@ -1004,24 +1015,31 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
             sorted(set(manager_name_by_id.values())),
             index=None,
             placeholder="Any",
-            key="seasons_transactions_team",
+            key=versioned_key("seasons_transactions_team"),
         )
     with type_column:
         selected_type = st.selectbox(
-            "Transaction",
+            "Transaction Type",
             transaction_types,
             index=None,
             placeholder="Any",
-            key="seasons_transactions_type",
+            key=versioned_key("seasons_transactions_type"),
         )
     with date_column:
         selected_range = st.date_input(
-            "Date range",
+            "Date Range",
             value=(min_date, max_date),
             min_value=min_date,
             max_value=max_date,
-            key="seasons_transactions_date_range",
+            key=versioned_key("seasons_transactions_date_range"),
         )
+
+    clear_col, _ = st.columns([1, 7])
+    with clear_col:
+        if st.button("Clear Filters", key="seasons_transactions_clear", use_container_width=True):
+            st.session_state["seasons_transactions_filters_generation"] = generation + 1
+            st.session_state["seasons_transactions_page"] = 1
+            st.rerun()
 
     # st.date_input returns a single date while the user has only picked
     # one end of the range yet (before their second click) - skip
