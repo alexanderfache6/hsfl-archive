@@ -11,11 +11,7 @@ starts vs bench per manager. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from streamlit_flow import streamlit_flow
-from streamlit_flow.elements import StreamlitFlowEdge, StreamlitFlowNode
-from streamlit_flow.layouts import ManualLayout
-from streamlit_flow.state import StreamlitFlowState
-
+from constants import CHART_LEGEND_TOP_RIGHT
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -29,6 +25,10 @@ from data_loader import (
     player_nfl_team_by_season,
     resolve_manager_name,
 )
+from streamlit_flow import streamlit_flow
+from streamlit_flow.elements import StreamlitFlowEdge, StreamlitFlowNode
+from streamlit_flow.layouts import ManualLayout
+from streamlit_flow.state import StreamlitFlowState
 
 # ========================================
 # CONSTANTS
@@ -306,11 +306,11 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
         title="Starter vs Bench by Manager",
         barmode="stack",
         xaxis_title="Manager",
-        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         yaxis_title="Fantasy Games",
-        yaxis=dict(dtick=y_dtick, tickformat="d"),
-        margin=dict(t=40, b=0, l=0, r=0),
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
+        yaxis={"dtick": y_dtick, "tickformat": "d"},
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
+        legend=CHART_LEGEND_TOP_RIGHT,
     )
     st.plotly_chart(figure, width="stretch")
 
@@ -416,13 +416,13 @@ def _render_fantasy_points_per_game_chart(
     # name/color key instead, one per manager who started this player at
     # least once, plus "Bench"/"Not on a Fantasy Roster" if applicable.
     for manager_name, color in legend_entries.items():
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=color), name=manager_name, showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": color}, name=manager_name, showlegend=True)
     if has_bench:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=BENCH_COLOR), name="Bench", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": BENCH_COLOR}, name="Bench", showlegend=True)
     if any(is_bye_week):
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=BYE_WEEK_COLOR), name="Bye Week", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": BYE_WEEK_COLOR}, name="Bye Week", showlegend=True)
     if has_unrostered:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=UNROSTERED_GAME_COLOR), name="Not on a Fantasy Roster", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": UNROSTERED_GAME_COLOR}, name="Not on a Fantasy Roster", showlegend=True)
 
     # A 0-height bar has no height to hover over, so it's otherwise
     # unreachable - a marker dot at y=0 (same color/hover text as the bar
@@ -437,7 +437,7 @@ def _render_fantasy_points_per_game_chart(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker=dict(size=MARKER_SIZE, color=[colors[i] for i in zero_indices], line=dict(width=1, color="#333333")),
+            marker={"size": MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": "#333333"}},
             customdata=[hover_text[i] for i in zero_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -454,7 +454,7 @@ def _render_fantasy_points_per_game_chart(
             x=[x_positions[i] for i in bye_indices],
             y=[points[i] for i in bye_indices],
             mode="markers",
-            marker=dict(size=MARKER_SIZE, color=BYE_WEEK_COLOR, line=dict(width=1, color="#333333")),
+            marker={"size": MARKER_SIZE, "color": BYE_WEEK_COLOR, "line": {"width": 1, "color": "#333333"}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -462,11 +462,11 @@ def _render_fantasy_points_per_game_chart(
 
     figure.update_layout(
         title="Fantasy Points per Game",
-        xaxis=dict(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
+        xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Fantasy Points",
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
-        margin=dict(t=40, b=0, l=0, r=0),
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        legend=CHART_LEGEND_TOP_RIGHT,
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
 
     for index, entry in enumerate(full_game_list):
@@ -574,21 +574,21 @@ def _render_percentiles_tab(
     figure = go.Figure()
     figure.add_scatter(
         x=other_x, y=other_y, mode="markers", name="Other Players",
-        marker=dict(size=MARKER_SIZE, color=PERCENTILE_OTHER_COLOR, opacity=0.5),
+        marker={"size": MARKER_SIZE, "color": PERCENTILE_OTHER_COLOR, "opacity": 0.5},
         customdata=other_hover, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.add_scatter(
         x=selected_x, y=selected_y, mode="markers", name=player_names_by_id[selected_player_id],
-        marker=dict(size=MARKER_SIZE, color=PERCENTILE_SELECTED_COLOR, line=dict(width=1, color="#333333")),
+        marker={"size": MARKER_SIZE, "color": PERCENTILE_SELECTED_COLOR, "line": {"width": 1, "color": "#333333"}},
         customdata=selected_hover, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
         title=f"{selected_position} {PERCENTILE_METRIC_LABELS[metric]} by Season",
-        xaxis=dict(title="Season", tickmode="array", tickvals=seasons, ticktext=[str(season) for season in seasons]),
+        xaxis={"title": "Season", "tickmode": "array", "tickvals": seasons, "ticktext": [str(season) for season in seasons]},
         yaxis_title=PERCENTILE_METRIC_LABELS[metric],
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
-        margin=dict(t=40, b=0, l=0, r=0),
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        legend=CHART_LEGEND_TOP_RIGHT,
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     st.plotly_chart(figure, width="stretch")
 
@@ -687,26 +687,26 @@ def _render_nfl_stat_chart(
     tick_text = [str(season) for season in positions_by_season]
 
     if stat_label in YARDAGE_STAT_LABELS:
-        y_axis_config = dict(nticks=CHART_YAXIS_MAX_TICKS)
+        y_axis_config = {"nticks": CHART_YAXIS_MAX_TICKS}
     else:
         max_value = max(values, default=0)
         y_dtick = max(1, -(-int(max_value) // CHART_YAXIS_MAX_TICKS))
-        y_axis_config = dict(dtick=y_dtick, tickformat="d")
+        y_axis_config = {"dtick": y_dtick, "tickformat": "d"}
 
     figure = go.Figure(
         go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False)
     )
     if any(is_bye_week):
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=BYE_WEEK_COLOR), name="Bye Week", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": BYE_WEEK_COLOR}, name="Bye Week", showlegend=True)
     if has_unrostered:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker=dict(size=10, color=UNROSTERED_GAME_COLOR), name="Not on a Fantasy Roster", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": 10, "color": UNROSTERED_GAME_COLOR}, name="Not on a Fantasy Roster", showlegend=True)
     figure.update_layout(
         title=f"{stat_label} per Game",
-        xaxis=dict(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text),
+        xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title=stat_label,
         yaxis=y_axis_config,
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", bgcolor="rgba(255,255,255,0.5)", bordercolor="#888888", borderwidth=1),
-        margin=dict(t=40, b=0, l=0, r=0),
+        legend=CHART_LEGEND_TOP_RIGHT,
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     for index, entry in enumerate(full_game_list):
         if index > 0 and entry["season"] != full_game_list[index - 1]["season"]:
@@ -724,7 +724,7 @@ def _render_nfl_stat_chart(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker=dict(size=MARKER_SIZE, color=[colors[i] for i in zero_indices], line=dict(width=1, color="#333333")),
+            marker={"size": MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": "#333333"}},
             customdata=[hover_text[i] for i in zero_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -741,7 +741,7 @@ def _render_nfl_stat_chart(
             x=[x_positions[i] for i in bye_indices],
             y=[values[i] for i in bye_indices],
             mode="markers",
-            marker=dict(size=MARKER_SIZE, color=BYE_WEEK_COLOR, line=dict(width=1, color="#333333")),
+            marker={"size": MARKER_SIZE, "color": BYE_WEEK_COLOR, "line": {"width": 1, "color": "#333333"}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -750,7 +750,7 @@ def _render_nfl_stat_chart(
     st.plotly_chart(figure, width="stretch")
 
 
-def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, int]) -> None:
+def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, int], stints: list[dict]) -> None:
     # "Games" only counts weeks with a player_ownership.json entry - i.e.
     # weeks SOME manager had them rostered. A season this player appears
     # in at all but wasn't rostered every eligible week won't show that
@@ -782,13 +782,14 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
     start_pct = starts / len(timeline) if timeline else 0.0
     managers = len({entry["manager_id"] for entry in timeline if entry["manager_id"]})
 
-    nfl_games_column, games_column, starts_column, bench_column, start_pct_column, managers_column = st.columns(6)
+    nfl_games_column, games_column, starts_column, bench_column, start_pct_column, managers_column, transfers_column = st.columns(7)
     nfl_games_column.metric("NFL Games", nfl_games, help=NFL_GAMES_HELP)
     games_column.metric("Fantasy Games", len(timeline), help="Number of appearances on a fantasy roster.")
     starts_column.metric("Fantasy Starts", starts, help="Number of fantasy appearances as a starter.")
     bench_column.metric("Fantasy Bench", bench, help="Number fantasy appearances on bench.")
     start_pct_column.metric("Fantasy Start %", f"{start_pct:.1%}", help="Fantasy start percentage.")
     managers_column.metric("Fantasy Managers", managers, help="Number of fantasy managers who had player on roster.")
+    transfers_column.metric("# of Transfers", len(stints), help="Number of ownership stints shown in the Transfers flow chart. The start of the season counts as a new transfer.")
 
 
 def render_players_page() -> None:
@@ -900,6 +901,8 @@ def render_players_page() -> None:
 
     st.subheader(f"{player_names_by_id[selected_player_id]} ({players_data[selected_player_id]['position']})")
 
+    st.warning(body="Note - stats are incomplete when a player was not on a fantasy roster. also missing are stats on player injuries/suspensions", icon="ℹ️")
+
     fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
         _render_points_metrics(timeline, selected_player_id)
@@ -907,7 +910,7 @@ def render_players_page() -> None:
     with nfl_stats_tab:
         _render_nfl_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)
     with managers_tab:
-        _render_summary_metrics(timeline, nfl_season_lengths)
+        _render_summary_metrics(timeline, nfl_season_lengths, stints)
         _render_manager_summary_chart(stints, name_resolver, manager_color_map)
         _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}", player_id=selected_player_id)
     with percentiles_tab:
