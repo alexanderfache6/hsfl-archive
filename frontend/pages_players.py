@@ -42,8 +42,9 @@ MARKER_SIZE = 8
 
 NODE_X_SPACING = 260
 
-ZERO_POINT_GAMES_HELP = "Excludes bye weeks and 0-point games."
-ZERO_POINT_COUNT_HELP = "Excludes bye weeks. An indication that (1) player was injured or (2) player delivered no fantasy points." # NOTE future should take into account injury games
+NONZERO_POINT_GAMES_HELP = "Excludes bye weeks and 0-point games. Qualifed game count in `()`."
+ZERO_POINT_COUNT_HELP = "Excludes bye weeks. An indication that (1) player was injured or (2) player delivered no fantasy points." # TODO future should take into account injury games
+NFL_POINTS_GAME_HELP = "Excludes bye weeks. Qualified game count in `()`."
 
 # Yardage stats (stat_id_labels.json's "Pass/Rush/Rec Yds") can run into
 # the hundreds in a single game, so the shared nticks cap alone gives a
@@ -328,8 +329,8 @@ def _render_points_metrics(timeline: list[dict], player_id: str) -> None:
     points_per_bench = sum(bench_points) / len(bench_points) if bench_points else 0.0
 
     start_column, bench_column, zero_start_column, zero_bench_column = st.columns(4)
-    start_column.metric("Points per Fantasy Start", f"{points_per_start:.2f}", help=ZERO_POINT_GAMES_HELP)
-    bench_column.metric("Points per Fantasy Bench", f"{points_per_bench:.2f}", help=ZERO_POINT_GAMES_HELP)
+    start_column.metric("Points per Fantasy Start", f"{points_per_start:.2f} ({len(starter_points)})", help=NONZERO_POINT_GAMES_HELP)
+    bench_column.metric("Points per Fantasy Bench", f"{points_per_bench:.2f} ({len(bench_points)})", help=NONZERO_POINT_GAMES_HELP)
     zero_start_column.metric("0-Point Starts", zero_point_starts, help=ZERO_POINT_COUNT_HELP)
     zero_bench_column.metric("0-Point Bench", zero_point_bench, help=ZERO_POINT_COUNT_HELP)
 
@@ -475,9 +476,9 @@ def _render_nfl_stat_metrics(timeline: list[dict], selected_stat_id: str, stat_l
     stat_per_start = sum(starter_values) / len(starter_values) if starter_values else 0.0
     stat_per_bench = sum(bench_values) / len(bench_values) if bench_values else 0.0
 
-    start_column, bench_column = st.columns(2)
-    start_column.metric(f"{stat_label} per Fantasy Start", f"{stat_per_start:.2f}")
-    bench_column.metric(f"{stat_label} per Fantasy Bench", f"{stat_per_bench:.2f}")
+    start_column, bench_column, _, _ = st.columns([1, 1, 1, 1])
+    start_column.metric(f"{stat_label} per Fantasy Start", f"{stat_per_start:.2f} ({len(starter_values)})", help=NFL_POINTS_GAME_HELP)
+    bench_column.metric(f"{stat_label} per Fantasy Bench", f"{stat_per_bench:.2f} ({len(bench_values)})", help=NFL_POINTS_GAME_HELP)
 
 
 def _render_nfl_stat_chart(
@@ -661,12 +662,13 @@ def render_players_page() -> None:
     player_names_by_id = {player_id: player["name"] for player_id, player in players_data.items()}
     sorted_player_ids = sorted(player_names_by_id, key=lambda player_id: player_names_by_id[player_id])
 
-    # Same versioned-widget-key pattern as the Matchups tab's Clear Filters:
-    # each filter's ACTUAL key includes a generation counter, so Clear
-    # Filters can bump the counter and force brand-new widget instances
-    # instead of relying on session_state deletion alone, which left
-    # stale-looking dropdowns in some browsers even after the underlying
-    # value was cleared (see pages_matchups.py's _render_filters).
+    # Same versioned-widget-key pattern as the Matchups tab's Clear
+    # Filters: each filter's ACTUAL key includes a generation counter, so
+    # Clear Filters can bump the counter and force brand-new widget
+    # instances instead of relying on session_state deletion alone, which
+    # left stale-looking dropdowns in some browsers even after the
+    # underlying value was cleared (see pages_matchups.py's
+    # _render_filters).
     generation = st.session_state.setdefault("player_filters_generation", 0)
 
     def versioned_key(base_key: str) -> str:
@@ -750,13 +752,17 @@ def render_players_page() -> None:
         return
 
     timeline = [entry for entry in full_timeline if entry["season"] == selected_season] if selected_season else full_timeline
-
     stints = _build_ownership_stints(timeline)
 
     st.subheader(f"{player_names_by_id[selected_player_id]} ({players_data[selected_player_id]['position']})")
-    _render_summary_metrics(timeline, nfl_season_lengths)
-    _render_manager_summary_chart(stints, name_resolver, manager_color_map)
-    _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}", player_id=selected_player_id)
-    _render_points_metrics(timeline, selected_player_id)
-    _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id)
-    _render_nfl_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)
+
+    fantasy_stats_tab, nfl_stats_tab, managers_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats"])
+    with fantasy_stats_tab:
+        _render_points_metrics(timeline, selected_player_id)
+        _render_fantasy_points_per_game_chart(timeline, name_resolver, manager_color_map, nfl_season_lengths, selected_player_id)
+    with nfl_stats_tab:
+        _render_nfl_stat_chart(timeline, stat_id_labels, nfl_season_lengths, selected_player_id, name_resolver)
+    with managers_tab:
+        _render_summary_metrics(timeline, nfl_season_lengths)
+        _render_manager_summary_chart(stints, name_resolver, manager_color_map)
+        _render_flow_chart(stints, name_resolver, manager_color_map, flow_key=f"player_ownership_flow_{selected_player_id}", player_id=selected_player_id)
