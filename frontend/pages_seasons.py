@@ -490,6 +490,64 @@ def _season_total_score_records(season: int) -> tuple[list[dict], list[dict]]:
     return highest, lowest
 
 
+def _season_player_start_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 5 best individual starter performances, top 5 worst) for this
+    season - one entry per starter slot across every matchup (regular
+    season and postseason alike, same "all" matchup_type scope as the
+    other Season Stats records)."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        for side, opponent in ((matchup["home"], matchup["away"]), (matchup["away"], matchup["home"])):
+            for starter in side["starters"]:
+                entries.append(
+                    {
+                        "value": starter["points"],
+                        "season": season,
+                        "week": matchup["week"],
+                        "matchup_type": matchup["matchup_type"],
+                        "player_name": starter["player_name"],
+                        "position": starter["position"],
+                        "manager_id": side["manager_id"],
+                        "display_name": side["display_name"],
+                        "opponent_manager_id": opponent["manager_id"],
+                    }
+                )
+    best = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:5]
+    worst = sorted(entries, key=lambda entry: entry["value"])[:5]
+    return best, worst
+
+
+def _render_player_start_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+    score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
+    manager_name = resolve_manager_name(entry["manager_id"], name_resolver, entry["display_name"])
+    with score_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            unsafe_allow_html=True,
+        )
+    with info_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{info_size}; color:gray;'>"
+            f"{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
+            unsafe_allow_html=True,
+        )
+    if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
+        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["manager_id"], entry["opponent_manager_id"], entry["matchup_type"])
+
+
+def _render_player_start_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str]) -> None:
+    st.markdown(f"<div style='font-size:1.15em; font-weight:600;'>{title}</div>", unsafe_allow_html=True)
+    if not top_n:
+        st.metric(title, "-", label_visibility="collapsed")
+        return
+
+    _render_player_start_row(key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    for ordinal, entry in zip(("2nd", "3rd", "4th", "5th"), top_n[1:]):
+        _render_player_start_row(key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
+
+
 def _render_season_stat_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
     # Same score/info/button column layout as the History tab's
     # _render_record_row (see pages_history.py) - independently
@@ -542,6 +600,14 @@ def _render_season_stats_tab(season: int, name_resolver: dict[str, str]) -> None
             _render_season_stat_cell("highest_scoring_game", "Highest Scoring Game", highest_scoring, name_resolver)
         with right_column:
             _render_season_stat_cell("lowest_scoring_game", "Lowest Scoring Game", lowest_scoring, name_resolver)
+
+    best_starts, worst_starts = _season_player_start_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_player_start_cell("best_player_start", "Best Player Starts", best_starts, name_resolver)
+        with right_column:
+            _render_player_start_cell("worst_player_start", "Worst Player Starts", worst_starts, name_resolver)
 
 
 def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:

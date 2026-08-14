@@ -10,7 +10,6 @@
 - [x] true tab
 - [x] transactions tab
 - [x] create schedule tab for each week
-- [ ] season stats tab - Margin-of-victory distribution chart (are games trending closer or more lopsided over the years).
 - [ ] Weekly "Power Rankings" chart blending win%, points for, and all-play record into one index, tracked week over week.
 
 # managers
@@ -54,6 +53,7 @@
 
 # global
 - [ ] search/jump/filter to manager/season/player
+- [ ] 
 
 # trade
 - [ ] trade grader: compare a trade's two players' rest-of-season point totals to grade who "won" the trade.
