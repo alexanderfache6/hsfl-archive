@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from constants import (
     CHART_LEGEND_OUTSIDE_RIGHT,
-    CHART_LEGEND_TOP_RIGHT,
+    CHART_LEGEND_INSIDE_TOP_RIGHT,
     SCATTER_PLOT_MARKER_SIZE,
 )
 from data_loader import (
@@ -360,7 +360,7 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
         yaxis_title="Fantasy Games",
         yaxis={"dtick": y_dtick, "tickformat": "d"},
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
-        legend=CHART_LEGEND_TOP_RIGHT,
+        legend=CHART_LEGEND_INSIDE_TOP_RIGHT,
     )
     st.plotly_chart(figure, width="stretch")
 
@@ -882,7 +882,7 @@ def _render_percentiles_tab(
         xaxis={"title": "Season", "tickmode": "array", "tickvals": seasons, "ticktext": [str(season) for season in seasons]},
         yaxis_title=PERCENTILE_METRIC_LABELS[metric],
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
-        legend=CHART_LEGEND_TOP_RIGHT,
+        legend=CHART_LEGEND_INSIDE_TOP_RIGHT,
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     st.plotly_chart(figure, width="stretch")
@@ -1033,7 +1033,7 @@ def _render_nfl_stat_chart(
         xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title=stat_label,
         yaxis=y_axis_config,
-        legend=CHART_LEGEND_TOP_RIGHT,
+        legend=CHART_LEGEND_INSIDE_TOP_RIGHT,
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     for index, entry in enumerate(full_game_list):

@@ -15,7 +15,7 @@ See execution-plan.md Phase G.
 
 import plotly.graph_objects as go
 import streamlit as st
-from constants import CHART_LEGEND_TOP_RIGHT
+from constants import CHART_LEGEND_OUTSIDE_RIGHT
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -51,6 +51,12 @@ MATCHUP_TYPE_LABELS = {
 }
 
 FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matchups_week", "matchups_team2_manager_id", "matchups_matchup_type")
+
+# Matchup cards are the expensive part of this page (each one computes an
+# optimal lineup, builds two roster tables, etc) - the aggregate stats/
+# diff chart above them still run over the FULL filtered list regardless
+# of this, only the card loop itself is paginated.
+MATCHUPS_PAGE_SIZE = 10
 
 BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
 
@@ -341,7 +347,6 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             placeholder="Any",
             key=versioned_key("matchups_team1_manager_id"),
         )
-    team2_options = [manager_id for manager_id, _ in manager_options if manager_id != team1_manager_id]
     # Season stays disabled (rather than just showing every season) until
     # Manager 1 is picked - showing the full unfiltered season list first
     # would let a user pick a season Manager 1 never actually played,
@@ -366,7 +371,49 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             key=season_widget_key,
         )
     with week_col:
-        week = st.selectbox("Week", list(range(1, MAX_WEEK + 1)), index=None, placeholder="Any", key=versioned_key("matchups_week"))
+        week = st.selectbox(
+            "Week",
+            list(range(1, MAX_WEEK + 1)),
+            index=None,
+            placeholder="Any",
+            disabled=team1_manager_id is None,
+            help="Select Manager 1 first" if team1_manager_id is None else None,
+            key=versioned_key("matchups_week"),
+        )
+    # Matchup Type is picked here (out of visual column order - it still
+    # renders into type_col, its normal rightmost spot) rather than after
+    # Manager 2 below, because Manager 2's own options need to already
+    # know season/week/matchup_type - widgets run in CODE order, not
+    # column-layout order, so its value has to exist before team2_options
+    # is computed just below.
+    with type_col:
+        matchup_type = st.selectbox(
+            "Matchup Type",
+            MATCHUP_TYPE_OPTIONS,
+            format_func=lambda value: MATCHUP_TYPE_LABELS[value],
+            index=0,
+            disabled=team1_manager_id is None,
+            help="Select Manager 1 first" if team1_manager_id is None else None,
+            key=versioned_key("matchups_matchup_type"),
+        )
+    # Manager 2's options are only the managers Manager 1 has actually
+    # faced under the CURRENT season/week/matchup_type filters (not just
+    # "every other manager") - load_matchups() already does exactly this
+    # filtering, cheaply, over the single cached full-archive matchup
+    # list, so this reuses it rather than re-deriving the same logic.
+    team2_options = []
+    if team1_manager_id:
+        opponent_ids = {
+            matchup["home"]["manager_id"] if matchup["away"]["manager_id"] == team1_manager_id else matchup["away"]["manager_id"]
+            for matchup in load_matchups(season, week, team1_manager_id, None, matchup_type)
+        }
+        team2_options = sorted(opponent_ids, key=lambda mid: manager_labels.get(mid, ""))
+    # Same stale-selection guard as Season above - narrowing
+    # season/week/matchup_type after Manager 2 was already picked can
+    # push that manager_id out of the newly-computed team2_options.
+    team2_widget_key = versioned_key("matchups_team2_manager_id")
+    if st.session_state.get(team2_widget_key) not in team2_options and st.session_state.get(team2_widget_key) is not None:
+        st.session_state[team2_widget_key] = None
     with team2_col:
         team2_manager_id = st.selectbox(
             "Manager 2",
@@ -376,15 +423,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             placeholder="Any",
             disabled=team1_manager_id is None,
             help="Select Manager 1 first" if team1_manager_id is None else None,
-            key=versioned_key("matchups_team2_manager_id"),
-        )
-    with type_col:
-        matchup_type = st.selectbox(
-            "Matchup Type",
-            MATCHUP_TYPE_OPTIONS,
-            format_func=lambda value: MATCHUP_TYPE_LABELS[value],
-            index=0,
-            key=versioned_key("matchups_matchup_type"),
+            key=team2_widget_key,
         )
 
     st.session_state["matchups_team1_manager_id"] = team1_manager_id
@@ -411,6 +450,8 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("matchups_applied_filters", None)
             st.session_state["matchups_filters_generation"] = generation + 1
+            st.session_state["matchups_page"] = 0
+            st.session_state["matchups_show_optimal"] = False
             st.rerun()
 
     if applied:
@@ -421,6 +462,11 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             "team2_manager_id": team2_manager_id if team1_manager_id else None,
             "matchup_type": matchup_type,
         }
+        st.session_state["matchups_page"] = 0
+        # Show Optimal Lineup resets on a NEW search, but stays exactly
+        # as the user left it across page navigation within the same
+        # search - see _render_pagination_row.
+        st.session_state["matchups_show_optimal"] = False
 
     return st.session_state.get("matchups_applied_filters")
 
@@ -556,8 +602,8 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         xaxis={"title": "Season / Week", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
-        legend=CHART_LEGEND_TOP_RIGHT,
-        margin={"t": 40, "b": 0, "l": 0, "r": 0},
+        legend=CHART_LEGEND_OUTSIDE_RIGHT,
+        margin={"t": 40, "b": 0, "l": 0, "r": 150},
     )
 
     # With every season shown together (no Season filter), mark each
@@ -791,6 +837,56 @@ def _render_matchup_card(
                     )
 
 
+def _sync_show_optimal(source_key: str) -> None:
+    """on_change callback - MUST be a callback, not a plain post-creation
+    read of the widget's return value: Streamlit runs on_change callbacks
+    BEFORE the script reruns, so by the time _render_pagination_row's own
+    reseed line executes (even on the rerun the toggle's OWN click just
+    triggered), the master already reflects the click. Reading the
+    return value directly instead (tried and reverted - see git history)
+    reseeds the widget from the STALE master before the widget is even
+    created, silently clobbering the user's own click on that exact
+    toggle - confirmed live via Playwright: the toggle never turned on
+    at all with that version, not just on Previous/Next."""
+    st.session_state["matchups_show_optimal"] = st.session_state[source_key]
+
+
+def _render_pagination_row(page: int, total_pages: int, total_matchups: int, position: str) -> bool:
+    """position: "top" or "bottom" - distinct widget keys per position
+    (Previous/Next buttons AND the Show Optimal Lineup toggle both appear
+    twice, once above and once below the card list). The two toggles are
+    kept in sync via a shared "matchups_show_optimal" master value rather
+    than a literal shared key (Streamlit doesn't allow two widgets with
+    the same key) - see _sync_show_optimal for why this MUST be an
+    on_change callback. Returns the CURRENT
+    show_optimal value for this render. Wrapped in
+    the SAME [1, 6, 1] outer column split as the matchup cards below (see
+    render_matchups_page) so this row lines up at the same 75% width
+    rather than spanning the full page."""
+    _, row_column, _ = st.columns([1, 6, 1])
+    with row_column:
+        previous_page_column, next_page_column, page_label_column, matchup_range_column, optimal_toggle_column = st.columns([2, 2, 2, 3, 3], vertical_alignment="center")
+        with previous_page_column:
+            if st.button("← Previous", key=f"matchups_page_prev_{position}", disabled=page <= 0, use_container_width=True):
+                st.session_state["matchups_page"] = page - 1
+                st.rerun()
+        with next_page_column:
+            if st.button("Next →", key=f"matchups_page_next_{position}", disabled=page >= total_pages - 1, use_container_width=True):
+                st.session_state["matchups_page"] = page + 1
+                st.rerun()
+        with page_label_column:
+            st.markdown(f"Page {page + 1} of {total_pages}")
+        with matchup_range_column:
+            range_start = page * MATCHUPS_PAGE_SIZE + 1
+            range_end = min(range_start + MATCHUPS_PAGE_SIZE - 1, total_matchups)
+            st.markdown(f"Showing matchups {range_start}-{range_end}")
+        with optimal_toggle_column:
+            toggle_key = f"matchups_show_optimal_{position}"
+            st.session_state[toggle_key] = st.session_state.get("matchups_show_optimal", False)
+            st.toggle("Show Optimal Lineup", key=toggle_key, help=TOGGLE_OPTIMAL_LINEUP, on_change=_sync_show_optimal, args=(toggle_key,))
+    return st.session_state.get("matchups_show_optimal", False)
+
+
 def render_matchups_page() -> None:
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
@@ -817,15 +913,18 @@ def render_matchups_page() -> None:
     _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
     st.divider()
 
-    show_optimal = st.toggle(
-        "Show Optimal Lineup",
-        key="matchups_show_optimal",
-        help=f"{TOGGLE_OPTIMAL_LINEUP}"
-    )
+    total_pages = max(1, -(-len(matchups) // MATCHUPS_PAGE_SIZE))
+    page = min(st.session_state.get("matchups_page", 0), total_pages - 1)
+    st.session_state["matchups_page"] = page
 
-    for matchup in matchups:
+    show_optimal = _render_pagination_row(page, total_pages, len(matchups), "top")
+
+    start = page * MATCHUPS_PAGE_SIZE
+    for matchup in matchups[start : start + MATCHUPS_PAGE_SIZE]:
         # Cards capped at 75% width: a 1/6/1-ratio column layout, middle
         # column centered and 6/8 = 75% wide.
         _, card_column, _ = st.columns([1, 6, 1])
         with card_column:
             _render_matchup_card(matchup, applied_filters["team1_manager_id"], name_resolver, manager_color_map, show_optimal)
+
+    _render_pagination_row(page, total_pages, len(matchups), "bottom")

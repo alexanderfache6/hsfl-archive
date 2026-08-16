@@ -1,7 +1,7 @@
 """Shared constants used across multiple page modules."""
 
 # for consistent chart legend attributes
-CHART_LEGEND_TOP_RIGHT = {
+CHART_LEGEND_INSIDE_TOP_RIGHT = {
     "x": 1,
     "y": 1,
     "xanchor": "right",
