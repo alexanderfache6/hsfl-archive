@@ -12,8 +12,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from constants import (
-    CHART_LEGEND_OUTSIDE_RIGHT,
     CHART_LEGEND_INSIDE_TOP_RIGHT,
+    CHART_LEGEND_OUTSIDE_RIGHT,
     SCATTER_PLOT_MARKER_SIZE,
 )
 from data_loader import (
