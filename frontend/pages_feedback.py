@@ -196,7 +196,15 @@ def _all_issues() -> list[dict]:
     which is what's used to tell them apart), pre-parsed into this form's
     own Type/Page/Description fields. Cached for 60s so a page rerun
     doesn't refetch every time - issues don't change that fast outside of
-    right after a fresh submission (see the cache-clear above)."""
+    right after a fresh submission (see the cache-clear above).
+
+    Any issue whose RAW GitHub title contains "[Internal]" is dropped
+    right here, before _parse_issue even runs - internal tracking issues
+    should never reach the table, the chart, or anything else downstream,
+    not just be hidden by a filter toggle. Checked against the raw title
+    (not the parsed one _parse_issue produces, which strips the leading
+    "[...]" bracket entirely) since "the title of the issue" as filed on
+    GitHub is what actually carries the "[Internal]" marker."""
     token = _github_issues_token()
     headers = {"Accept": "application/vnd.github+json"}
     if token:
@@ -208,7 +216,7 @@ def _all_issues() -> list[dict]:
         timeout=10,
     )
     response.raise_for_status()
-    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
+    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue and "[Internal]" not in issue["title"]]
 
 
 @st.cache_data(ttl=300)
