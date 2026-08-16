@@ -71,6 +71,9 @@ DEF_TEAM_ABBREVIATIONS = {
     "Vikings": "MIN",
 } # TODO move to /archive/nfl_team_abbreviations.json
 
+
+TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
+
 # ========================================
 # FUNCTIONS
 # ========================================
@@ -817,7 +820,7 @@ def render_matchups_page() -> None:
     show_optimal = st.toggle(
         "Show Optimal Lineup",
         key="matchups_show_optimal",
-        help="Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
+        help=f"{TOGGLE_OPTIMAL_LINEUP}"
     )
 
     for matchup in matchups:
