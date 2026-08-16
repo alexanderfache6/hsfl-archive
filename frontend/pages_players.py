@@ -11,8 +11,11 @@ starts vs bench per manager. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
-from constants import CHART_LEGEND_OUTSIDE_RIGHT, CHART_LEGEND_TOP_RIGHT, SCATTER_PLOT_MARKER_SIZE
+from constants import (
+    CHART_LEGEND_OUTSIDE_RIGHT,
+    CHART_LEGEND_TOP_RIGHT,
+    SCATTER_PLOT_MARKER_SIZE,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -37,6 +40,7 @@ from data_loader import (
     player_nfl_team_by_season,
     resolve_manager_name,
 )
+from plotly.subplots import make_subplots
 from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowEdge, StreamlitFlowNode
 from streamlit_flow.layouts import ManualLayout
