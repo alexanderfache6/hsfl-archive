@@ -471,7 +471,19 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     return st.session_state.get("matchups_applied_filters")
 
 
-def _render_filter_description(applied_filters: dict, name_resolver: dict[str, str]) -> None:
+def _manager_pill(label: str, manager_id: str, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> str:
+    """A small colored pill around the WHOLE "{label} ({name})" text
+    (e.g. "Manager 1 (Alex F)") - same background-color/contrasting-
+    text-color/rounded-corners treatment as the manager name blocks on
+    each matchup card below, so this recap line visually ties back to
+    the same color key."""
+    name = resolve_manager_name(manager_id, name_resolver)
+    background_color = manager_color_map.get(manager_id, "#CCCCCC")
+    text_color = contrasting_text_color(background_color)
+    return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{label} ({name})</span>"
+
+
+def _render_filter_description(applied_filters: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """A plain-language recap of exactly which filters are in effect,
     e.g. "Season: 2013 · Week: 11 · Manager 1: Alex F vs Manager 2:
     Ashwin · Championship Bracket" - each piece is left out entirely
@@ -485,14 +497,20 @@ def _render_filter_description(applied_filters: dict, name_resolver: dict[str, s
     team1_manager_id = applied_filters["team1_manager_id"]
     team2_manager_id = applied_filters["team2_manager_id"]
     if team1_manager_id and team2_manager_id:
-        parts.append(f"Manager 1 ({resolve_manager_name(team1_manager_id, name_resolver)}) vs Manager 2 ({resolve_manager_name(team2_manager_id, name_resolver)})")
+        parts.append(
+            f"{_manager_pill('Manager 1', team1_manager_id, name_resolver, manager_color_map)} "
+            f"vs {_manager_pill('Manager 2', team2_manager_id, name_resolver, manager_color_map)}"
+        )
     elif team1_manager_id:
-        parts.append(f"Manager 1 ({resolve_manager_name(team1_manager_id, name_resolver)})")
+        parts.append(_manager_pill("Manager 1", team1_manager_id, name_resolver, manager_color_map))
 
     if applied_filters["matchup_type"] and applied_filters["matchup_type"] != "all":
         parts.append(MATCHUP_TYPE_LABELS[applied_filters["matchup_type"]])
 
-    st.subheader(" · ".join(parts) if parts else "All matchups")
+    # st.subheader doesn't support unsafe_allow_html (needed for the
+    # manager pills above), so this reproduces its look via st.markdown
+    # instead - same font-size/weight as Streamlit's default h3.
+    st.markdown(f"<h3 style='margin:0;'>{' · '.join(parts) if parts else 'All matchups'}</h3>", unsafe_allow_html=True)
 
 
 def _render_aggregate(matchups: list[dict], team1_manager_id: str | None) -> None:
@@ -908,7 +926,7 @@ def render_matchups_page() -> None:
         st.info("No matchups found for these filters.")
         return
 
-    _render_filter_description(applied_filters, name_resolver)
+    _render_filter_description(applied_filters, name_resolver, manager_color_map)
     _render_aggregate(matchups, applied_filters["team1_manager_id"])
     _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
     st.divider()
