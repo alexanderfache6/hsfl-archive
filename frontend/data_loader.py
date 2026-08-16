@@ -33,7 +33,7 @@ PARSED_DIRECTORY = ARCHIVE_DIRECTORY / "parsed"
 STATS_AGGREGATION_DIRECTORY = PROJECT_ROOT_DIRECTORY / "code" / "stats-aggregation"
 if str(STATS_AGGREGATION_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(STATS_AGGREGATION_DIRECTORY))
-from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup  # noqa: E402
+from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup
 
 # Standard 12-color ColorBrewer "Paired" qualitative palette - not
 # available under plotly.express.colors.qualitative by this name (that
@@ -93,6 +93,247 @@ STAT_ID_TO_SCORING_RULE = {
     "stat_77": "Touchdown (Fumble return)",
     "stat_78": "Touchdown (Blocked kick)",
 }
+
+# stat_N -> ESPN gamelog field name (archive/nfl_player_stats.json's own
+# "stats" dict keys, from code/raw-parsing/nfl/nfl_player_stats.py) - a
+# DIRECT single-value field, comparable as-is against this league's own
+# stat_N raw value. Confirmed 2026-08-14 against a real downloaded 2012
+# season (QB/RB/WR/TE/K categories only - individual DB players' own
+# ESPN category ("defensive") was never actually sampled in that pull,
+# since no DB player had 2012 data resolved yet). None = no ESPN field
+# available at all for this stat_N in the categories confirmed so far -
+# either genuinely not itemized by ESPN (stat_32 2-Point Conversions),
+# or DB-only/defensive stats (46/47/49/72/73/74/75/76/77/78) whose real
+# ESPN field names are still UNCONFIRMED, not verified to not exist -
+# revisit once a DB player's own gamelog response has actually been
+# inspected live, rather than guessing names into this table now.
+STAT_ID_TO_ESPN_FIELD = {
+    "stat_5": "passingYards",
+    "stat_6": "passingTouchdowns",
+    "stat_7": "interceptions",
+    "stat_14": "rushingYards",
+    "stat_15": "rushingTouchdowns",
+    "stat_21": "receivingYards",
+    "stat_22": "receivingTouchdowns",
+    "stat_30": "fumblesLost",
+    "stat_32": None,  # 2-Point Conversions - not itemized in the sampled ESPN categories
+    "stat_45": "sacks",  # QB's own sacks-taken, not a defensive sack
+    "stat_46": None,  # Interceptions (defense) - DB category unconfirmed
+    "stat_47": None,  # Fumbles Recovered - DB/DEF category unconfirmed
+    "stat_49": None,  # Safeties - DB/DEF category unconfirmed
+    "stat_50": None,  # Touchdowns (general) - meaning ambiguous, not itemized in sampled categories
+    "stat_53": None,  # Kickoff/Punt Return TDs - return stats not itemized in sampled categories
+    "stat_70": None,  # Tack(le) - not scored in this league's rule set (see STAT_ID_TO_SCORING_RULE)
+    "stat_71": None,  # Ast(ist) - not scored
+    "stat_72": None,  # Sacks (defense) - DB/DEF category unconfirmed
+    "stat_73": None,  # Defense Interception - DB/DEF category unconfirmed
+    "stat_74": None,  # Forced Fumble - DB/DEF category unconfirmed
+    "stat_75": None,  # Fumbles Recovery - DB/DEF category unconfirmed
+    "stat_76": None,  # Touchdown (Interception return) - DB/DEF category unconfirmed
+    "stat_77": None,  # Touchdown (Fumble return) - DB/DEF category unconfirmed
+    "stat_78": None,  # Touchdown (Blocked kick) - DB/DEF category unconfirmed
+}
+
+# stat_N -> ESPN gamelog field name for kicking stats, where ESPN reports
+# a single "{made}-{attempted}" string (e.g. "3-3") instead of a bare
+# made count - see _espn_made_attempted_count() below for the parser.
+# Confirmed 2026-08-14 against real downloaded 2012 K data.
+STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD = {
+    "stat_33": "extraPointsMade-extraPointAttempts",
+    "stat_35": "fieldGoalsMade1_19-fieldGoalAttempts1_19",
+    "stat_36": "fieldGoalsMade20_29-fieldGoalAttempts20_29",
+    "stat_37": "fieldGoalsMade30_39-fieldGoalAttempts30_39",
+    "stat_38": "fieldGoalsMade40_49-fieldGoalAttempts40_49",
+    "stat_39": "fieldGoalsMade50-fieldGoalAttempts50",
+}
+
+
+def _espn_made_attempted_count(raw_value: str | None) -> int | None:
+    """"3-3" -> 3 (the MADE count, left of the dash) - None if the field
+    is missing or not in the expected "{made}-{attempted}" shape."""
+    if not raw_value or "-" not in raw_value:
+        return None
+    made, _, _attempted = raw_value.partition("-")
+    try:
+        return int(made)
+    except ValueError:
+        return None
+
+
+def espn_stat_value(stat_id: str, espn_week_stats: dict) -> int | None:
+    """This week's ESPN value for a fantasy stat_N, as an int - via
+    STAT_ID_TO_ESPN_FIELD's direct field, or
+    STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD's parsed made-count for kicking
+    stats. None if stat_id has no known ESPN mapping yet, or the field is
+    genuinely absent from this week's ESPN data (e.g. a QB with no field
+    goal attempts simply has no fieldGoalsMade... key that week)."""
+    direct_field = STAT_ID_TO_ESPN_FIELD.get(stat_id)
+    if direct_field:
+        raw_value = espn_week_stats.get(direct_field)
+        if raw_value is None:
+            return None
+        try:
+            return int(float(raw_value))
+        except ValueError:
+            return None
+
+    made_attempted_field = STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD.get(stat_id)
+    if made_attempted_field:
+        return _espn_made_attempted_count(espn_week_stats.get(made_attempted_field))
+
+    return None
+
+
+# ESPN field name -> stat_N, the inverse of STAT_ID_TO_ESPN_FIELD /
+# STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD - 1:1 in both source dicts, so
+# inversion is safe. Used by the "Select NFL Stat to View" chart to know
+# whether a selected ESPN-native field (e.g. "rushingYards") has a
+# fantasy stat_N counterpart worth cross-checking for a mismatch at all
+# - most of NFL_STAT_FIELDS_BY_POSITION's fields (completions, targets,
+# per-attempt averages, "FG Made (Total)", "Total Kicking Points") have
+# NO stat_N equivalent, so they're simply absent from this map.
+ESPN_FIELD_TO_STAT_ID = {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_FIELD.items() if field} | {
+    field: stat_id for stat_id, field in STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD.items()
+}
+
+
+def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
+    """This league's own box-score value for a stat_N, as an int -
+    same rounding convention as espn_stat_value() above, so the two are
+    directly comparable. None if this stat_N wasn't recorded that week
+    (this league's box score omits a stat_N entirely rather than storing
+    an explicit 0 - see code/raw-parsing/nfl/nfl_stat_consistency_check.py)."""
+    raw_value = entry_stats.get(stat_id)
+    if raw_value is None:
+        return None
+    try:
+        return round(float(raw_value))
+    except (TypeError, ValueError):
+        return None
+
+
+# Curated per-position ESPN field list for the Players page's "Select
+# NFL Stat to View" chart (frontend/pages_players.py) - user-specified
+# 2026-08-14, sourced directly from archive/nfl_player_stats.json's own
+# field names (NOT limited to this league's fantasy-scored stat_N set -
+# e.g. "completions"/"receivingTargets"/the "yardsPer..." per-attempt
+# averages have no stat_N equivalent at all, since this league's own box
+# score never itemized them). DEF is intentionally absent - no NFL-stat
+# backfill exists for team defenses yet.
+# RB/WR/TE all share the identical skill-position field list below - RB
+# and WR come from optimal_lineup.py's own FLEX_ELIGIBLE_POSITIONS (the
+# two positions this league's FLEX roster slot accepts); TE is added on
+# top of that set for THIS field list specifically (a pass-catcher/
+# rusher stat shape, not a flex-roster-eligibility claim - TE itself is
+# NOT flex-eligible in this league's own scoring rules).
+_SKILL_POSITION_NFL_STAT_FIELDS = [
+    "rushingAttempts", "rushingYards", "yardsPerRushAttempt", "rushingTouchdowns", "receptions",
+    "receivingTargets", "receivingYards", "yardsPerReception", "receivingTouchdowns", "fumbles",
+    "fumblesLost",
+]
+
+NFL_STAT_FIELDS_BY_POSITION = {
+    "QB": [
+        "completions", "passingAttempts", "passingYards", "completionPct", "yardsPerPassAttempt",
+        "passingTouchdowns", "interceptions", "rushingAttempts", "rushingYards", "yardsPerRushAttempt",
+        "rushingTouchdowns",
+    ],
+    **{position: _SKILL_POSITION_NFL_STAT_FIELDS for position in FLEX_ELIGIBLE_POSITIONS | {"TE"}},
+    "K": [
+        "fieldGoalsMade1_19-fieldGoalAttempts1_19", "fieldGoalsMade20_29-fieldGoalAttempts20_29",
+        "fieldGoalsMade30_39-fieldGoalAttempts30_39", "fieldGoalsMade40_49-fieldGoalAttempts40_49",
+        "fieldGoalsMade50-fieldGoalAttempts50", "fieldGoalsMade-fieldGoalAttempts",
+        "extraPointsMade-extraPointAttempts", "totalKickingPoints",
+    ],
+}
+
+NFL_STAT_FIELD_LABELS = {
+    "completions": "Completions",
+    "passingAttempts": "Passing Attempts",
+    "passingYards": "Passing Yards",
+    "completionPct": "Completion %",
+    "yardsPerPassAttempt": "Yards Per Pass Attempt",
+    "passingTouchdowns": "Passing TDs",
+    "interceptions": "Interceptions",
+    "rushingAttempts": "Rushing Attempts",
+    "rushingYards": "Rushing Yards",
+    "yardsPerRushAttempt": "Yards Per Rush Attempt",
+    "rushingTouchdowns": "Rushing TDs",
+    "receptions": "Receptions",
+    "receivingTargets": "Receiving Targets",
+    "receivingYards": "Receiving Yards",
+    "yardsPerReception": "Yards Per Reception",
+    "receivingTouchdowns": "Receiving TDs",
+    "fumbles": "Fumbles",
+    "fumblesLost": "Fumbles Lost",
+    "fieldGoalsMade1_19-fieldGoalAttempts1_19": "FG Made 0-19",
+    "fieldGoalsMade20_29-fieldGoalAttempts20_29": "FG Made 20-29",
+    "fieldGoalsMade30_39-fieldGoalAttempts30_39": "FG Made 30-39",
+    "fieldGoalsMade40_49-fieldGoalAttempts40_49": "FG Made 40-49",
+    "fieldGoalsMade50-fieldGoalAttempts50": "FG Made 50+",
+    "fieldGoalsMade-fieldGoalAttempts": "FG Made (Total)",
+    "extraPointsMade-extraPointAttempts": "PAT Made",
+    "totalKickingPoints": "Total Kicking Points",
+}
+
+# Chart y-axis treatment, same idea as pages_players.py's own
+# YARDAGE_STAT_LABELS/forced-integer-dtick split for the fantasy stat_N
+# chart - genuinely fractional fields (percentages, per-attempt
+# averages) and yardage fields (which can run into the hundreds) both
+# get the auto-scaling nticks axis; every other field here is a small
+# whole-number count that gets a forced integer-only dtick instead.
+NFL_STAT_FRACTIONAL_FIELDS = {"completionPct", "yardsPerPassAttempt", "yardsPerRushAttempt", "yardsPerReception"}
+NFL_STAT_YARDAGE_FIELDS = {"passingYards", "rushingYards", "receivingYards"}
+
+# Fields reported as a 0-100 percentage - the chart pins the y-axis to
+# the full 0-100 range for these instead of auto-scaling to the data.
+NFL_STAT_PERCENTAGE_FIELDS = {"completionPct"}
+
+# Fields ESPN reports as a single "{made}-{attempted}" string (parsed via
+# _espn_made_attempted_count) rather than a bare number - every "FG
+# Made ..."/"PAT Made" entry in NFL_STAT_FIELDS_BY_POSITION["K"] above,
+# not "totalKickingPoints" (a plain int).
+NFL_STAT_MADE_ATTEMPTED_FIELDS = {
+    "fieldGoalsMade1_19-fieldGoalAttempts1_19",
+    "fieldGoalsMade20_29-fieldGoalAttempts20_29",
+    "fieldGoalsMade30_39-fieldGoalAttempts30_39",
+    "fieldGoalsMade40_49-fieldGoalAttempts40_49",
+    "fieldGoalsMade50-fieldGoalAttempts50",
+    "fieldGoalsMade-fieldGoalAttempts",
+    "extraPointsMade-extraPointAttempts",
+}
+
+
+def nfl_stat_field_value(field: str, espn_week_stats: dict) -> float | None:
+    """This week's ESPN value for a NFL_STAT_FIELDS_BY_POSITION field -
+    a made-count (int) for NFL_STAT_MADE_ATTEMPTED_FIELDS, else the raw
+    field parsed as a float (some of these ARE genuinely fractional -
+    completionPct, yardsPerRushAttempt/yardsPerReception - unlike
+    espn_stat_value()'s int-only fantasy stat_N counterparts above).
+    None if the field is missing, or ESPN's own "-" placeholder for an
+    undefined average (e.g. 0 attempts that week)."""
+    if field in NFL_STAT_MADE_ATTEMPTED_FIELDS:
+        return _espn_made_attempted_count(espn_week_stats.get(field))
+
+    raw_value = espn_week_stats.get(field)
+    if raw_value is None or raw_value == "-":
+        return None
+    try:
+        return float(raw_value)
+    except ValueError:
+        return None
+
+
+def get_espn_week_stats(player_id: str, season: int, week: int, nfl_player_stats: dict) -> dict | None:
+    """This player's ESPN "stats" dict for one real NFL week, or None if
+    unavailable (unresolved ESPN id, that season not yet backfilled, or
+    a genuine bye/no-game week)."""
+    player_entry = nfl_player_stats.get(player_id)
+    if not player_entry:
+        return None
+    week_entry = player_entry.get("seasons", {}).get(str(season), {}).get("weeks", {}).get(str(week))
+    return week_entry["stats"] if week_entry else None
+
 
 # (points, allows tiers below) for the "Points Allowed" ladder - checked
 # in order, first matching upper bound wins. stat_54 on a DEF entry only.
@@ -267,6 +508,17 @@ def load_player_ownership() -> dict:
 
 
 @st.cache_resource
+def load_nfl_player_stats() -> dict:
+    """{"<player_id>": {"espn_id", "name", "position", "seasons": {"2018":
+    {"weeks": {"3": {"team", "opponent", "result", "stats": {...}}}}}}} -
+    real per-week NFL stats from ESPN (see code/raw-parsing/nfl/
+    nfl_player_stats.py), keyed by the SAME fantasy player_id as
+    players.json/player_ownership.json (nfl_player_stats.py builds it
+    that way directly - no separate espn_id hop needed here)."""
+    return _read_json(ARCHIVE_DIRECTORY / "nfl_player_stats.json")
+
+
+@st.cache_resource
 def load_stat_id_labels() -> dict[str, str]:
     """{"stat_5": "Pass Yds", ...} - NFL.com's fantasy statId -> short
     label, harvested once from every archived gamecenter page's HTML (see
@@ -306,7 +558,7 @@ def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, yea
     scoring_rules = load_metadata(year)["scoring_rules"]
 
     if stat_id == "stat_54" and position == "DEF":
-        for upper_bound, tier_key in POINTS_ALLOWED_TIERS:
+        for upper_bound, tier_key in POINTS_ALLOWED_TIERS: # DEF points allowed
             if value <= upper_bound:
                 rule_key = tier_key
                 break
@@ -363,26 +615,35 @@ def get_bye_week(season: int, nfl_team: str) -> int | None:
 
 @st.cache_resource
 def player_nfl_team_by_season(player_id: str) -> dict[int, str]:
-    """{season: nfl_team} for whichever seasons this player appears in
-    ANY matchup's starters/bench list - there's no direct per-week NFL
-    team field in player_ownership.json (only which FANTASY team, if
-    any, owned them), so this scans the already-cached full matchup list
-    instead. A player who changes NFL teams mid-season (rare) gets
-    whichever team appears most often that season - a real, deliberately
-    unhandled edge case, same as pages_players.py's "NFL Games" bye
-    assumption. A season with zero matchup appearances (never once
-    rostered a real week the archive has a box score for) simply isn't a
-    key in the returned dict - callers treat that season as "unknown
-    team, no bye to mark" rather than guessing."""
+    """{season: nfl_team}, sourced from archive/nfl_player_stats.json's
+    own per-week ESPN gamelog "team" field - NOT the fantasy matchup
+    archive's own nfl_team field, which only reflects whichever team was
+    current AT PARSE TIME, not the real historical team for that season
+    (confirmed 2026-08-15: Aaron Rodgers's entire 2022 season was
+    mislabeled "NYJ" - the team he joined in 2023 - throughout
+    archive/parsed/2022/matchups/*.json, which fed NYJ's real week-10
+    bye into _bye_weeks_by_season instead of GB's real week-14 bye).
+    ESPN's own gamelog is a genuine historical record instead. A player
+    with no resolved ESPN mapping, or no seasons in
+    archive/nfl_player_stats.json, simply isn't a key here - callers
+    treat that season as "unknown team, no bye to mark" rather than
+    guessing, same contract as before. A player who changes NFL teams
+    mid-season (rare) gets whichever team appears most often that
+    season - a real, deliberately unhandled edge case, same as
+    pages_players.py's "NFL Games" bye assumption."""
     from collections import Counter
 
+    player_entry = load_nfl_player_stats().get(player_id)
+    if not player_entry:
+        return {}
+
     teams_by_season: dict[int, Counter] = {}
-    for matchup in _load_all_matchups_enriched():
-        for side in (matchup["home"], matchup["away"]):
-            for player in side["starters"] + side["bench"]:
-                if player.get("player_id") != player_id or not player.get("nfl_team"):
-                    continue
-                teams_by_season.setdefault(matchup["season"], Counter())[player["nfl_team"]] += 1
+    for season_str, season_data in player_entry.get("seasons", {}).items():
+        for week_data in season_data.get("weeks", {}).values():
+            team = week_data.get("team")
+            if not team:
+                continue
+            teams_by_season.setdefault(int(season_str), Counter())[team] += 1
 
     return {season: counts.most_common(1)[0][0] for season, counts in teams_by_season.items()}
 

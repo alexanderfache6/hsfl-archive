@@ -20,7 +20,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import requests
 import streamlit as st
-
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
 
 # ========================================
@@ -97,7 +96,7 @@ ISSUES_CLOSED_COLOR = "#1E88E5"
 def _github_issues_token() -> str:
     try:
         return st.secrets.get("GITHUB_ISSUES_TOKEN", "")
-    except Exception:
+    except Exception:  # noqa: BLE001
         return ""
 
 
@@ -108,7 +107,7 @@ def _github_feedback_token() -> str:
     issue-creation token never needs contents-write permission."""
     try:
         return st.secrets.get("GITHUB_FEEDBACK_TOKEN", "")
-    except Exception:
+    except Exception:  # noqa: BLE001
         return ""
 
 
@@ -592,7 +591,8 @@ def _render_issues_table(issues: list[dict]) -> None:
     with page_counter_column:
         # Labeled "Pagination" (not "Page") to avoid reading like a
         # second "Page" filter alongside the actual Page dropdown above.
-        page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="feedback_issues_page")
+        page = st.number_input("Pagination", min_value=1, max_value=total_pages, step=1, key="feedback_issues_page")
+        # NOTE ^ removing `value=1` resolves "The widget with key "feedback_issues_page" was created with a default value but also had its value set via the Session State API." since value is passed in via session state
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} issues)")
 
     start_index = (page - 1) * ISSUES_PAGE_SIZE
@@ -649,7 +649,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         y=opened_values,
         marker_color=ISSUES_OPENED_COLOR,
         customdata=closed_values,
-        hovertemplate="Date: %{x}<br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
+        hovertemplate="<b>%{x}</b><br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
     figure.add_bar(
         name="Closed",
@@ -657,14 +657,15 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         y=closed_values,
         marker_color=ISSUES_CLOSED_COLOR,
         customdata=opened_values,
-        hovertemplate="Date: %{x}<br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
+        hovertemplate="<b>%{x}</b><br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
     figure.update_layout(
+        title="Number of Issues",
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",
-        xaxis=dict(type="category", nticks=CHART_XAXIS_MAX_TICKS),  # plain "yyyy-mm-dd" tick labels, no time-of-day
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"type": "category", "nticks": CHART_XAXIS_MAX_TICKS},  # plain "yyyy-mm-dd" tick labels, no time-of-day
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="",
     )
     st.plotly_chart(figure, width="stretch")

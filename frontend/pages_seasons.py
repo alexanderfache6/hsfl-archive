@@ -12,7 +12,7 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
+from constants import RECORD_ROW_COLUMN_RATIOS
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -31,6 +31,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from pages_history import CHAMPION_COLOR, RUNNER_UP_COLOR, THIRD_PLACE_COLOR
+from pages_matchups import MATCHUP_TYPE_LABELS
 
 # ========================================
 # CONSTANTS
@@ -74,7 +75,7 @@ PODIUM_LOGO_GAP_PX = 10
 PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
 LAST_PLACE_EMOJI = "🥞"
 
-SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.2, 4]
+SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.8, 4]
 
 # ========================================
 # FUNCTIONS
@@ -96,7 +97,7 @@ def _parse_transaction_date(date_text: str, season: int) -> datetime:
     (Aug-Dec) uses the season's own year."""
     month_text = date_text.split(" ", 1)[0]
     year = season + 1 if month_text == "Jan" else season
-    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")
+    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")  # noqa: DTZ007
 
 
 def _bracket_effective_winner(game: dict) -> str:
@@ -162,21 +163,43 @@ def _bracket_game_card_html(
     on_winning_path = bool(path_team_id) and path_team_id in (game["team_id_home"], game["team_id_away"])
     card_background = "background:#F0F0F0; " if on_winning_path else ""
 
-    lines_html = []
-    if round_label:
-        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
-
     # "Only one side present" (not the is_bye flag, which some brackets
     # leave False on a loser's "continues on" slot with an empty
     # opponent - see _bracket_effective_winner) is what actually
     # determines whether this is a single-team card.
-    if bool(game["team_id_home"]) != bool(game["team_id_away"]):
+    is_bye_card = bool(game["team_id_home"]) != bool(game["team_id_away"])
+
+    lines_html = []
+    if round_label:
+        lines_html.append(f'<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">{html.escape(round_label)}</div>')
+    elif is_bye_card:
+        # A bye whose game carries no round_label (only some rounds'
+        # bye slots have one - see _bracket_display_round_label) would
+        # otherwise start its team name higher than a labeled sibling
+        # card in the same row - an empty placeholder of the same
+        # height keeps every card's content starting at the same y.
+        lines_html.append('<div style="font-size:0.75rem; opacity:0.7; margin-bottom:6px;">&nbsp;</div>')
+
+    if is_bye_card:
         lone_team_id = game["team_id_home"] or game["team_id_away"]
         lone_seed = game["seed_home"] or game["seed_away"]
         lone_label = html.escape(_bracket_team_label(lone_team_id, lone_seed, team_info, name_resolver))
         lone_highlight = _bracket_highlight_style(lone_team_id, winner_team_id, team_info, manager_color_map)
-        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><strong>{lone_label}</strong></div>')
-        lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.7; font-style:italic;">Bye</div>')
+        # Name + "Bye" text in ONE outer highlighted div (not two
+        # separately-styled divs) - same "one continuous highlighted box
+        # spanning both lines" convention the real-matchup branch below
+        # uses for a winner's name+score.
+        # No opacity dimming on "Bye" here (unlike the old two-div
+        # version) - same as the real-matchup branch's score line below,
+        # which also just inherits the wrapper's own contrasting
+        # text-color rather than separately fading itself, since this
+        # text now sits on the same colored highlight background as the
+        # name above it and opacity:0.7 there could wash out against a
+        # dark manager color.
+        lines_html.append(
+            f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><div><strong>{lone_label}</strong></div>'
+            f'<div style="font-style:italic;">Bye</div></div>'
+        )
     else:
         home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
         away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
@@ -382,24 +405,26 @@ def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> di
     return top_three
 
 
-def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str) -> None:
+def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str, matchup_type: str = "regular") -> None:
     """Jumps to the Matchups page pre-filtered to this exact matchup,
     same st.switch_page pattern as the History tab's _go_to_matchup -
     must be called from the main script body (not a button's on_click
     callback), since st.switch_page is a no-op/error from within a
-    callback."""
+    callback. matchup_type defaults to "regular" for the Schedule tab's
+    own call site, but the Bracket tab (see _render_bracket) passes
+    "championship"/"consolation" through the same function."""
     st.session_state["matchups_team1_manager_id"] = team1_manager_id
     st.session_state["matchups_season"] = season
     st.session_state["matchups_week"] = week
     st.session_state["matchups_team2_manager_id"] = team2_manager_id
-    st.session_state["matchups_matchup_type"] = "regular"
+    st.session_state["matchups_matchup_type"] = matchup_type
     st.session_state["matchups_filters_generation"] = st.session_state.get("matchups_filters_generation", 0) + 1
     st.session_state["matchups_applied_filters"] = {
         "season": season,
         "week": week,
         "team1_manager_id": team1_manager_id,
         "team2_manager_id": team2_manager_id,
-        "matchup_type": "regular",
+        "matchup_type": matchup_type,
     }
     st.switch_page(st.session_state["_matchups_page"])
 
@@ -407,6 +432,182 @@ def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, 
 # ========================================
 # RENDER
 # ========================================
+
+
+def _season_margin_of_victory_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 3 greatest margins of victory, top 3 smallest margins of
+    victory) for this season - one entry per real matchup across every
+    matchup type (regular season and postseason alike, same "all"
+    matchup_type scope as the Matchups tab's own default filter)."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        home, away = matchup["home"], matchup["away"]
+        winner, loser = (home, away) if home["score"] >= away["score"] else (away, home)
+        entries.append(
+            {
+                "value": abs(home["score"] - away["score"]),
+                "season": season,
+                "week": matchup["week"],
+                "matchup_type": matchup["matchup_type"],
+                "winner_manager_id": winner["manager_id"],
+                "winner_display_name": winner["display_name"],
+                "winner_score": winner["score"],
+                "loser_manager_id": loser["manager_id"],
+                "loser_display_name": loser["display_name"],
+                "loser_score": loser["score"],
+            }
+        )
+    greatest = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:3]
+    smallest = sorted(entries, key=lambda entry: entry["value"])[:3]
+    return greatest, smallest
+
+
+def _season_total_score_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 3 highest scoring games, top 3 lowest scoring games) for this
+    season - "scoring" here is the combined score of both teams in a
+    matchup, same "all" matchup_type scope (regular + postseason) as
+    _season_margin_of_victory_records."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        home, away = matchup["home"], matchup["away"]
+        winner, loser = (home, away) if home["score"] >= away["score"] else (away, home)
+        entries.append(
+            {
+                "value": home["score"] + away["score"],
+                "season": season,
+                "week": matchup["week"],
+                "matchup_type": matchup["matchup_type"],
+                "winner_manager_id": winner["manager_id"],
+                "winner_display_name": winner["display_name"],
+                "winner_score": winner["score"],
+                "loser_manager_id": loser["manager_id"],
+                "loser_display_name": loser["display_name"],
+                "loser_score": loser["score"],
+            }
+        )
+    highest = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:3]
+    lowest = sorted(entries, key=lambda entry: entry["value"])[:3]
+    return highest, lowest
+
+
+def _season_player_start_records(season: int) -> tuple[list[dict], list[dict]]:
+    """(top 5 best individual starter performances, top 5 worst) for this
+    season - one entry per starter slot across every matchup (regular
+    season and postseason alike, same "all" matchup_type scope as the
+    other Season Stats records)."""
+    entries = []
+    for matchup in load_matchups(season, None, None, None, "all"):
+        for side, opponent in ((matchup["home"], matchup["away"]), (matchup["away"], matchup["home"])):
+            for starter in side["starters"]:
+                entries.append(
+                    {
+                        "value": starter["points"],
+                        "season": season,
+                        "week": matchup["week"],
+                        "matchup_type": matchup["matchup_type"],
+                        "player_name": starter["player_name"],
+                        "position": starter["position"],
+                        "manager_id": side["manager_id"],
+                        "display_name": side["display_name"],
+                        "opponent_manager_id": opponent["manager_id"],
+                    }
+                )
+    best = sorted(entries, key=lambda entry: entry["value"], reverse=True)[:5]
+    worst = sorted(entries, key=lambda entry: entry["value"])[:5]
+    return best, worst
+
+
+def _render_player_start_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+    score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
+    manager_name = resolve_manager_name(entry["manager_id"], name_resolver, entry["display_name"])
+    with score_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            unsafe_allow_html=True,
+        )
+    with info_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{info_size}; color:gray;'>"
+            f"{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
+            unsafe_allow_html=True,
+        )
+    if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
+        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["manager_id"], entry["opponent_manager_id"], entry["matchup_type"])
+
+
+def _render_player_start_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str]) -> None:
+    st.markdown(f"<div style='font-size:1.15em; font-weight:600;'>{title}</div>", unsafe_allow_html=True)
+    if not top_n:
+        st.metric(title, "-", label_visibility="collapsed")
+        return
+
+    _render_player_start_row(key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    for ordinal, entry in zip(("2nd", "3rd", "4th", "5th"), top_n[1:]):
+        _render_player_start_row(key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
+
+
+def _render_season_stat_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+    # Same score/info/button column layout as the History tab's
+    # _render_record_row (see pages_history.py) - independently
+    # implemented here since this record is a two-manager matchup event
+    # (winner + loser), not a single-manager record.
+    score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
+    winner_name = resolve_manager_name(entry["winner_manager_id"], name_resolver, entry["winner_display_name"])
+    loser_name = resolve_manager_name(entry["loser_manager_id"], name_resolver, entry["loser_display_name"])
+    with score_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            unsafe_allow_html=True,
+        )
+    with info_column:
+        st.markdown(
+            f"<div style='display:flex; align-items:center; height:{row_height};'>"
+            f"<span style='font-size:{info_size}; color:gray;'>"
+            f"{winner_name} defeated {loser_name} · Wk {entry['week']}</span></div>",
+            unsafe_allow_html=True,
+        )
+    if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
+        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["winner_manager_id"], entry["loser_manager_id"], entry["matchup_type"])
+
+
+def _render_season_stat_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str]) -> None:
+    st.markdown(f"<div style='font-size:1.15em; font-weight:600;'>{title}</div>", unsafe_allow_html=True)
+    if not top_n:
+        st.metric(title, "-", label_visibility="collapsed")
+        return
+
+    _render_season_stat_row(key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    for ordinal, entry in zip(("2nd", "3rd"), top_n[1:]):
+        _render_season_stat_row(key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
+
+
+def _render_season_stats_tab(season: int, name_resolver: dict[str, str]) -> None:
+    greatest_margins, smallest_margins = _season_margin_of_victory_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_season_stat_cell("greatest_margin", "Greatest Margin of Victory", greatest_margins, name_resolver)
+        with right_column:
+            _render_season_stat_cell("smallest_margin", "Smallest Margin of Victory", smallest_margins, name_resolver)
+
+    highest_scoring, lowest_scoring = _season_total_score_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_season_stat_cell("highest_scoring_game", "Highest Scoring Game", highest_scoring, name_resolver)
+        with right_column:
+            _render_season_stat_cell("lowest_scoring_game", "Lowest Scoring Game", lowest_scoring, name_resolver)
+
+    best_starts, worst_starts = _season_player_start_records(season)
+    with st.container(border=True):
+        left_column, right_column = st.columns(2)
+        with left_column:
+            _render_player_start_cell("best_player_start", "Best Player Starts", best_starts, name_resolver)
+        with right_column:
+            _render_player_start_cell("worst_player_start", "Worst Player Starts", worst_starts, name_resolver)
 
 
 def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
@@ -509,7 +710,7 @@ def _standings_stat_value(row: dict, stat: str) -> float | int:
     return round(row["points_for"] - row["points_against"], 2)  # "Point Difference"
 
 
-def _standings_stat_display(value: float | int, stat: str) -> str:
+def _standings_stat_display(value: float, stat: str) -> str:
     if stat == "Win %":
         return f"{value:.1f}%"
     if stat == "Streak":
@@ -532,7 +733,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
     if not weekly_tables:
         return
 
-    selected_stat = st.selectbox("Stat to chart", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
+    selected_stat = st.selectbox("Select Stat to View", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]
@@ -566,10 +767,10 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 y=values,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
-                    "Manager: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "W-L-T: %{customdata[1]}<br>"
                     "Week Result: %{customdata[2]}<br>"
                     f"Cumulative {selected_stat}: " + "%{customdata[3]}"
@@ -579,13 +780,14 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
         )
 
     figure.update_layout(
+        title=f"Cumulative {selected_stat}",
         xaxis_title="Week",
         yaxis_title=f"Cumulative {selected_stat}",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
         # Rank is lower-is-better - reverse so the top of the chart
         # visually matches "doing well", consistent with the Rank column
         # itself (1 = best).
-        yaxis=dict(autorange="reversed", nticks=CHART_YAXIS_MAX_TICKS) if selected_stat == "Rank" else dict(nticks=CHART_YAXIS_MAX_TICKS),
+        yaxis={"autorange": "reversed", "nticks": CHART_YAXIS_MAX_TICKS} if selected_stat == "Rank" else {"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -703,10 +905,10 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 y=percentages,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
-                    "Manager: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "Cumulative Breakdown: %{customdata[1]}<br>"
                     "Week Breakdown: %{customdata[2]}<br>"
                     "Breakdown %: %{customdata[3]}"
@@ -716,10 +918,11 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
         )
 
     figure.update_layout(
+        title="Cumulative Overall Breakdown %",
         xaxis_title="Week",
         yaxis_title="Overall Breakdown %",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -818,10 +1021,10 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
                 y=totals,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
-                    "Manager: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "Cumulative Coach: %{customdata[1]}<br>"
                     "Week Coach: %{customdata[2]}"
                     "<extra></extra>"
@@ -830,10 +1033,11 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
         )
 
     figure.update_layout(
+        title="Cumulative Coaching Difference",
         xaxis_title="Week",
         yaxis_title="Cumulative Coaching Difference",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -868,7 +1072,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
             scores.append(row["true_ranking_score"])
             custom_data.append(
                 [
-                    team_label,
+                    manager_name,
                     row["true_ranking_score"],
                     row["record_rank"],
                     row["points_for_rank"],
@@ -883,11 +1087,12 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 y=scores,
                 mode="lines",
                 name=manager_name,
-                line=dict(color=manager_color_map.get(manager_id, "#CCCCCC")),
+                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
                 customdata=custom_data,
                 hovertemplate=(
-                    "Team: %{customdata[0]}<br>"
+                    "<b>%{customdata[0]}<br></b>"
                     "True Rank: %{customdata[1]}<br>"
+                    "---"
                     "Record Rank: %{customdata[2]}<br>"
                     "Points For Rank: %{customdata[3]}<br>"
                     "Breakdown Rank: %{customdata[4]}<br>"
@@ -898,10 +1103,11 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
         )
 
     figure.update_layout(
+        title="Cumulative True Ranking Score",
         xaxis_title="Week",
         yaxis_title="True Ranking Score",
-        xaxis=dict(tickmode="linear", dtick=1, nticks=CHART_XAXIS_MAX_TICKS),
-        yaxis=dict(range=[0, 40], nticks=CHART_YAXIS_MAX_TICKS),
+        xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
+        yaxis={"range": [0, 40], "nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -975,8 +1181,6 @@ def _render_true_ranking_table(season: int, name_resolver: dict[str, str]) -> No
 
 
 def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> None:
-    st.subheader("Transactions")
-
     transactions = load_transactions(season)["transactions"]
     if not transactions:
         st.info("No transactions recorded for this season.")
@@ -999,6 +1203,17 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     min_date, max_date = min(all_dates).date(), max(all_dates).date()
     transaction_types = sorted({t["type"] for t in transactions})
 
+    # Versioned widget keys (base name + a generation counter), same
+    # pattern/reasoning as pages_matchups.py's _render_filters - a plain
+    # session_state.pop() + rerun left these widgets visibly showing their
+    # old selections in some browsers, since the underlying component was
+    # never actually remounted. Clear Filters below bumps the counter
+    # instead, forcing brand-new widget instances.
+    generation = st.session_state.setdefault("seasons_transactions_filters_generation", 0)
+
+    def versioned_key(base_key: str) -> str:
+        return f"{base_key}_gen{generation}"
+
     team_column, type_column, date_column, page_column = st.columns(4)
     with team_column:
         selected_team = st.selectbox(
@@ -1006,24 +1221,31 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
             sorted(set(manager_name_by_id.values())),
             index=None,
             placeholder="Any",
-            key="seasons_transactions_team",
+            key=versioned_key("seasons_transactions_team"),
         )
     with type_column:
         selected_type = st.selectbox(
-            "Transaction",
+            "Transaction Type",
             transaction_types,
             index=None,
             placeholder="Any",
-            key="seasons_transactions_type",
+            key=versioned_key("seasons_transactions_type"),
         )
     with date_column:
         selected_range = st.date_input(
-            "Date range",
+            "Date Range",
             value=(min_date, max_date),
             min_value=min_date,
             max_value=max_date,
-            key="seasons_transactions_date_range",
+            key=versioned_key("seasons_transactions_date_range"),
         )
+
+    clear_col, _ = st.columns([1, 7])
+    with clear_col:
+        if st.button("Clear Filters", key="seasons_transactions_clear", use_container_width=True):
+            st.session_state["seasons_transactions_filters_generation"] = generation + 1
+            st.session_state["seasons_transactions_page"] = 1
+            st.rerun()
 
     # st.date_input returns a single date while the user has only picked
     # one end of the range yet (before their second click) - skip
@@ -1088,6 +1310,8 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         # Feedback tab's Issues table - keeps it distinct from any
         # "Page" filter elsewhere in the app.
         page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
+
+    _render_transactions_metrics(chart_rows)
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} transactions)")
 
     start_index = (page - 1) * TRANSACTIONS_PAGE_SIZE
@@ -1111,12 +1335,10 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         },
     )
 
-    _render_transactions_metrics(chart_rows)
     _render_transactions_chart(chart_rows)
 
 
 def _render_transactions_metrics(chart_rows: list[dict]) -> None:
-    st.divider()
     total_column, add_column, drop_column, lm_column, lineup_column, trade_column = st.columns(6)
     type_counts = pd.Series([row["type"] for row in chart_rows]).value_counts()
     total_column.metric("# Transactions", len(chart_rows))
@@ -1125,7 +1347,6 @@ def _render_transactions_metrics(chart_rows: list[dict]) -> None:
     lm_column.metric("# LM", int(type_counts.get("LM", 0)))
     lineup_column.metric("# Lineup", int(type_counts.get("Lineup", 0)))
     trade_column.metric("# Trade", int(type_counts.get("Trade", 0)))
-    st.divider()
 
 
 def _render_transactions_chart(chart_rows: list[dict]) -> None:
@@ -1152,20 +1373,74 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
         )
 
     figure.update_layout(
+        title="Transaction Count",
         barmode="stack",
         xaxis_title="Date",
         yaxis_title="Transaction Count",
         # nticks caps the y-axis at ~10 gridlines regardless of the max
         # stacked count - plotly still snaps to "nice" integer steps.
-        yaxis=dict(tickmode="auto", nticks=CHART_YAXIS_MAX_TICKS, tick0=0),
+        yaxis={"tickmode": "auto", "nticks": CHART_YAXIS_MAX_TICKS, "tick0": 0},
         # Same cap on the date axis - a season with many transaction
         # dates would otherwise show one label per date.
-        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         legend_title_text="Type",
         hovermode="x unified",
-        hoverlabel=dict(namelength=-1),
+        hoverlabel={"namelength": -1},
     )
     st.plotly_chart(figure, width="stretch")
+
+
+def _render_miscellaneous_table(season: int, name_resolver: dict[str, str]) -> None:
+    """Strength of Schedule: each manager's average opponent win% across
+    the regular season, aggregated cumulatively as more weeks are
+    played - each week's opponent win% is that opponent's own
+    cumulative win_pct through that week (weekly_tables.json's
+    standings rows are already running totals, same source
+    _render_standings_table uses), so a team's SoS updates week over
+    week as their schedule unfolds, exactly like the Standings tab's
+    other cumulative columns."""
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    if not weekly_tables:
+        st.info("No standings available for this season yet.")
+        return
+
+    win_pct_by_week_and_team = {week_table["week"]: {row["team_id"]: row["win_pct"] for row in week_table["standings"]} for week_table in weekly_tables}
+
+    regular_season_matchups = load_matchups(season, None, None, None, "regular")
+
+    opponent_win_pcts_by_team: dict[str, list[float]] = {}
+    for matchup in regular_season_matchups:
+        week_win_pcts = win_pct_by_week_and_team.get(matchup["week"], {})
+        home_team_id = matchup["home"]["team_id"]
+        away_team_id = matchup["away"]["team_id"]
+        home_win_pct = week_win_pcts.get(home_team_id)
+        away_win_pct = week_win_pcts.get(away_team_id)
+        if home_win_pct is None or away_win_pct is None:
+            continue
+        opponent_win_pcts_by_team.setdefault(home_team_id, []).append(away_win_pct)
+        opponent_win_pcts_by_team.setdefault(away_team_id, []).append(home_win_pct)
+
+    current_standings = weekly_tables[-1]["standings"]
+    team_info = team_id_to_manager_map(season)
+
+    rows = []
+    for row in current_standings:
+        info = team_info.get(row["team_id"], {})
+        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+        opponent_win_pcts = opponent_win_pcts_by_team.get(row["team_id"], [])
+        strength_of_schedule = sum(opponent_win_pcts) / len(opponent_win_pcts) if opponent_win_pcts else 0.0
+        rows.append({"Managers": manager_name, "Strength of Schedule": strength_of_schedule})
+    dataframe = pd.DataFrame(rows).sort_values("Strength of Schedule", ascending=False)
+
+    st.dataframe(
+        dataframe,
+        hide_index=True,
+        width="stretch",
+        height=_full_table_height(len(dataframe)),
+        column_config={
+            "Strength of Schedule": st.column_config.NumberColumn(format="%.3f"),
+        },
+    )
 
 
 def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
@@ -1192,7 +1467,13 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
 
 
 def _render_bracket(
-    bracket: dict, team_info: dict[str, dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], is_consolation: bool, path_team_id: str
+    season: int,
+    bracket: dict,
+    team_info: dict[str, dict],
+    name_resolver: dict[str, str],
+    manager_color_map: dict[str, str],
+    is_consolation: bool,
+    path_team_id: str,
 ) -> None:
     rounds = bracket.get("rounds", [])
     if not any(round_entry["matchups"] for round_entry in rounds):
@@ -1216,32 +1497,84 @@ def _render_bracket(
             column_widths.append(1)
     columns = st.columns(column_widths)
 
+    bracket_key_prefix = "consolation" if is_consolation else "championship"
     column_index = 0
     for round_index, (round_order, round_name, games_with_rows) in enumerate(rounds_with_rows):
         with columns[column_index]:
-            # A fixed-pixel-height header div (not an st.container) so
-            # every column - round or connector - starts its canvas at
-            # exactly the same y=0, regardless of any inherent margin
-            # differences between bold text and an empty line.
-            st.markdown(
-                f'<div style="height:{BRACKET_HEADER_HEIGHT_PX}px; display:flex; align-items:center;"><strong>{html.escape(round_name)}</strong></div>',
-                unsafe_allow_html=True,
-            )
-            # All of this round's cards as one absolutely positioned
-            # canvas - no invisible st.container spacers between them.
-            cards_html = "".join(
-                _bracket_game_card_html(
-                    game,
-                    row * BRACKET_ROW_UNIT_PX,
-                    team_info,
-                    name_resolver,
-                    manager_color_map,
-                    _bracket_display_round_label(game, round_order, max_round_order, is_consolation),
-                    path_team_id,
+            round_key = f"bracket_{bracket_key_prefix}_round_{round_order}"
+            with st.container(key=round_key):
+                # The header div, the card canvas div, and the invisible
+                # click-overlay buttons below all need to share one
+                # coordinate space - this container is that shared
+                # position:relative root, so a button's top:{...}px lands
+                # on the exact same pixel as its card regardless of
+                # Streamlit's own wrapper divs in between.
+                st.markdown(f"<style>.st-key-{round_key} {{ position: relative; }}</style>", unsafe_allow_html=True)
+                # A fixed-pixel-height header div (not an st.container) so
+                # every column - round or connector - starts its canvas at
+                # exactly the same y=0, regardless of any inherent margin
+                # differences between bold text and an empty line.
+                st.markdown(
+                    f'<div style="height:{BRACKET_HEADER_HEIGHT_PX}px; display:flex; align-items:center;"><strong>{html.escape(round_name)}</strong></div>',
+                    unsafe_allow_html=True,
                 )
-                for game, row in games_with_rows
-            )
-            st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{cards_html}</div>', unsafe_allow_html=True)
+                # All of this round's cards as one absolutely positioned
+                # canvas - no invisible st.container spacers between them.
+                cards_html = "".join(
+                    _bracket_game_card_html(
+                        game,
+                        row * BRACKET_ROW_UNIT_PX,
+                        team_info,
+                        name_resolver,
+                        manager_color_map,
+                        _bracket_display_round_label(game, round_order, max_round_order, is_consolation),
+                        path_team_id,
+                    )
+                    for game, row in games_with_rows
+                )
+                st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{cards_html}</div>', unsafe_allow_html=True)
+
+                # One invisible, full-card-sized button per REAL matchup
+                # (skipped for byes - "only one side present" is the same
+                # test _bracket_game_card_html uses to decide bye vs real
+                # game), absolutely positioned over its card via the
+                # round_key position:relative root above - clicking
+                # anywhere on the card's area (not just a small button in
+                # the corner) jumps to that matchup on the Matchups page.
+                for game, row in games_with_rows:
+                    if bool(game["team_id_home"]) != bool(game["team_id_away"]):
+                        continue
+                    button_key = f"{round_key}_game_{game['bracket_position']}"
+                    top_px = BRACKET_HEADER_HEIGHT_PX + row * BRACKET_ROW_UNIT_PX
+                    st.markdown(
+                        f"<style>.st-key-{button_key} {{ position:absolute; top:{top_px}px; left:0; "
+                        f"width:100%; height:{BRACKET_CARD_HEIGHT_PX}px; z-index:1; }} "
+                        # A CSS height:100% only resolves if EVERY ancestor
+                        # in the chain down to the <button> itself also has
+                        # an explicit height - Streamlit wraps a button in
+                        # its own stElementContainer/stButton divs (both
+                        # height:auto by default), so each of those needs
+                        # height:100% too, or only the outer key div above
+                        # ends up correctly sized while the real clickable
+                        # <button> stays its tiny natural size (confirmed
+                        # live: outer div was the full 298x190 card, but
+                        # the button inside was still only 26x40).
+                        f".st-key-{button_key} div {{ height:100%; width:100%; }} "
+                        f".st-key-{button_key} button {{ width:100%; height:100%; opacity:0; cursor:pointer; }}</style>",
+                        unsafe_allow_html=True,
+                    )
+                    with st.container(key=button_key):
+                        if st.button(" ", key=f"{button_key}_button"):
+                            # game["week_label"] is "Week 15" - same
+                            # format data_loader.py's own (private,
+                            # module-local) _week_label_to_number parses,
+                            # not importable across modules, so parsed
+                            # inline here instead.
+                            week = int(game["week_label"].removeprefix("Week ").strip())
+                            team1_manager_id = team_info.get(game["team_id_home"], {}).get("manager_id", "")
+                            team2_manager_id = team_info.get(game["team_id_away"], {}).get("manager_id", "")
+                            matchup_type = "consolation" if is_consolation else "championship"
+                            _go_to_matchup_from_schedule(season, week, team1_manager_id, team2_manager_id, matchup_type)
         column_index += 1
 
         if round_index < len(rounds_with_rows) - 1:
@@ -1265,12 +1598,12 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
     championship_tab, consolation_tab = st.tabs(["Championship", "Consolation"])
     with championship_tab:
         _render_bracket(
-            championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
+            season, championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
             path_team_id=championship_bracket.get("champion_team_id", ""),
         )
     with consolation_tab:
         _render_bracket(
-            consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
+            season, consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
             path_team_id=consolation_bracket.get("consolation_winner_team_id", ""),
         )
 
@@ -1531,7 +1864,83 @@ def _render_schedule_record(standings_row: dict | None, align: str) -> None:
         f"Streak: {standings_row['win_streak'] or '—'}",
         f"Rank: {standings_row['rank']}",
     ]
-    st.markdown(f"<div style='text-align:{align};'>{'<br>'.join(lines)}</div>", unsafe_allow_html=True)
+    # Same 10px horizontal padding as _render_schedule_highlight's colored
+    # box above (and the same left/right-inset idea as the Matchups page's
+    # Starters/Bench roster-row cells, padding:0 8px) - without it this
+    # text sits flush against the column edge while the name/score box
+    # above it is inset, so "Record:" doesn't line up under the manager
+    # name.
+    st.markdown(f"<div style='text-align:{align}; padding:0 10px;'>{'<br>'.join(lines)}</div>", unsafe_allow_html=True)
+
+
+def _render_schedule_week_metrics(matchups: list[dict], week_table: dict | None, name_resolver: dict[str, str], metrics_key: str) -> None:
+    """Four league-wide "of the week" headline stats shown above this
+    week's schedule containers - Coach (least negative coaching diff,
+    i.e. closest to the 0 = perfectly-optimal lineup), Start (highest
+    single starter score across every team), Team (highest team score),
+    and Bye Team (most starters at points <= 0 - covers true byes,
+    actual 0-or-negative-point games, and any empty roster slot, which
+    all show up as points <= 0 in the parsed matchup data)."""
+    sides = [matchup[side] for matchup in matchups for side in ("home", "away")]
+
+    # These metrics' values are "score | name" text, not a bare number
+    # (st.metric's default size assumes) - scoped CSS shrinks just this
+    # row's value font so a long manager/player name doesn't force
+    # awkward wrapping or overflow. metrics_key is caller-supplied
+    # (season+week specific) since st.tabs renders every week's content
+    # into the DOM at once, not just the active tab - a fixed key here
+    # would collide across weeks.
+    with st.container(key=metrics_key):
+        st.markdown(
+            f"<style>.st-key-{metrics_key} [data-testid='stMetricValue'] {{ font-size: 1.5rem; }}</style>",
+            unsafe_allow_html=True,
+        )
+        team_column, start_column, coach_column, bye_column = st.columns(4)
+
+        with team_column:
+            best_team_side = max(sides, key=lambda side: side["score"])
+            manager_name = resolve_manager_name(best_team_side.get("manager_id", ""), name_resolver, best_team_side.get("display_name", ""))
+            st.metric("Team of the Week", f"{best_team_side['score']:.2f} ({manager_name})", help="Team with highest points total.")
+
+        with start_column:
+            best_starter, best_starter_side = None, None
+            for side in sides:
+                for player in side["starters"]:
+                    if best_starter is None or player["points"] > best_starter["points"]:
+                        best_starter, best_starter_side = player, side
+            if best_starter:
+                manager_name = resolve_manager_name(best_starter_side.get("manager_id", ""), name_resolver, best_starter_side.get("display_name", ""))
+                st.metric("Start of the Week", f"{best_starter['player_name']} {best_starter['points']:.2f} ({manager_name})", help="Starting player with highest points total.")
+            else:
+                st.metric("Start of the Week", "—")
+
+        with coach_column:
+            if week_table and week_table.get("coaching"):
+                best_coach_row = max(week_table["coaching"], key=lambda row: row["weekly"]["diff"])
+                manager_name = resolve_manager_name(*_manager_lookup_args(best_coach_row["team_id"], sides, name_resolver))
+                st.metric("Coach of the Week", f"{best_coach_row['weekly']['diff']:.2f} ({manager_name})", help="Manager with most optimal starting lineup.")
+            else:
+                st.metric("Coach of the Week", "—", help="Manager with most optimal starting lineup.")
+
+        with bye_column:
+            zero_point_counts = [(sum(1 for player in side["starters"] if player["points"] <= 0), side) for side in sides]
+            worst_count, worst_side = max(zero_point_counts, key=lambda pair: pair[0])
+            if worst_count > 0:
+                manager_name = resolve_manager_name(worst_side.get("manager_id", ""), name_resolver, worst_side.get("display_name", ""))
+                st.metric("Bye Team of the Week", f"{worst_count} ({manager_name})", help="Manager starting line up with most: empty slots, bye week slots, 0 point players, negative point players.")
+            else:
+                st.metric("Bye Team of the Week", "—", help="Manager starting line up with most: empty slots, bye week slots, 0 point players, negative point players.")
+
+
+def _manager_lookup_args(team_id: str, sides: list[dict], name_resolver: dict[str, str]) -> tuple[str, dict, str]:
+    """resolve_manager_name() needs a manager_id + display_name, but
+    week_table["coaching"] rows only carry a team_id - sides (this
+    week's home/away matchup dicts, already enriched with manager_id/
+    display_name) is the only place that week's team_id -> manager
+    mapping is available without a separate team_id_to_manager_map()
+    lookup."""
+    side = next((side for side in sides if side["team_id"] == team_id), {})
+    return side.get("manager_id", ""), name_resolver, side.get("display_name", "")
 
 
 def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -1544,30 +1953,46 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
     week_table = next((table for table in weekly_tables if table["week"] == week), None)
     standings_by_team = {row["team_id"]: row for row in week_table["standings"]} if week_table else {}
 
+    _render_schedule_week_metrics(matchups, week_table, name_resolver, f"schedule_week_metrics_{season}_{week}")
+
     # Scoped to this week's own key (the established st.container(key=...)
     # -> ".st-key-*" CSS-scoping technique used elsewhere in the app) so
     # tightening the gap between row containers doesn't leak into any
     # other vertical stack on the page.
     outer_key = f"schedule_week_{season}_{week}"
+    # Sorted by matchup_id (e.g. "2022_w1_1_2") rather than trusting
+    # load_matchups()'s own order, since that order ultimately traces back
+    # to a directory glob - not guaranteed stable across filesystems -
+    # and the "Matchup N" number below needs to be deterministic.
+    sorted_matchups = sorted(matchups, key=lambda matchup: matchup["matchup_id"])
     with st.container(key=outer_key):
         st.markdown(f"<style>.st-key-{outer_key} div[data-testid='stVerticalBlock'] {{ gap: 0.4rem; }}</style>", unsafe_allow_html=True)
-        for matchup in matchups:
+        for matchup_number, matchup in enumerate(sorted_matchups, start=1):
             home, away = matchup["home"], matchup["away"]
             # 1:6:1 outer split centers the actual row at exactly 75%
             # (6/8) of the available width, rather than stretching edge
             # to edge.
             _, row_area, _ = st.columns([1, 6, 1])
             with row_area, st.container(border=True):
+                st.caption(f"{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]} · Matchup {matchup_number}")
                 # Highlight row and record-stats row are two SEPARATE
-                # st.columns calls (not one column stacking both) so
-                # vertical_alignment="center" here centers the button
-                # against just the colored highlight blocks, not the
-                # highlight+record text combined.
-                team1_highlight_column, button_column, team2_highlight_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS, vertical_alignment="center")
+                # st.columns calls (not one column stacking both) so the
+                # button below is only ever centered against the colored
+                # highlight blocks, not the highlight+record text combined.
+                # vertical_alignment="center" alone still left the button a
+                # few px above true center (measured live: box center
+                # 565.17 vs button center 557.17px, an 8px gap) - not
+                # Streamlit's per-column height centering pattern's fault
+                # so much as the button's own element wrapper not being
+                # exactly its rendered height; a manual top spacer sized to
+                # the live-measured (box_height - button_height) / 2 offset
+                # closes that last gap directly rather than guessing.
+                team1_highlight_column, button_column, team2_highlight_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS, vertical_alignment="top")
 
                 with team1_highlight_column:
                     _render_schedule_highlight(home, name_resolver, manager_color_map, align="left")
                 with button_column:
+                    st.markdown("<div style='height:1.45rem;'></div>", unsafe_allow_html=True)
                     if st.button("View Matchup", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
                         _go_to_matchup_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
                 with team2_highlight_column:
@@ -1580,6 +2005,13 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                     _render_schedule_record(standings_by_team.get(home["team_id"]), align="left")
                 with team2_record_column:
                     _render_schedule_record(standings_by_team.get(away["team_id"]), align="right")
+
+                # The record row's plain text sits closer to the container's
+                # own bottom padding edge than the highlight row's colored
+                # blocks sit to the top edge (measured live: ~22px top vs
+                # ~3px bottom) - this spacer closes that gap so the visible
+                # whitespace matches on both sides.
+                st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
 
 
 def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> None:
@@ -1656,19 +2088,22 @@ def render_seasons_page() -> None:
     # Single mandatory season (not an "Any" filter like Players/Games -
     # this whole tab is inherently scoped to one season at a time),
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Season", seasons, index=len(seasons) - 1, key="seasons_season")
+    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")
 
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
 
-    season_summary_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
-        ["Season Summary", "Schedule", "Regular Season", "Post Season", "Season Settings"]
+    season_summary_tab, season_stats_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
+        ["Season Summary", "Season Stats", "Schedule", "Regular Season", "Post Season", "Season Settings"]
     )
 
     with season_summary_tab:
         _render_season_podium(selected_season, name_resolver)
         st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
         _render_season_summary_table(selected_season, name_resolver)
+
+    with season_stats_tab:
+        _render_season_stats_tab(selected_season, name_resolver)
 
     with schedule_tab:
         # weekly_tables.json is already built from load_regular_season_weeks
@@ -1684,8 +2119,8 @@ def render_seasons_page() -> None:
                     _render_schedule_week(selected_season, week, name_resolver, manager_color_map)
 
     with regular_season_tab:
-        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab = st.tabs(
-            ["Standings", "Breakdown", "Coach", "True Ranking", "Transactions"]
+        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab, miscellaneous_tab = st.tabs(
+            ["Standings", "Breakdown", "Coach", "True Ranking", "Transactions", "Miscellaneous"]
         )
         with standings_tab:
             _render_standings_table(selected_season, name_resolver)
@@ -1701,6 +2136,8 @@ def render_seasons_page() -> None:
             _render_true_ranking_chart(selected_season, name_resolver, manager_color_map)
         with transactions_tab:
             _render_transactions_table(selected_season, name_resolver)
+        with miscellaneous_tab:
+            _render_miscellaneous_table(selected_season, name_resolver)
 
     with post_season_tab:
         bracket_tab, final_standings_tab = st.tabs(["Bracket", "Bracket Standings"])

@@ -10,7 +10,7 @@ across every season in the archive. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
+from constants import RECORD_ROW_COLUMN_RATIOS
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -39,8 +39,8 @@ RUNNER_UP_COLOR = "#a7a7a7"
 THIRD_PLACE_COLOR = "#9f724b"
 
 RECORD_LABELS = {
-    "highest_weekly_score": "Highest Weekly Score",
-    "lowest_weekly_score": "Lowest Weekly Score",
+    "highest_weekly_score": "Highest Weekly Team Score",
+    "lowest_weekly_score": "Lowest Weekly Team Score",
     "highest_season_points_for": "Highest Season Points",
     "lowest_season_points_for": "Lowest Season Points",
     "longest_win_streak": "Longest Win Streak",
@@ -73,13 +73,6 @@ ORDINAL_WORDS = [
     "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
     "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
 ]
-
-# score | info | button - wide enough for the button column to fit
-# "View Matchup"/"View Season" on one line without wrapping (each record row
-# is itself in a half-width column, so this column only gets ~1/10 of
-# the page width) - same ratio every row so all three still align
-# vertically.
-RECORD_ROW_COLUMN_RATIOS = [1, 2.3, 1.7]
 
 MANAGER_STAT_COLUMN_FORMATS = {
     "Win %": "%.3f",
@@ -143,7 +136,7 @@ PER_SEASON_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against", "Pla
 PER_GAME_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against"}
 
 NORMALIZATION_LABELS = {"all_time": "All Time", "per_season": "Per Season", "per_game": "Per Game"}
-NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against (Per Season also covers Players Started)."
+NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against, Players Started."
 
 # ========================================
 # FUNCTIONS
@@ -445,14 +438,18 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
                 sort=False,  # preserve our own count-then-recency order, not plotly's default value sort
                 rotation=0,  # first slice starts at 12 o'clock
                 direction="clockwise",
-                marker=dict(colors=colors),
+                marker={"colors": colors},
                 textinfo="label+value",
                 customdata=years_text,
-                hovertemplate="%{label}<br>Championships: %{value}<br>Years: %{customdata}<extra></extra>",
+                hovertemplate="<b>%{label}</b><br>Championships: %{value}<br>Years: %{customdata}<extra></extra>",
                 showlegend=False,
+                # Plotly centers each line of hover text by default -
+                # left-align it instead, since "Years: 2019, 2021, 2023"
+                # reads better ragged-right than centered.
+                hoverlabel={"align": "left"},
             )
         )
-        pie_figure.update_layout(title="Championships by Manager", margin=dict(t=40, b=0, l=0, r=0))
+        pie_figure.update_layout(title="Championships by Manager", margin={"t": 40, "b": 0, "l": 0, "r": 0})
         st.plotly_chart(pie_figure, width="stretch")
 
     with bar_column:
@@ -487,35 +484,61 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             x=names,
             y=[row["third_place_count"] for row in bar_rows],
             marker_color=THIRD_PLACE_COLOR,
-            customdata=[f"3rd Place: {_years_label(row['third_place_years'], '☹️')}" for row in bar_rows],
-            hovertemplate="%{customdata}<extra></extra>",
+            hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Runner-Up",
             x=names,
             y=[row["runner_up_count"] for row in bar_rows],
             marker_color=RUNNER_UP_COLOR,
-            customdata=[f"Runner-Up: {_years_label(row['runner_up_years'], '😢')}" for row in bar_rows],
-            hovertemplate="%{customdata}<extra></extra>",
+            hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Champion",
             x=names,
             y=[row["champion_count"] for row in bar_rows],
             marker_color=CHAMPION_COLOR,
-            customdata=[f"Champion: {_years_label(row['champion_years'], '😭')}" for row in bar_rows],
+            hoverinfo="skip",
+        )
+        # A fourth, fully transparent bar stacked on top of the real three -
+        # its height is the manager's own total (so it exactly covers the
+        # visible stack for hover purposes) and it alone owns the tooltip
+        # (the three real traces above have hoverinfo="skip"). This is a
+        # workaround for x unified's shared hoverlabel font: Plotly's own
+        # header/row styling can't be bolded selectively (confirmed live -
+        # a layout-level bold bolds every row, a trace-level bold on just
+        # one real trace bolds nothing), but a single trace's own
+        # hovertemplate can freely mix "<b>...</b>" with plain text.
+        bar_figure.add_bar(
+            x=names,
+            # Explicit base=0 opts this trace OUT of automatic stacking
+            # positioning (which would otherwise draw it starting from
+            # the top of the real stack, at height 2x total) - y is each
+            # manager's own full stack height, so it overlays exactly
+            # the visible colored bar for hover purposes.
+            y=[row["champion_count"] + row["runner_up_count"] + row["third_place_count"] for row in bar_rows],
+            base=[0] * len(bar_rows),
+            marker={"color": "rgba(0,0,0,0)"},
+            customdata=[
+                f"<b>{row['name']}</b><br>"
+                f"Champion: {_years_label(row['champion_years'], '😭')}<br>"
+                f"Runner-Up: {_years_label(row['runner_up_years'], '😢')}<br>"
+                f"3rd Place: {_years_label(row['third_place_years'], '☹️')}"
+                for row in bar_rows
+            ],
             hovertemplate="%{customdata}<extra></extra>",
+            showlegend=False,
         )
         bar_figure.update_layout(
             title="Podiums by Manager",
             barmode="stack",
-            hovermode="x unified",
+            hovermode="x",
             xaxis_title="Manager",
-            xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
-            yaxis_title="Count",
-            yaxis=dict(tickformat="d", nticks=CHART_YAXIS_MAX_TICKS),  # counts are integers - no fractional ticks
-            legend=dict(traceorder="reversed"),  # keep legend reading Champion/Runner-Up/3rd Place despite reversed trace order above
-            margin=dict(t=40, b=0, l=0, r=0),
+            xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
+            yaxis_title="Trophy Count",
+            yaxis={"tickformat": "d", "nticks": CHART_YAXIS_MAX_TICKS},  # counts are integers - no fractional ticks
+            legend={"traceorder": "reversed"},  # keep legend reading Champion/Runner-Up/3rd Place despite reversed trace order above
+            margin={"t": 40, "b": 0, "l": 0, "r": 0},
         )
         st.plotly_chart(bar_figure, width="stretch")
 
@@ -580,7 +603,7 @@ def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, st
 def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> None:
     with st.container(border=True):
         variant_suffix = st.selectbox(
-            "Streak type",
+            "Select Streak Variant",
             list(STREAK_VARIANTS),
             format_func=lambda suffix: STREAK_VARIANTS[suffix],
             key="streak_variant",
@@ -632,16 +655,15 @@ def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
 
 
 def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[str, str]) -> None:
-    st.subheader("Stats to Chart")
-    selectbox_column, normalization_column, tooltip_column = st.columns([3, 1, 0.2])
+    selectbox_column, normalization_column = st.columns([3, 1])
     with selectbox_column:
         selected_stat = st.selectbox(
-            "Stat to chart",
+            "Select Stat to View",
             MANAGER_STAT_COLUMNS,
             format_func=lambda column: MANAGER_STAT_FULL_LABELS[column],
             index=0,
             key="manager_stat_chart_selection",
-            label_visibility="collapsed",
+            # label_visibility="collapsed",
         )
         # The widget always has index=0 as a fallback, but a stale
         # session_state value from a prior rerun (e.g. before a code
@@ -674,17 +696,9 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
             normalization_options,
             format_func=lambda value: NORMALIZATION_LABELS[value],
             key="manager_stat_normalization",
-            label_visibility="collapsed",
+            # label_visibility="collapsed",
+            help=NORMALIZATION_HELP
         )
-    with tooltip_column:
-        # st.selectbox's built-in help icon renders next to its LABEL,
-        # which is collapsed here for layout reasons - so it silently
-        # disappears rather than just moving. st.popover gives a proper
-        # native Streamlit icon button (not a raw unicode glyph) that
-        # opens the same explanation on click, placed in its own narrow
-        # column to the dropdown's right.
-        with st.popover("ℹ️", use_container_width=False):
-            st.markdown(NORMALIZATION_HELP)
 
     selected_stat_label = MANAGER_STAT_FULL_LABELS[selected_stat]
 
@@ -715,10 +729,10 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
     stat_figure.update_layout(
         title=f"{selected_stat_label} by Manager",
         xaxis_title="Manager",
-        xaxis=dict(nticks=CHART_XAXIS_MAX_TICKS),
+        xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         yaxis_title=selected_stat_label,
-        yaxis=dict(nticks=CHART_YAXIS_MAX_TICKS),
-        margin=dict(t=40, b=0, l=0, r=0),
+        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     st.plotly_chart(stat_figure, width="stretch")
 
