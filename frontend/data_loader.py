@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 import streamlit as st
+from colors import COLOR_BLACK, COLOR_PALETTE_PAIRED, COLOR_WHITE
 
 # ========================================
 # CONSTANTS
@@ -34,16 +35,6 @@ STATS_AGGREGATION_DIRECTORY = PROJECT_ROOT_DIRECTORY / "code" / "stats-aggregati
 if str(STATS_AGGREGATION_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(STATS_AGGREGATION_DIRECTORY))
 from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup
-
-# Standard 12-color ColorBrewer "Paired" qualitative palette - not
-# available under plotly.express.colors.qualitative by this name (that
-# module has Set1/Set2/Set3 etc, but no "Paired"), so hardcoded here
-# rather than adding a matplotlib dependency just for these 12 hex codes.
-PAIRED_PALETTE = [
-    "#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C",
-    "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00",
-    "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928",
-]
 
 # stat_N -> the scoring_rules key (in archive/parsed/{year}/metadata.json)
 # it's scored under. Most map to their own obviously-named rule; a few
@@ -494,7 +485,7 @@ def build_manager_color_map() -> dict[str, str]:
     is what makes the assignment stable across different views."""
     manager_stats = load_all_time_manager_stats()
     manager_ids = sorted(manager["manager_id"] for manager in manager_stats["managers"])
-    return {manager_id: PAIRED_PALETTE[index % len(PAIRED_PALETTE)] for index, manager_id in enumerate(manager_ids)}
+    return {manager_id: COLOR_PALETTE_PAIRED[index % len(COLOR_PALETTE_PAIRED)] for index, manager_id in enumerate(manager_ids)}
 
 
 @st.cache_resource
@@ -804,4 +795,4 @@ def contrasting_text_color(hex_color: str) -> str:
     hex_color = hex_color.lstrip("#")
     red, green, blue = (int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
     luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-    return "#000000" if luminance > 150 else "#FFFFFF"
+    return COLOR_BLACK if luminance > 150 else COLOR_WHITE

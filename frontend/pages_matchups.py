@@ -15,7 +15,22 @@ See execution-plan.md Phase G.
 
 import plotly.graph_objects as go
 import streamlit as st
-from constants import CHART_LEGEND_OUTSIDE_RIGHT
+from colors import (
+    COLOR_CHART_VERTICAL_DASHED_YEARS,
+    COLOR_MANAGER_BACKUP,
+    COLOR_NO_OPTIMAL_GAIN,
+    COLOR_PLAYER_BENCH,
+    COLOR_POINTS_NEGATIVE,
+    COLOR_POINTS_POSITIVE,
+    COLOR_ROSTER_TABLE,
+)
+from constants import (
+    BENCH_POSITION_ORDER,
+    CHART_LEGEND_OUTSIDE_RIGHT,
+    MATCHUP_TYPE_LABELS,
+    MATCHUP_TYPE_OPTIONS,
+    NFL_TEAM_ABBREVIATIONS,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -37,19 +52,6 @@ from player_modal import open_player_stats_modal
 
 MAX_WEEK = 17 # TODO this should be taken from /archive/nfl_season_lengths.json
 
-# Same neutral gray used for the "Bench" segment in the Players tab's
-# starts-vs-bench chart - reused here for a losing/negative-diff bar so
-# the loss color is consistent with the rest of the app.
-BENCH_COLOR = "#B0B0B0"
-
-MATCHUP_TYPE_OPTIONS = ["all", "regular", "championship", "consolation"]
-MATCHUP_TYPE_LABELS = {
-    "all": "All",
-    "regular": "Regular Season",
-    "championship": "Championship Bracket",
-    "consolation": "Consolation Bracket",
-}
-
 FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matchups_week", "matchups_team2_manager_id", "matchups_matchup_type")
 
 # Matchup cards are the expensive part of this page (each one computes an
@@ -57,26 +59,6 @@ FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matc
 # diff chart above them still run over the FULL filtered list regardless
 # of this, only the card loop itself is paginated.
 MATCHUPS_PAGE_SIZE = 10
-
-BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
-
-# DEF entries carry an empty "nfl_team" in the archived data - it was
-# never captured during parsing (only individual players' teams were),
-# so this display-only lookup fills it back in from the DEF's own
-# player_name (e.g. "49ers") rather than requiring a full re-parse of
-# every season just for this one field.
-DEF_TEAM_ABBREVIATIONS = {
-    "49ers": "SF", "Bears": "CHI", "Bengals": "CIN", "Bills": "BUF",
-    "Broncos": "DEN", "Browns": "CLE", "Buccaneers": "TB", "Cardinals": "ARI",
-    "Chargers": "LAC", "Chiefs": "KC", "Colts": "IND", "Commanders": "WAS",
-    "Cowboys": "DAL", "Dolphins": "MIA", "Eagles": "PHI", "Falcons": "ATL",
-    "Giants": "NYG", "Jaguars": "JAX", "Jets": "NYJ", "Lions": "DET",
-    "Packers": "GB", "Panthers": "CAR", "Patriots": "NE", "Raiders": "LV",
-    "Rams": "LAR", "Ravens": "BAL", "Redskins": "WAS", "Saints": "NO",
-    "Seahawks": "SEA", "Steelers": "PIT", "Texans": "HOU", "Titans": "TEN",
-    "Vikings": "MIN",
-} # TODO move to /archive/nfl_team_abbreviations.json
-
 
 TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
 
@@ -478,7 +460,7 @@ def _manager_pill(label: str, manager_id: str, name_resolver: dict[str, str], ma
     each matchup card below, so this recap line visually ties back to
     the same color key."""
     name = resolve_manager_name(manager_id, name_resolver)
-    background_color = manager_color_map.get(manager_id, "#CCCCCC")
+    background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
     text_color = contrasting_text_color(background_color)
     return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{label} ({name})</span>"
 
@@ -554,7 +536,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         return
 
     manager1_name = resolve_manager_name(team1_manager_id, name_resolver)
-    manager1_color = manager_color_map.get(team1_manager_id, "#4C78A8")
+    manager1_color = manager_color_map.get(team1_manager_id, COLOR_MANAGER_BACKUP)
 
     x_labels, diffs, hover_text = [], [], []
     for matchup in matchups:
@@ -612,7 +594,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.add_bar(
-        x=x_positions, y=loss_diffs, marker_color=BENCH_COLOR, name="Loss/Tie",
+        x=x_positions, y=loss_diffs, marker_color=COLOR_PLAYER_BENCH, name="Loss/Tie",
         customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
@@ -630,7 +612,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     if not season_filter:
         for index, matchup in enumerate(matchups):
             if index > 0 and matchup["season"] != matchups[index - 1]["season"]:
-                figure.add_vline(x=index - 0.5, line_dash="dash", line_color="#888888")
+                figure.add_vline(x=index - 0.5, line_dash="dash", line_color=COLOR_CHART_VERTICAL_DASHED_YEARS)
 
     st.plotly_chart(figure, width="stretch")
 
@@ -701,7 +683,7 @@ def _render_roster_table(
     with st.container(border=show_border, key=container_key):
         for index, player in enumerate(players):
             columns = st.columns(column_ratios)
-            columns[0].markdown(_cell(player["position"], color="#666666"), unsafe_allow_html=True)
+            columns[0].markdown(_cell(player["position"], color=COLOR_ROSTER_TABLE), unsafe_allow_html=True)
 
             if player.get("is_empty_slot"):
                 columns[1].markdown(_cell("—"), unsafe_allow_html=True)
@@ -710,7 +692,7 @@ def _render_roster_table(
                     columns[3].markdown(_cell("—", align="right"), unsafe_allow_html=True)
                 continue
 
-            nfl_team = player["nfl_team"] or DEF_TEAM_ABBREVIATIONS.get(player["player_name"], "")
+            nfl_team = player["nfl_team"] or NFL_TEAM_ABBREVIATIONS.get(player["player_name"], "")
             button_key = f"player_row_{row_key_prefix}_{player.get('player_id')}_{season}_{week}_{index}"
             if columns[1].button(f"{player['player_name']} ({nfl_team})", key=button_key, use_container_width=True):
                 open_player_stats_modal(player.get("player_id"), player["player_name"], player["position"], nfl_team, season, week)
@@ -720,15 +702,15 @@ def _render_roster_table(
             # red instead of the normal black, to flag them without
             # altering the number.
             is_displaced = optimal_losses is not None and player.get("player_id") in optimal_losses
-            points_color = "#C62828" if is_displaced else "inherit"
+            points_color = COLOR_POINTS_NEGATIVE if is_displaced else "inherit"
             columns[2].markdown(_cell(f"{player['points']:.2f}", align="right", color=points_color, weight="600"), unsafe_allow_html=True)
 
             if optimal_gains is not None:
                 gain = optimal_gains.get(player.get("player_id"))
                 if gain is None:
-                    columns[3].markdown(_cell("—", align="right", color="#999999"), unsafe_allow_html=True)
+                    columns[3].markdown(_cell("—", align="right", color=COLOR_NO_OPTIMAL_GAIN), unsafe_allow_html=True)
                 else:
-                    columns[3].markdown(_cell(f"+{gain:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+                    columns[3].markdown(_cell(f"+{gain:.2f}", align="right", color=COLOR_POINTS_POSITIVE, weight="600"), unsafe_allow_html=True)
 
         if optimal_total_points is None:
             # Streamlit's own default vertical gap sits ABOVE the first
@@ -750,7 +732,7 @@ def _render_roster_table(
             total_columns[2].markdown(_cell(f"{optimal_total_points:.2f}", align="right", weight="600"), unsafe_allow_html=True)
             if optimal_gains is not None and actual_total_points is not None:
                 total_diff = optimal_total_points - actual_total_points
-                total_columns[3].markdown(_cell(f"+{total_diff:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+                total_columns[3].markdown(_cell(f"+{total_diff:.2f}", align="right", color=COLOR_POINTS_POSITIVE, weight="600"), unsafe_allow_html=True)
             # The expander's own bottom padding is tightened (see the
             # scoped CSS in _render_matchup_card), so this row needs its
             # own explicit breathing room instead of relying on that.
@@ -773,7 +755,7 @@ def _render_matchup_card(
         for column, side, is_left_side in ((left_column, left, True), (right_column, right, False)):
             with column:
                 display_name = resolve_manager_name(side["manager_id"], name_resolver, side.get("display_name", ""))
-                background_color = manager_color_map.get(side["manager_id"], "#CCCCCC")
+                background_color = manager_color_map.get(side["manager_id"], COLOR_MANAGER_BACKUP)
                 text_color = contrasting_text_color(background_color)
                 # Computed once per side and reused for both the header
                 # score and the bench table below, rather than solving

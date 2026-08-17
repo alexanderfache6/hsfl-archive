@@ -10,7 +10,13 @@ across every season in the archive. See execution-plan.md Phase G.
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from constants import RECORD_ROW_COLUMN_RATIOS
+from colors import (
+    COLOR_CHAMPION,
+    COLOR_MANAGER_BACKUP,
+    COLOR_RUNNER_UP,
+    COLOR_THIRD_PLACE,
+)
+from constants import ORDINAL_WORDS, RECORD_ROW_COLUMN_RATIOS
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -28,15 +34,6 @@ from data_loader import (
 # ========================================
 # CONSTANTS
 # ========================================
-
-# Standard real-world medal colors - not a generated categorical palette,
-# so not run through the dataviz skill's CVD validator (this exact
-# 3-color convention is a fixed, universally recognized domain standard,
-# and the three already differ sharply in lightness: bright yellow-gold,
-# light neutral silver, dark orange-brown bronze).
-CHAMPION_COLOR = "#d0b04e"
-RUNNER_UP_COLOR = "#a7a7a7"
-THIRD_PLACE_COLOR = "#9f724b"
 
 RECORD_LABELS = {
     "highest_weekly_score": "Highest Weekly Team Score",
@@ -69,10 +66,7 @@ STREAK_VARIANTS = {
     "combined_cross_season": "Spans Regular and Postseason",
 }
 
-ORDINAL_WORDS = [
-    "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
-    "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
-]
+
 
 MANAGER_STAT_COLUMN_FORMATS = {
     "Win %": "%.3f",
@@ -383,7 +377,7 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
             return [""] * len(column)
         styles = []
         for manager_id in champion_manager_ids:
-            hex_color = manager_color_map.get(manager_id, "")
+            hex_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
             styles.append(f"background-color: {_hex_to_rgba(hex_color, 0.75)}" if hex_color else "")
         return styles
 
@@ -429,7 +423,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
         labels = [resolve_manager_name(manager_id, name_resolver) for manager_id, _, _ in champion_managers]
         values = [count for _, count, _ in champion_managers]
         years_text = [_years_label(years) for _, _, years in champion_managers]
-        colors = [manager_color_map.get(manager_id, "#CCCCCC") for manager_id, _, _ in champion_managers]
+        colors = [manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP) for manager_id, _, _ in champion_managers]
 
         pie_figure = go.Figure(
             go.Pie(
@@ -483,21 +477,21 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             name="3rd Place",
             x=names,
             y=[row["third_place_count"] for row in bar_rows],
-            marker_color=THIRD_PLACE_COLOR,
+            marker_color=COLOR_THIRD_PLACE,
             hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Runner-Up",
             x=names,
             y=[row["runner_up_count"] for row in bar_rows],
-            marker_color=RUNNER_UP_COLOR,
+            marker_color=COLOR_RUNNER_UP,
             hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Champion",
             x=names,
             y=[row["champion_count"] for row in bar_rows],
-            marker_color=CHAMPION_COLOR,
+            marker_color=COLOR_CHAMPION,
             hoverinfo="skip",
         )
         # A fourth, fully transparent bar stacked on top of the real three -
@@ -716,7 +710,7 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
     # better/more).
     ascending = selected_stat in ("Avg Reg. Finish", "Avg Post. Finish", "Best Finish", "Worst Finish")
     chart_data = chart_data.sort_values(selected_stat, ascending=ascending)
-    bar_colors = [manager_color_map.get(manager_id, "#4C78A8") for manager_id in chart_data["manager_id"]]
+    bar_colors = [manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP) for manager_id in chart_data["manager_id"]]
 
     stat_figure = go.Figure(
         go.Bar(
