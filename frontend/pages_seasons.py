@@ -53,7 +53,7 @@ BRACKET_HEADER_HEIGHT_PX = 40
 
 # Every selectable stat for the Standings tab's chart - same "Stat to
 # chart" selectbox pattern as pages_history.py's MANAGER_STAT_COLUMNS.
-STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Streak", "Points For", "Points Against", "Point Difference"]
+STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Active Streak", "Points For", "Points Against", "Point Difference"]
 
 TRANSACTIONS_PAGE_SIZE = 10
 
@@ -589,9 +589,9 @@ def _render_season_stats_tab(season: int, name_resolver: dict[str, str]) -> None
     with st.container(border=True):
         left_column, right_column = st.columns(2)
         with left_column:
-            _render_season_stat_cell("highest_scoring_game", "Highest Scoring Game", highest_scoring, name_resolver)
+            _render_season_stat_cell("highest_scoring_matchup", "Highest Scoring Matchup", highest_scoring, name_resolver)
         with right_column:
-            _render_season_stat_cell("lowest_scoring_game", "Lowest Scoring Game", lowest_scoring, name_resolver)
+            _render_season_stat_cell("lowest_scoring_matchup", "Lowest Scoring Matchup", lowest_scoring, name_resolver)
 
     best_starts, worst_starts = _season_player_start_records(season)
     with st.container(border=True):
@@ -629,14 +629,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
                 "Team": f"{team_name} ({manager_name})",
                 "W-L-T": f"{row['wins']}-{row['losses']}-{row['ties']}",
                 "Win %": row["win_pct"],
-                # Signed int (not the raw "W5"/"L3" text) so Streamlit's
-                # built-in click-to-sort on this column orders it
-                # correctly: W5...W1, L1...L5 (a continuous "how good is
-                # this streak" scale) - a text column would sort
-                # alphabetically instead (W5...W1, L5...L1), since there's
-                # no way to give st.dataframe's interactive sort a custom
-                # comparator. +d format keeps the sign visible either way.
-                "Streak": int(row["win_streak"][1:]) * (1 if row["win_streak"][0] == "W" else -1) if row["win_streak"] else 0,
+                "Active Streak": int(row["win_streak"][1:]) * (1 if row["win_streak"][0] == "W" else -1) if row["win_streak"] else 0,
                 "Points For": row["points_for"],
                 "Points Against": row["points_against"],
                 "Point Difference": row["points_for"] - row["points_against"],
@@ -666,7 +659,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
             return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
-    styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Streak"]).map(_color_point_difference, subset=["Point Difference"])
+    styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Active Streak"]).map(_color_point_difference, subset=["Point Difference"])
 
     st.dataframe(
         styled_dataframe,
@@ -675,7 +668,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
         height=_full_table_height(len(dataframe)),
         column_config={
             "Win %": st.column_config.NumberColumn(format="%.3f"),
-            "Streak": st.column_config.NumberColumn(format="%+d"),
+            "Active Streak": st.column_config.NumberColumn(format="%+d"),
             "Points For": st.column_config.NumberColumn(format="%.2f"),
             "Points Against": st.column_config.NumberColumn(format="%.2f"),
             "Point Difference": st.column_config.NumberColumn(format="%+.2f"),
@@ -692,7 +685,7 @@ def _standings_stat_value(row: dict, stat: str) -> float | int:
         return row["losses"]
     if stat == "Win %":
         return round(row["win_pct"] * 100, 1)
-    if stat == "Streak":
+    if stat == "Active Streak":
         streak = row["win_streak"]
         return int(streak[1:]) * (1 if streak[0] == "W" else -1) if streak else 0
     if stat == "Points For":
@@ -705,7 +698,7 @@ def _standings_stat_value(row: dict, stat: str) -> float | int:
 def _standings_stat_display(value: float, stat: str) -> str:
     if stat == "Win %":
         return f"{value:.1f}%"
-    if stat == "Streak":
+    if stat == "Active Streak":
         return f"{value:+d}"
     if stat == "Point Difference":
         return f"{value:+.2f}"
@@ -912,7 +905,7 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
     figure.update_layout(
         title="Cumulative Overall Breakdown %",
         xaxis_title="Week",
-        yaxis_title="Overall Breakdown %",
+        yaxis_title="Cumulative Overall Breakdown %",
         xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
@@ -1084,7 +1077,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
                     "True Rank: %{customdata[1]}<br>"
-                    "---"
+                    "<br>"
                     "Record Rank: %{customdata[2]}<br>"
                     "Points For Rank: %{customdata[3]}<br>"
                     "Breakdown Rank: %{customdata[4]}<br>"
@@ -1097,7 +1090,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
     figure.update_layout(
         title="Cumulative True Ranking Score",
         xaxis_title="Week",
-        yaxis_title="True Ranking Score",
+        yaxis_title="Cumulative True Ranking Score",
         xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
         yaxis={"range": [0, 40], "nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",

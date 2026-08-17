@@ -36,16 +36,16 @@ from data_loader import (
 # ========================================
 
 RECORD_LABELS = {
-    "highest_weekly_score": "Highest Weekly Team Score",
-    "lowest_weekly_score": "Lowest Weekly Team Score",
-    "highest_season_points_for": "Highest Season Points",
-    "lowest_season_points_for": "Lowest Season Points",
+    "highest_weekly_score": "Highest Single Matchup Score",
+    "lowest_weekly_score": "Lowest Single Matchup Score",
+    "highest_season_points_for": "Highest Points Season",
+    "lowest_season_points_for": "Lowest Points Season",
     "longest_win_streak": "Longest Win Streak",
     "longest_losing_streak": "Longest Losing Streak",
     "best_coaching_season": "Best Coaching Season",
     "worst_coaching_season": "Worst Coaching Season",
-    "most_players_started_season": "Most Players Started (Season)",
-    "fewest_players_started_season": "Fewest Players Started (Season)",
+    "most_players_started_season": "Most Players Started Season",
+    "fewest_players_started_season": "Fewest Players Started Season",
 }
 
 # Each row pairs a "high" stat (left) with its "low" counterpart (right).

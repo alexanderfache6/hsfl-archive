@@ -31,9 +31,9 @@ from data_loader import (
 
 MODAL_CONTEXT_KEY = "_player_stats_modal_context"
 
-CAPTION_FANTASY_POINTS = "Fantasy Points include each stat line's own scoring contribution, decoded from that season's league rules."
-CAPTION_PPR_POINTS = "Some components such as PPR are not yet integrated."
-CAPTION_POINTS_SOURCE = "Real per-game NFL stats sourced from ESPN."
+CAPTION_FANTASY_POINTS = "Fantasy Points includes each stat line's own scoring contribution, decoded from that season's league rules."
+CAPTION_PPR_POINTS = "Some scoring components such as PPR are not yet integrated."
+CAPTION_POINTS_SOURCE = "Per game NFL stats sourced from ESPN."
 INFO_NO_FANTASY_DATA = "No stat breakdown available for this player."
 INFO_NO_ESPN_DATA = "No ESPN NFL stats available for this player."
 
