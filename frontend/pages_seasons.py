@@ -12,7 +12,18 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from constants import RECORD_ROW_COLUMN_RATIOS
+from colors import (
+    COLOR_BRACKET_HIGHLIGHT_WINNING_PATH,
+    COLOR_BRACKET_OUTLINE,
+    COLOR_CHAMPION,
+    COLOR_MANAGER_BACKUP,
+    COLOR_POINTS_NEGATIVE,
+    COLOR_POINTS_POSITIVE,
+    COLOR_RUNNER_UP,
+    COLOR_THIRD_PLACE,
+    COLOR_TRANSACTION_TYPES,
+)
+from constants import MATCHUP_TYPE_LABELS, RECORD_ROW_COLUMN_RATIOS
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -30,14 +41,11 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from pages_history import CHAMPION_COLOR, RUNNER_UP_COLOR, THIRD_PLACE_COLOR
-from pages_matchups import MATCHUP_TYPE_LABELS
 
 # ========================================
 # CONSTANTS
 # ========================================
 
-BRACKET_NEUTRAL_COLOR = "#888888"
 BRACKET_CARD_HEIGHT_PX = 190
 BRACKET_CARD_GAP_PX = 40
 BRACKET_ROW_UNIT_PX = BRACKET_CARD_HEIGHT_PX + BRACKET_CARD_GAP_PX
@@ -47,33 +55,17 @@ BRACKET_HEADER_HEIGHT_PX = 40
 # chart" selectbox pattern as pages_history.py's MANAGER_STAT_COLUMNS.
 STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Streak", "Points For", "Points Against", "Point Difference"]
 
-# Shared red/green text-color scheme for any "positive is good" signed
-# stat (Point Difference, Rank Gained) across the Standings/Bracket
-# Standings/End of Postseason Standings tables.
-POINT_DIFFERENCE_COLOR_POSITIVE = "#2E7D32"
-POINT_DIFFERENCE_COLOR_NEGATIVE = "#C62828"
-
 TRANSACTIONS_PAGE_SIZE = 10
-# Explicit per-type colors requested by the user (not derived from the
-# shared manager-color map - these represent transaction TYPE, not manager).
-TRANSACTION_TYPE_COLORS = {
-    "Add": "#2E7D32",
-    "Drop": "#C62828",
-    "LM": "#F9A825",
-    "Lineup": "#1E88E5",
-    "Trade": "#6A1B9A",
-}
 
 PODIUM_BLOCK_HEIGHT_PX = {1: 250, 2: 190, 3: 140}
-PODIUM_COLOR = {1: CHAMPION_COLOR, 2: RUNNER_UP_COLOR, 3: THIRD_PLACE_COLOR}
+PODIUM_COLOR = {1: COLOR_CHAMPION, 2: COLOR_RUNNER_UP, 3: COLOR_THIRD_PLACE}
+PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
+LAST_PLACE_EMOJI = "🥞"
 PODIUM_LABEL = {1: "1st", 2: "2nd", 3: "3rd"}
 PODIUM_DISPLAY_ORDER = [2, 1, 3]
 
 PODIUM_LOGO_SIZE_PX = {1: 120, 2: 100, 3: 90}
 PODIUM_LOGO_GAP_PX = 10
-
-PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
-LAST_PLACE_EMOJI = "🥞"
 
 SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.8, 4]
 
@@ -132,7 +124,7 @@ def _bracket_highlight_style(team_id: str, winner_team_id: str, team_info: dict[
     if team_id != winner_team_id:
         return ""
     manager_id = team_info.get(team_id, {}).get("manager_id", "")
-    background_color = manager_color_map.get(manager_id, BRACKET_NEUTRAL_COLOR)
+    background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
     text_color = contrasting_text_color(background_color)
     return f"background-color:{background_color}; color:{text_color}; border-radius:4px;"
 
@@ -161,7 +153,7 @@ def _bracket_game_card_html(
     the bracket at a glance."""
     winner_team_id = _bracket_effective_winner(game)
     on_winning_path = bool(path_team_id) and path_team_id in (game["team_id_home"], game["team_id_away"])
-    card_background = "background:#F0F0F0; " if on_winning_path else ""
+    card_background = f"background:{COLOR_BRACKET_HIGHLIGHT_WINNING_PATH}; " if on_winning_path else ""
 
     # "Only one side present" (not the is_bye flag, which some brackets
     # leave False on a loser's "continues on" slot with an empty
@@ -669,9 +661,9 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
     # background tint above).
     def _color_point_difference(value: float) -> str:
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
     styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Streak"]).map(_color_point_difference, subset=["Point Difference"])
@@ -767,7 +759,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 y=values,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -905,7 +897,7 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 y=percentages,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -1021,7 +1013,7 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
                 y=totals,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -1087,7 +1079,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 y=scores,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
                 hovertemplate=(
                     "<b>%{customdata[0]}<br></b>"
@@ -1356,7 +1348,7 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
     dates = sorted(counts["date"].unique())
 
     figure = go.Figure()
-    for transaction_type, color in TRANSACTION_TYPE_COLORS.items():
+    for transaction_type, color in COLOR_TRANSACTION_TYPES.items():
         type_counts = counts[counts["type"] == transaction_type]
         counts_by_date = dict(zip(type_counts["date"], type_counts["count"]))
         y_values = [counts_by_date.get(date, 0) for date in dates]
@@ -1445,7 +1437,6 @@ def _render_miscellaneous_table(season: int, name_resolver: dict[str, str]) -> N
 
 def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
     card_center = BRACKET_CARD_HEIGHT_PX / 2
-    color = "black"  # matches the cards' own black outline, per request
 
     segments = []
     for from_round, from_row, to_round, to_row, team_id in connectors:
@@ -1455,12 +1446,12 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
         # Left stub (out of the source card) + right stub (into the target
         # card) + a vertical bar joining them - the two 90-degree turns
         # that make this an elbow connector instead of a diagonal line.
-        segments.append(f'<div style="position:absolute; left:0; top:{from_y - 1}px; width:50%; height:2px; background:{color};"></div>')
-        segments.append(f'<div style="position:absolute; left:50%; top:{top}px; width:2px; height:{bottom - top}px; background:{color};"></div>')
-        segments.append(f'<div style="position:absolute; left:50%; top:{to_y - 1}px; width:50%; height:2px; background:{color};"></div>')
+        segments.append(f'<div style="position:absolute; left:0; top:{from_y - 1}px; width:50%; height:2px; background:{COLOR_BRACKET_OUTLINE};"></div>')
+        segments.append(f'<div style="position:absolute; left:50%; top:{top}px; width:2px; height:{bottom - top}px; background:{COLOR_BRACKET_OUTLINE};"></div>')
+        segments.append(f'<div style="position:absolute; left:50%; top:{to_y - 1}px; width:50%; height:2px; background:{COLOR_BRACKET_OUTLINE};"></div>')
         segments.append(
             f'<div style="position:absolute; left:calc(100% - 8px); top:{to_y - 5}px; width:0; height:0; '
-            f'border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid {color};"></div>'
+            f'border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid {COLOR_BRACKET_OUTLINE};"></div>'
         )
 
     st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{"".join(segments)}</div>', unsafe_allow_html=True)
@@ -1676,9 +1667,9 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
 
     def _color_rank_gained(value: int) -> str:
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
     def _format_point_difference(value: float) -> str:
@@ -1688,9 +1679,9 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
         if pd.isna(value):
             return ""
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
     styled_dataframe = (
@@ -1813,9 +1804,9 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
     # tabs' Point Difference (and Bracket Standings' Rank Gained).
     def _color_point_difference(value: float) -> str:
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
     styled_dataframe = dataframe.style.map(_color_point_difference, subset=["Point Difference"])
@@ -1840,7 +1831,7 @@ def _render_schedule_highlight(team: dict, name_resolver: dict[str, str], manage
     text = contrasting_text_color against it) - so a team reads the same
     way in both places."""
     manager_name = resolve_manager_name(team.get("manager_id", ""), name_resolver, team.get("display_name", ""))
-    background_color = manager_color_map.get(team.get("manager_id", ""), "#CCCCCC")
+    background_color = manager_color_map.get(team.get("manager_id", ""), COLOR_MANAGER_BACKUP)
     text_color = contrasting_text_color(background_color)
     flex_direction = "row" if align == "left" else "row-reverse"
 

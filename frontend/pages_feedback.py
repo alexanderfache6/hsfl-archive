@@ -20,6 +20,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+from colors import (
+    COLOR_ISSUES_BUG,
+    COLOR_ISSUES_CLOSED,
+    COLOR_ISSUES_ENHANCEMENT,
+    COLOR_ISSUES_NEW_FEATURE,
+    COLOR_ISSUES_OPENED,
+)
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
 
 # ========================================
@@ -56,7 +63,7 @@ ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
 
 # Same colors as this repo's actual GitHub labels, for the Issues
 # table's Type pill.
-ISSUE_TYPE_COLORS = {"Bug": "#b60205", "Enhancement": "#0e8a16", "New Feature": "#0052cc"}
+ISSUE_TYPE_COLORS = {"Bug": COLOR_ISSUES_BUG, "Enhancement": COLOR_ISSUES_ENHANCEMENT, "New Feature": COLOR_ISSUES_NEW_FEATURE}
 # TODO don't hardcode this
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
@@ -85,8 +92,7 @@ ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
 
 ISSUES_PAGE_SIZE = 10
 
-ISSUES_OPENED_COLOR = "#2E7D32"
-ISSUES_CLOSED_COLOR = "#1E88E5"
+
 
 # ========================================
 # FUNCTIONS
@@ -655,7 +661,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Opened",
         x=all_dates,
         y=opened_values,
-        marker_color=ISSUES_OPENED_COLOR,
+        marker_color=COLOR_ISSUES_OPENED,
         customdata=closed_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
@@ -663,7 +669,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Closed",
         x=all_dates,
         y=closed_values,
-        marker_color=ISSUES_CLOSED_COLOR,
+        marker_color=COLOR_ISSUES_CLOSED,
         customdata=opened_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
