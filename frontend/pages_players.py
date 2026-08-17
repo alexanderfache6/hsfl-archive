@@ -1430,7 +1430,7 @@ def render_players_page() -> None:
             index=None,
             placeholder="Any",
             disabled=selected_player_id is None,
-            help="Select a player first" if selected_player_id is None else None,
+            help="Select a player first." if selected_player_id is None else None,
             key=season_widget_key,
         )
 
@@ -1481,8 +1481,9 @@ def render_players_page() -> None:
     else:
         seasons_present = sorted({entry["season"] for entry in full_timeline})
         year_label = str(seasons_present[0]) if len(seasons_present) == 1 else f"{seasons_present[0]}-{seasons_present[-1]}"
-    st.subheader(f"{player_names_by_id[selected_player_id]} ({selected_position}) · {year_label}")
 
+    st.warning("Some players (typically retired) do not have espn data so metrics/charts may look funky.")
+    st.subheader(f"{player_names_by_id[selected_player_id]} ({selected_position}) · {year_label}")
 
     fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:

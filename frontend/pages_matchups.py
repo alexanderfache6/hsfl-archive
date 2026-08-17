@@ -60,7 +60,7 @@ FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matc
 # of this, only the card loop itself is paginated.
 MATCHUPS_PAGE_SIZE = 10
 
-TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
+TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to bench players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
 
 # ========================================
 # FUNCTIONS
@@ -893,7 +893,8 @@ def render_matchups_page() -> None:
 
     applied_filters = _render_filters(name_resolver)
     if applied_filters is None:
-        st.info("Set your filters above and click Apply Filters.")
+        st.info("Select Manager 1 first, then apply other filters.")
+        st.warning("Back to back filters may be slow, refresh page if more than 2 seconds.")
         return
 
     matchups = load_matchups(

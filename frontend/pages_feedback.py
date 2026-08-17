@@ -303,6 +303,7 @@ def _mb_to_bytes(mb):
 
 def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
+    st.info("Provide feedback/new ideas. The more details the better. Logged with Github Issues.")
 
     # Same versioned-widget-key pattern as the Matchups/Players tabs'
     # Clear Filters - Clear Feedback (and a successful Submit) bumps this
@@ -320,13 +321,13 @@ def _render_feedback_form() -> None:
         if widget_key not in st.session_state and base_key in st.session_state:
             st.session_state[widget_key] = st.session_state[base_key]
 
-    feedback_type = st.radio("Type", FEEDBACK_TYPES, key=versioned_key("feedback_type"), horizontal=True)
+    feedback_type = st.radio("Issue Type", FEEDBACK_TYPES, key=versioned_key("feedback_type"), horizontal=True)
 
     page_options = [*REAL_PAGES, "Other"] if feedback_type == "New Feature" else REAL_PAGES
     page_widget_key = versioned_key("feedback_page")
     if st.session_state.get(page_widget_key) not in page_options:
         st.session_state[page_widget_key] = page_options[0]
-    selected_page = st.radio("Page", page_options, key=page_widget_key, horizontal=True)
+    selected_page = st.radio("App Page", page_options, key=page_widget_key, horizontal=True)
 
     title = st.text_input("Title", max_chars=TITLE_MAX_CHARS, key=versioned_key("feedback_title"))
     description = st.text_area("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
