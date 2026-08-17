@@ -22,7 +22,7 @@ from colors import (
     COLOR_PLAYER_BENCH,
     COLOR_POINTS_NEGATIVE,
     COLOR_POINTS_POSITIVE,
-    COLOR_ROSTER_TABLE,
+    COLOR_TABLE_ROSTER,
 )
 from constants import (
     BENCH_POSITION_ORDER,
@@ -683,7 +683,7 @@ def _render_roster_table(
     with st.container(border=show_border, key=container_key):
         for index, player in enumerate(players):
             columns = st.columns(column_ratios)
-            columns[0].markdown(_cell(player["position"], color=COLOR_ROSTER_TABLE), unsafe_allow_html=True)
+            columns[0].markdown(_cell(player["position"], color=COLOR_TABLE_ROSTER), unsafe_allow_html=True)
 
             if player.get("is_empty_slot"):
                 columns[1].markdown(_cell("—"), unsafe_allow_html=True)
