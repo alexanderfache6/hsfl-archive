@@ -48,22 +48,10 @@ def _render_stat_table(column_labels: list[str], rows: list[tuple]) -> None:
     arity - shared HTML table styling for both the Fantasy Stats (3
     columns: Stat/Value/Fantasy Points) and NFL Stats (2 columns: NFL
     Stat/Value - no fantasy-point conversion for raw ESPN fields) sections."""
-    header_cells = "".join(
-        f"<td style='padding:3px 8px; font-weight:700;{'' if index == 0 else ' text-align:right;'}'>{label}</td>"
-        for index, label in enumerate(column_labels)
-    )
-    row_html = "".join(
-        "<tr>"
-        + "".join(
-            f"<td style='padding:3px 8px;{' color:#666666;' if index == 0 else ' text-align:right; font-weight:600;'}'>{value}</td>"
-            for index, value in enumerate(row)
-        )
-        + "</tr>"
-        for row in rows
-    )
+    header_cells = "".join(f"<td style='padding:3px 8px; font-weight:700;{'' if index == 0 else ' text-align:right;'}'>{label}</td>" for index, label in enumerate(column_labels))
+    row_html = "".join("<tr>" + "".join(f"<td style='padding:3px 8px;{' color:#666666;' if index == 0 else ' text-align:right; font-weight:600;'}'>{value}</td>" for index, value in enumerate(row)) + "</tr>" for row in rows)
     st.markdown(
-        f"<table style='width:100%; border-collapse:separate; border-spacing:0; border-radius:6px; "
-        f"overflow:hidden; background-color:#F0F0F0; font-size:0.9em; color:#333333;'><tr style='background-color:#E0E0E0;'>{header_cells}</tr>{row_html}</table>",
+        f"<table style='width:100%; border-collapse:separate; border-spacing:0; border-radius:6px; overflow:hidden; background-color:#F0F0F0; font-size:0.9em; color:#333333;'><tr style='background-color:#E0E0E0;'>{header_cells}</tr>{row_html}</table>",
         unsafe_allow_html=True,
     )
 
@@ -76,11 +64,7 @@ def _render_player_stats_dialog() -> None:
 
     nfl_player_stats = load_nfl_player_stats()
     espn_player_entry = nfl_player_stats.get(context["player_id"])
-    espn_week_entry = (
-        (espn_player_entry.get("seasons", {}).get(str(context["season"]), {}).get("weeks", {}).get(str(context["week"])))
-        if espn_player_entry
-        else None
-    )
+    espn_week_entry = (espn_player_entry.get("seasons", {}).get(str(context["season"]), {}).get("weeks", {}).get(str(context["week"]))) if espn_player_entry else None
 
     # Prefer ESPN's own name (archive/nfl_player_stats.json) when a
     # resolved ESPN mapping exists - falls back to context["player_name"]
@@ -113,7 +97,10 @@ def _render_player_stats_dialog() -> None:
             # reported total is shown here rather than a recomputed one.
             rows.append(("<b>Total</b>", "", f"<b>{entry['points']:+.2f}<sup>2</sup></b>"))
             _render_stat_table(["Stat", "Value", "Fantasy Points<sup>1</sup>"], rows)
-            st.caption(f"<sup>1</sup>{CAPTION_FANTASY_POINTS}",unsafe_allow_html=True,)
+            st.caption(
+                f"<sup>1</sup>{CAPTION_FANTASY_POINTS}",
+                unsafe_allow_html=True,
+            )
             st.caption(f"<sup>2</sup>{CAPTION_PPR_POINTS}", unsafe_allow_html=True)
 
     with st.expander("NFL Stats", expanded=False):
@@ -121,11 +108,7 @@ def _render_player_stats_dialog() -> None:
         if not espn_week_stats:
             st.info(f"{INFO_NO_ESPN_DATA}")
         else:
-            rows = [
-                (NFL_STAT_FIELD_LABELS.get(field, field), value)
-                for field, value in espn_week_stats.items()
-                if value not in (None, "-")
-            ]
+            rows = [(NFL_STAT_FIELD_LABELS.get(field, field), value) for field, value in espn_week_stats.items() if value not in (None, "-")]
             _render_stat_table(["NFL Stat", "Value<sup>3</sup>"], rows)
             st.caption(f"<sup>3</sup>{CAPTION_POINTS_SOURCE}", unsafe_allow_html=True)
 

@@ -1,4 +1,19 @@
-"""Shared constants used across multiple page modules."""
+# ----------------------------------------
+# emojis
+# ----------------------------------------
+
+EMOJI_FIRST_PLACE = "🏆"
+EMOJI_SECOND_PLACE = "🥈"
+EMOJI_THIRD_PLACE = "🥉"
+EMOJI_LAST_PLACE = "🥞"
+
+EMOJI_NO_FIRST_PLACE = "😭"
+EMOJI_NO_SECOND_PLACE = "😢"
+EMOJI_NO_THIRD_PLACE = "☹️"
+
+# ----------------------------------------
+# chart legends
+# ----------------------------------------
 
 # for consistent chart legend attributes
 CHART_LEGEND_INSIDE_TOP_RIGHT = {
@@ -23,20 +38,26 @@ CHART_LEGEND_OUTSIDE_RIGHT = {
     "borderwidth": 1,
 }
 
+# ----------------------------------------
+# chart markers
+# ----------------------------------------
+
 # for consistent scatter plot marker size
 SCATTER_PLOT_MARKER_SIZE = 8
+
+# ----------------------------------------
+# column size
+# ----------------------------------------
 
 # for consistent row record column size
 RECORD_ROW_COLUMN_RATIOS = [1.5, 4, 2]
 
+# ----------------------------------------
+# nfl
+# ----------------------------------------
 
-# DEF entries carry an empty "nfl_team" in the archived data - it was
-# never captured during parsing (only individual players' teams were),
-# so this display-only lookup fills it back in from the DEF's own
-# player_name (e.g. "49ers") rather than requiring a full re-parse of
-# every season just for this one field.
 NFL_TEAM_ABBREVIATIONS = {
-    "49ers":"SF",
+    "49ers": "SF",
     "Bears": "CHI",
     "Bengals": "CIN",
     "Bills": "BUF",
@@ -71,9 +92,17 @@ NFL_TEAM_ABBREVIATIONS = {
     "Vikings": "MIN",
 }
 
+# ----------------------------------------
+# roster order
+# ----------------------------------------
+
 # order of positions on a bench roster
 BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
 
+
+# ----------------------------------------
+# matchups
+# ----------------------------------------
 
 MATCHUP_TYPE_OPTIONS = ["all", "regular", "championship", "consolation"]
 MATCHUP_TYPE_LABELS = {
@@ -83,8 +112,25 @@ MATCHUP_TYPE_LABELS = {
     "consolation": "Consolation Bracket",
 }
 
+# ----------------------------------------
+# strings
+# ----------------------------------------
 
 ORDINAL_WORDS = [
-    "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
-    "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
+    "zeroth",
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "eleventh",
+    "twelfth",
+    "thirteenth",
+    "fourteenth",
+    "fifteenth",
 ]
