@@ -11,7 +11,18 @@ COLOR_WHITE = "#FFFFFF"
 
 # generate manager custom colors
 COLOR_PALETTE_PAIRED = [
-    "#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00","#CAB2D6", "#6A3D9A", "#FFF449", "#B15928",
+    "#A6CEE3",
+    "#1F78B4",
+    "#B2DF8A",
+    "#33A02C",
+    "#FB9A99",
+    "#E31A1C",
+    "#FDBF6F",
+    "#FF7F00",
+    "#CAB2D6",
+    "#6A3D9A",
+    "#FFF449",
+    "#B15928",
 ]
 
 # backup if more managers created
@@ -30,6 +41,11 @@ COLOR_THIRD_PLACE = "#9f724b"
 # negative for point differential, optimal points lost, decrease in standings
 COLOR_POINTS_POSITIVE = "#2E7D32"
 COLOR_POINTS_NEGATIVE = "#C62828"
+
+
+# used for best/worst colors
+COLOR_MAX_EXTREME = "rgba(46, 125, 50, 0.85)"
+COLOR_MIN_EXTREME = "rgba(198, 40, 40, 0.85)"
 
 # ----------------------------------------
 # transactions
