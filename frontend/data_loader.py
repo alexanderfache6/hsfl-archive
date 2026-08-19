@@ -140,7 +140,7 @@ STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD = {
 
 
 def _espn_made_attempted_count(raw_value: str | None) -> int | None:
-    """"3-3" -> 3 (the MADE count, left of the dash) - None if the field
+    """ "3-3" -> 3 (the MADE count, left of the dash) - None if the field
     is missing or not in the expected "{made}-{attempted}" shape."""
     if not raw_value or "-" not in raw_value:
         return None
@@ -183,9 +183,7 @@ def espn_stat_value(stat_id: str, espn_week_stats: dict) -> int | None:
 # - most of NFL_STAT_FIELDS_BY_POSITION's fields (completions, targets,
 # per-attempt averages, "FG Made (Total)", "Total Kicking Points") have
 # NO stat_N equivalent, so they're simply absent from this map.
-ESPN_FIELD_TO_STAT_ID = {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_FIELD.items() if field} | {
-    field: stat_id for stat_id, field in STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD.items()
-}
+ESPN_FIELD_TO_STAT_ID = {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_FIELD.items() if field} | {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD.items()}
 
 
 def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
@@ -218,23 +216,43 @@ def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
 # rusher stat shape, not a flex-roster-eligibility claim - TE itself is
 # NOT flex-eligible in this league's own scoring rules).
 _SKILL_POSITION_NFL_STAT_FIELDS = [
-    "rushingAttempts", "rushingYards", "yardsPerRushAttempt", "rushingTouchdowns", "receptions",
-    "receivingTargets", "receivingYards", "yardsPerReception", "receivingTouchdowns", "fumbles",
+    "rushingAttempts",
+    "rushingYards",
+    "yardsPerRushAttempt",
+    "rushingTouchdowns",
+    "receptions",
+    "receivingTargets",
+    "receivingYards",
+    "yardsPerReception",
+    "receivingTouchdowns",
+    "fumbles",
     "fumblesLost",
 ]
 
 NFL_STAT_FIELDS_BY_POSITION = {
     "QB": [
-        "completions", "passingAttempts", "passingYards", "completionPct", "yardsPerPassAttempt",
-        "passingTouchdowns", "interceptions", "rushingAttempts", "rushingYards", "yardsPerRushAttempt",
+        "completions",
+        "passingAttempts",
+        "passingYards",
+        "completionPct",
+        "yardsPerPassAttempt",
+        "passingTouchdowns",
+        "interceptions",
+        "rushingAttempts",
+        "rushingYards",
+        "yardsPerRushAttempt",
         "rushingTouchdowns",
     ],
     **{position: _SKILL_POSITION_NFL_STAT_FIELDS for position in FLEX_ELIGIBLE_POSITIONS | {"TE"}},
     "K": [
-        "fieldGoalsMade1_19-fieldGoalAttempts1_19", "fieldGoalsMade20_29-fieldGoalAttempts20_29",
-        "fieldGoalsMade30_39-fieldGoalAttempts30_39", "fieldGoalsMade40_49-fieldGoalAttempts40_49",
-        "fieldGoalsMade50-fieldGoalAttempts50", "fieldGoalsMade-fieldGoalAttempts",
-        "extraPointsMade-extraPointAttempts", "totalKickingPoints",
+        "fieldGoalsMade1_19-fieldGoalAttempts1_19",
+        "fieldGoalsMade20_29-fieldGoalAttempts20_29",
+        "fieldGoalsMade30_39-fieldGoalAttempts30_39",
+        "fieldGoalsMade40_49-fieldGoalAttempts40_49",
+        "fieldGoalsMade50-fieldGoalAttempts50",
+        "fieldGoalsMade-fieldGoalAttempts",
+        "extraPointsMade-extraPointAttempts",
+        "totalKickingPoints",
     ],
 }
 
@@ -367,6 +385,7 @@ NFL_TEAM_TO_ESPN_ABBR = {"WAS": "wsh"}
 # ========================================
 # FUNCTIONS
 # ========================================
+
 
 def _read_json(path: Path):
     return json.loads(path.read_text())
@@ -523,7 +542,7 @@ def load_stat_id_labels() -> dict[str, str]:
 
 
 def _parse_scoring_rule(rule_text: str) -> tuple[float, float]:
-    """"4 points" -> (4.0, 1.0); "1 point per 25 yards" -> (1.0, 25.0);
+    """ "4 points" -> (4.0, 1.0); "1 point per 25 yards" -> (1.0, 25.0);
     "-2 points" -> (-2.0, 1.0). fantasy_points = value * points / per."""
     match = re.match(r"(-?[\d.]+)\s*points?(?:\s*per\s*([\d.]+)\s*yards?)?", rule_text.strip(), re.IGNORECASE)
     if not match:
@@ -549,7 +568,7 @@ def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, yea
     scoring_rules = load_metadata(year)["scoring_rules"]
 
     if stat_id == "stat_54" and position == "DEF":
-        for upper_bound, tier_key in POINTS_ALLOWED_TIERS: # DEF points allowed
+        for upper_bound, tier_key in POINTS_ALLOWED_TIERS:  # DEF points allowed
             if value <= upper_bound:
                 rule_key = tier_key
                 break
@@ -653,11 +672,7 @@ def load_starting_slot_counts(year: int) -> dict[str, int]:
     starters in a slot than the season's settings call for), as opposed
     to a bye/injury which still shows an actual (if low-scoring) player."""
     roster_settings = load_metadata(year)["settings"]["roster_settings"]
-    return {
-        ROSTER_SETTINGS_KEY_TO_SLOT.get(key, key): count
-        for key, count in roster_settings.items()
-        if key not in NON_STARTING_ROSTER_SETTINGS_KEYS
-    }
+    return {ROSTER_SETTINGS_KEY_TO_SLOT.get(key, key): count for key, count in roster_settings.items() if key not in NON_STARTING_ROSTER_SETTINGS_KEYS}
 
 
 def compute_optimal_lineup(players: list[dict], year: int) -> dict:
@@ -743,15 +758,9 @@ def _load_all_matchups_enriched() -> list[dict]:
             home_info = manager_by_team_id.get(matchup["home"]["team_id"], {})
             away_info = manager_by_team_id.get(matchup["away"]["team_id"], {})
 
-            matchup["home"].update(
-                manager_id=home_info.get("manager_id", ""), display_name=home_info.get("display_name", ""), team_name=home_info.get("team_name", "")
-            )
-            matchup["away"].update(
-                manager_id=away_info.get("manager_id", ""), display_name=away_info.get("display_name", ""), team_name=away_info.get("team_name", "")
-            )
-            matchup["matchup_type"] = type_by_week_and_teams.get(
-                (matchup["week"], frozenset({matchup["home"]["team_id"], matchup["away"]["team_id"]})), "regular"
-            )
+            matchup["home"].update(manager_id=home_info.get("manager_id", ""), display_name=home_info.get("display_name", ""), team_name=home_info.get("team_name", ""))
+            matchup["away"].update(manager_id=away_info.get("manager_id", ""), display_name=away_info.get("display_name", ""), team_name=away_info.get("team_name", ""))
+            matchup["matchup_type"] = type_by_week_and_teams.get((matchup["week"], frozenset({matchup["home"]["team_id"], matchup["away"]["team_id"]})), "regular")
             matchups.append(matchup)
 
     matchups.sort(key=lambda matchup: (matchup["season"], matchup["week"]))

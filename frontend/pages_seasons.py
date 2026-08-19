@@ -51,7 +51,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import _return_plural, _return_s, ordinal_word
+from helpers import ordinal_word, return_plural, return_s
 
 # ========================================
 # CONSTANTS
@@ -94,7 +94,7 @@ def _full_table_height(row_count: int) -> int:
 
 
 def _parse_transaction_date(date_text: str, season: int) -> datetime:
-    """"Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
+    """ "Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
     can run into January of the FOLLOWING calendar year (confirmed for
     2012, 2021, 2022) - only "Jan" dates get season+1, everything else
     (Aug-Dec) uses the season's own year."""
@@ -199,10 +199,7 @@ def _bracket_game_card_html(
         # text now sits on the same colored highlight background as the
         # name above it and opacity:0.7 there could wash out against a
         # dark manager color.
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><div><strong>{lone_label}</strong></div>'
-            f'<div style="font-style:italic;">Bye</div></div>'
-        )
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><div><strong>{lone_label}</strong></div><div style="font-style:italic;">Bye</div></div>')
     else:
         home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
         away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
@@ -220,19 +217,11 @@ def _bracket_game_card_html(
         # highlighted box spanning both lines), not two separately
         # highlighted divs - the inner name/score lines carry no
         # background of their own, just the outer wrapper.
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>'
-        )
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>')
         lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.6;">vs</div>')
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>'
-        )
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>')
 
-    return (
-        f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; '
-        f'{card_background}border:2px solid black; border-radius:8px; padding:10px; '
-        f'height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
-    )
+    return f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; {card_background}border:2px solid black; border-radius:8px; padding:10px; height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
 
 
 def _layout_bracket_rounds(
@@ -525,15 +514,12 @@ def _render_player_start_row(key: str, ordinal: str, entry: dict, name_resolver:
     manager_name = resolve_manager_name(entry["manager_id"], name_resolver, entry["display_name"])
     with score_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
             unsafe_allow_html=True,
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{info_size}; color:gray;'>"
-            f"{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
             unsafe_allow_html=True,
         )
     if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
@@ -561,15 +547,12 @@ def _render_season_stat_row(key: str, ordinal: str, entry: dict, name_resolver: 
     loser_name = resolve_manager_name(entry["loser_manager_id"], name_resolver, entry["loser_display_name"])
     with score_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
             unsafe_allow_html=True,
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{info_size}; color:gray;'>"
-            f"{winner_name} defeated {loser_name} · Wk {entry['week']}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{winner_name} defeated {loser_name} · Wk {entry['week']}</span></div>",
             unsafe_allow_html=True,
         )
     if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
@@ -765,13 +748,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 name=manager_name,
                 line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "W-L-T: %{customdata[1]}<br>"
-                    "Week Result: %{customdata[2]}<br>"
-                    f"Cumulative {selected_stat}: " + "%{customdata[3]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=(f"<b>%{{customdata[0]}}<br></b>W-L-T: %{{customdata[1]}}<br>Week Result: %{{customdata[2]}}<br>Cumulative {selected_stat}: " + "%{customdata[3]}<extra></extra>"),
             )
         )
 
@@ -791,7 +768,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
 
 
 def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
-    """"All-play" record - each week, a team's record if it had played
+    """ "All-play" record - each week, a team's record if it had played
     every other team that week instead of just its scheduled opponent
     (see code/stats-aggregation/breakdown.py). Rank/Team/Overall come
     from the final week's CUMULATIVE all-play record; one column per
@@ -903,13 +880,7 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 name=manager_name,
                 line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "Cumulative Breakdown: %{customdata[1]}<br>"
-                    "Week Breakdown: %{customdata[2]}<br>"
-                    "Breakdown %: %{customdata[3]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=("<b>%{customdata[0]}<br></b>Cumulative Breakdown: %{customdata[1]}<br>Week Breakdown: %{customdata[2]}<br>Breakdown %: %{customdata[3]}<extra></extra>"),
             )
         )
 
@@ -1019,12 +990,7 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
                 name=manager_name,
                 line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "Cumulative Coach: %{customdata[1]}<br>"
-                    "Week Coach: %{customdata[2]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=("<b>%{customdata[0]}<br></b>Cumulative Coach: %{customdata[1]}<br>Week Coach: %{customdata[2]}<extra></extra>"),
             )
         )
 
@@ -1085,16 +1051,7 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 name=manager_name,
                 line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "True Rank: %{customdata[1]}<br>"
-                    "<br>"
-                    "Record Rank: %{customdata[2]}<br>"
-                    "Points For Rank: %{customdata[3]}<br>"
-                    "Breakdown Rank: %{customdata[4]}<br>"
-                    "Coach Rank: %{customdata[5]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=("<b>%{customdata[0]}<br></b>True Rank: %{customdata[1]}<br><br>Record Rank: %{customdata[2]}<br>Points For Rank: %{customdata[3]}<br>Breakdown Rank: %{customdata[4]}<br>Coach Rank: %{customdata[5]}<extra></extra>"),
             )
         )
 
@@ -1192,9 +1149,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # team ("to") instead, so each leg attributes to the team that
     # actually ended up with that player - the only way both sides of a
     # trade show up under their own manager.
-    manager_name_by_team_name = {
-        info["team_name"]: resolve_manager_name(info["manager_id"], name_resolver, info["display_name"]) for info in team_id_to_manager_map(season).values()
-    }
+    manager_name_by_team_name = {info["team_name"]: resolve_manager_name(info["manager_id"], name_resolver, info["display_name"]) for info in team_id_to_manager_map(season).values()}
     all_dates = [_parse_transaction_date(t["date"], season) for t in transactions]
     min_date, max_date = min(all_dates).date(), max(all_dates).date()
     transaction_types = sorted({t["type"] for t in transactions})
@@ -1246,7 +1201,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # st.date_input returns a single date while the user has only picked
     # one end of the range yet (before their second click) - skip
     # filtering by date in that transient state rather than erroring.
-    start_date, end_date = (selected_range if len(selected_range) == 2 else (min_date, max_date))
+    start_date, end_date = selected_range if len(selected_range) == 2 else (min_date, max_date)
 
     rows = []
     for transaction in transactions:
@@ -1453,10 +1408,7 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
         segments.append(f'<div style="position:absolute; left:0; top:{from_y - 1}px; width:50%; height:2px; background:{COLOR_BRACKET_OUTLINE};"></div>')
         segments.append(f'<div style="position:absolute; left:50%; top:{top}px; width:2px; height:{bottom - top}px; background:{COLOR_BRACKET_OUTLINE};"></div>')
         segments.append(f'<div style="position:absolute; left:50%; top:{to_y - 1}px; width:50%; height:2px; background:{COLOR_BRACKET_OUTLINE};"></div>')
-        segments.append(
-            f'<div style="position:absolute; left:calc(100% - 8px); top:{to_y - 5}px; width:0; height:0; '
-            f'border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid {COLOR_BRACKET_OUTLINE};"></div>'
-        )
+        segments.append(f'<div style="position:absolute; left:calc(100% - 8px); top:{to_y - 5}px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid {COLOR_BRACKET_OUTLINE};"></div>')
 
     st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{"".join(segments)}</div>', unsafe_allow_html=True)
 
@@ -1593,12 +1545,22 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
     championship_tab, consolation_tab = st.tabs(["Championship", "Consolation"])
     with championship_tab:
         _render_bracket(
-            season, championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
+            season,
+            championship_bracket,
+            team_info,
+            name_resolver,
+            manager_color_map,
+            is_consolation=False,
             path_team_id=championship_bracket.get("champion_team_id", ""),
         )
     with consolation_tab:
         _render_bracket(
-            season, consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
+            season,
+            consolation_bracket,
+            team_info,
+            name_resolver,
+            manager_color_map,
+            is_consolation=True,
             path_team_id=consolation_bracket.get("consolation_winner_team_id", ""),
         )
 
@@ -1688,11 +1650,7 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
             return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
-    styled_dataframe = (
-        dataframe.style.format({"Rank Gained": _format_rank_gained, "Point Difference": _format_point_difference})
-        .map(_color_rank_gained, subset=["Rank Gained"])
-        .map(_color_point_difference, subset=["Point Difference"])
-    )
+    styled_dataframe = dataframe.style.format({"Rank Gained": _format_rank_gained, "Point Difference": _format_point_difference}).map(_color_rank_gained, subset=["Rank Gained"]).map(_color_point_difference, subset=["Point Difference"])
 
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(dataframe)))
 
@@ -1780,7 +1738,7 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
 
     placement_counts_by_manager_id: dict[str, dict[int, int]] = {}
     for season_entry in load_all_time_champions()["champions"]:
-        if season_entry["season"] > season: # NOTE for each season only run stats through the current season, no future all time stats
+        if season_entry["season"] > season:  # NOTE for each season only run stats through the current season, no future all time stats
             continue
         for placement_row in season_entry["top_3"]:
             manager_id = placement_row.get("manager_id", "")
@@ -1796,11 +1754,7 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
         record = f"{champion_row['wins']}-{champion_row['losses']}-{champion_row['ties']}" if champion_row["ties"] else f"{champion_row['wins']}-{champion_row['losses']}"
         sentences.append(f"{champion_row['team_name']}, run by team manager {champion_row['manager_name']}, won the {season} championship with a final record of {record}.")
         championship_count = placement_counts_by_manager_id.get(champion_row["manager_id"], {}).get(1, 0)
-        sentences.append(
-            f"This is {champion_row['manager_name']}'s {ordinal_word(championship_count)} championship ({EMOJI_FIRST_PLACE * championship_count})."
-            if championship_count > 1
-            else f"This is {champion_row['manager_name']}'s first championship{'!' * championship_count}"
-        )
+        sentences.append(f"This is {champion_row['manager_name']}'s {ordinal_word(championship_count)} championship ({EMOJI_FIRST_PLACE * championship_count})." if championship_count > 1 else f"This is {champion_row['manager_name']}'s first championship{'!' * championship_count}")
 
     if runner_up_row:
         runner_up_count = placement_counts_by_manager_id.get(runner_up_row["manager_id"], {}).get(2, 0)
@@ -1829,36 +1783,24 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
             if top3_by_rank.get(1) and top3_by_rank.get(2):
                 top2_pairing_by_season[entry_season] = (frozenset({top3_by_rank[1], top3_by_rank[2]}), top3_by_rank[1])
 
-        rematch_seasons = sorted(
-            past_season
-            for past_season, (pairing, _) in top2_pairing_by_season.items()
-            if past_season != season and pairing == current_top2_pairing
-        )
+        rematch_seasons = sorted(past_season for past_season, (pairing, _) in top2_pairing_by_season.items() if past_season != season and pairing == current_top2_pairing)
         if rematch_seasons:
             rematch_details = []
             for past_season in rematch_seasons:
                 past_winner_manager_id = top2_pairing_by_season[past_season][1]
                 past_winner_manager_name = resolve_manager_name(past_winner_manager_id, name_resolver)
-                rematch_details.append(
-                    f"{past_season} ({_highlight_manager_name(past_winner_manager_name, past_winner_manager_id, manager_color_map)})"
-                )
-            sentences.append(f"The top 2 is a rematch of the {', '.join(rematch_details)} Fantasy Super Bowl{_return_s(len(rematch_details))}.")
+                rematch_details.append(f"{past_season} ({_highlight_manager_name(past_winner_manager_name, past_winner_manager_id, manager_color_map)})")
+            sentences.append(f"The top 2 is a rematch of the {', '.join(rematch_details)} Fantasy Super Bowl{return_s(len(rematch_details))}.")
 
         unique_podium_count = len(set(podium_makeup_by_season.values()))
-        sentences.append(f"There {_return_plural(unique_podium_count, 'has', 'have')} been {unique_podium_count} unique podium combination{_return_s(unique_podium_count)}.")
+        sentences.append(f"There {return_plural(unique_podium_count, 'has', 'have')} been {unique_podium_count} unique podium combination{return_s(unique_podium_count)}.")
 
-        repeat_seasons = sorted(
-            past_season
-            for past_season, makeup in podium_makeup_by_season.items()
-            if past_season != season and makeup == current_podium_makeup
-        )
+        repeat_seasons = sorted(past_season for past_season, makeup in podium_makeup_by_season.items() if past_season != season and makeup == current_podium_makeup)
         if repeat_seasons:
-            sentences.append(f"This podium combination also occurred in {', '.join(str(s) for s in repeat_seasons)}.") # NOTE has never occurred yet
+            sentences.append(f"This podium combination also occurred in {', '.join(str(s) for s in repeat_seasons)}.")  # NOTE has never occurred yet
 
     # NOTE above are final ranks
-    sentences.append(
-        "<br><br>"
-    )
+    sentences.append("<br><br>")
     # NOTE below are stats
 
     if has_post_season:
@@ -1867,32 +1809,21 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
         riser_gain = biggest_riser["regular_season_rank"] - biggest_riser["rank"]
         faller_drop = biggest_faller["regular_season_rank"] - biggest_faller["rank"]
         if riser_gain > 0:
-            sentences.append(
-                f"{biggest_riser['team_name']} climbed the most in the post season, moving from "
-                f"{ordinal_word(biggest_riser['regular_season_rank'])} to {ordinal_word(biggest_riser['rank'])} (<span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{riser_gain:+.0f}</span>)."
-            )
+            sentences.append(f"{biggest_riser['team_name']} climbed the most in the post season, moving from {ordinal_word(biggest_riser['regular_season_rank'])} to {ordinal_word(biggest_riser['rank'])} (<span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{riser_gain:+.0f}</span>).")
         if faller_drop < 0:
-            sentences.append(
-                f"{biggest_faller['team_name']} fell the furthest, dropping from {ordinal_word(biggest_faller['regular_season_rank'])} to {ordinal_word(biggest_faller['rank'])}  (<span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{faller_drop:+.0f}</span>)."
-            )
+            sentences.append(f"{biggest_faller['team_name']} fell the furthest, dropping from {ordinal_word(biggest_faller['regular_season_rank'])} to {ordinal_word(biggest_faller['rank'])}  (<span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{faller_drop:+.0f}</span>).")
 
         hottest_row = max(rows, key=lambda row: row["active_streak"])
         coldest_row = min(rows, key=lambda row: row["active_streak"])
         if hottest_row["active_streak"] > 0:
             streak_label = "hottest" if hottest_row["active_streak"] >= 3 else "greatest"
-            sentences.append(
-                f"{hottest_row['team_name']} entered the postseason on the {streak_label} winning streak with <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{hottest_row['active_streak']}</span> straight wins."
-            )
+            sentences.append(f"{hottest_row['team_name']} entered the postseason on the {streak_label} winning streak with <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{hottest_row['active_streak']}</span> straight wins.")
         if coldest_row["active_streak"] < 0:
             skid_length = abs(coldest_row["active_streak"])
             streak_label = "free fall" if skid_length > 3 else "losing streak"
-            sentences.append(
-                f"{coldest_row['team_name']} entered the postseason in {streak_label}, having lost <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{skid_length}</span> straight."
-            )
+            sentences.append(f"{coldest_row['team_name']} entered the postseason in {streak_label}, having lost <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{skid_length}</span> straight.")
 
-    sentences.append(
-        f"{most_dominant_row['team_name']} was the most dominant scoring team, outscoring opponents by <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{most_dominant_row['point_difference']:+.2f}</span> points."
-    )
+    sentences.append(f"{most_dominant_row['team_name']} was the most dominant scoring team, outscoring opponents by <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{most_dominant_row['point_difference']:+.2f}</span> points.")
     sentences.append(f"{least_dominant_row['team_name']} preferred starting their bench, being outscored by <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{least_dominant_row['point_difference']:+.2f}</span> points.")
 
     st.markdown(" ".join(sentences), unsafe_allow_html=True)
@@ -1912,12 +1843,7 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
         team_id, team_name, manager_name, combined_record = top_three[rank]
         logo_data_uri = load_team_logo_data_uri(season, team_id)
         logo_size = PODIUM_LOGO_SIZE_PX[rank]
-        logo_html = (
-            f'<img src="{logo_data_uri}" style="width:{logo_size}px; height:{logo_size}px; object-fit:cover; '
-            f'border-radius:12px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;">'
-            if logo_data_uri
-            else f'<div style="width:{logo_size}px; height:{logo_size}px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;"></div>'
-        )
+        logo_html = f'<img src="{logo_data_uri}" style="width:{logo_size}px; height:{logo_size}px; object-fit:cover; border-radius:12px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;">' if logo_data_uri else f'<div style="width:{logo_size}px; height:{logo_size}px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;"></div>'
         with column:
             # Outer box is a fixed max height with the [logo + colored
             # block] stack bottom-aligned inside it (align-items:flex-end)
@@ -1929,7 +1855,7 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
                 f'<div style="width:100%; display:flex; flex-direction:column; align-items:center;">'
                 f"{logo_html}"
                 f'<div style="width:100%; height:{PODIUM_BLOCK_HEIGHT_PX[rank]}px; background:{PODIUM_COLOR[rank]}; '
-                f'border-radius:8px 8px 0 0; box-sizing:border-box; padding:12px; color:white; text-align:center; '
+                f"border-radius:8px 8px 0 0; box-sizing:border-box; padding:12px; color:white; text-align:center; "
                 f'display:flex; flex-direction:column; justify-content:flex-end;">'
                 f'<div style="font-size:1.5rem; font-weight:bold;">{PODIUM_LABEL[rank]}</div>'
                 f'<div style="font-weight:bold;">{html.escape(team_name)}</div>'
@@ -2240,9 +2166,7 @@ def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> N
         # Value is stringified - these settings mix ints (num_teams) with
         # plain text (trade_deadline, etc), and a mixed-type column
         # doesn't serialize to Arrow cleanly otherwise.
-        flat_settings = [
-            {"Setting": key.replace("_", " ").title(), "Value": str(value)} for key, value in settings.items() if key != "roster_settings"
-        ]
+        flat_settings = [{"Setting": key.replace("_", " ").title(), "Value": str(value)} for key, value in settings.items() if key != "roster_settings"]
         st.dataframe(pd.DataFrame(flat_settings), hide_index=True, width="stretch", height=_full_table_height(len(flat_settings)))
 
     draft_column, _ = st.columns(2)
@@ -2289,9 +2213,7 @@ def render_seasons_page() -> None:
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
 
-    season_summary_tab, season_stats_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
-        ["Season Summary", "Season Stats", "Schedule", "Regular Season", "Post Season", "Season Settings"]
-    )
+    season_summary_tab, season_stats_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(["Season Summary", "Season Stats", "Schedule", "Regular Season", "Post Season", "Season Settings"])
 
     with season_summary_tab:
         _render_season_summary_paragraph(selected_season, name_resolver, manager_color_map)
@@ -2317,9 +2239,7 @@ def render_seasons_page() -> None:
                     _render_schedule_week(selected_season, week, name_resolver, manager_color_map)
 
     with regular_season_tab:
-        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab, miscellaneous_tab = st.tabs(
-            ["Standings", "Breakdown", "Coach", "True Ranking", "Transactions", "Miscellaneous"]
-        )
+        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab, miscellaneous_tab = st.tabs(["Standings", "Breakdown", "Coach", "True Ranking", "Transactions", "Miscellaneous"])
         with standings_tab:
             _render_standings_table(selected_season, name_resolver)
             _render_standings_chart(selected_season, name_resolver, manager_color_map)

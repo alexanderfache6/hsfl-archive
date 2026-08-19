@@ -77,7 +77,6 @@ STREAK_VARIANTS = {
 }
 
 
-
 MANAGER_STAT_COLUMN_FORMATS = {
     "Win %": "%.3f",
     "Avg Reg. Finish": "%.2f",
@@ -337,9 +336,7 @@ def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[s
     most_winning_manager_name = resolve_manager_name(most_winning_manager_id, name_resolver, "")
 
     reigning_manager_id, reigning_champion_row, reigning_ordinal = reigning_champion_entry
-    reigning_manager_name = resolve_manager_name(
-        reigning_manager_id, name_resolver, reigning_champion_row.get("display_name", "")
-    )
+    reigning_manager_name = resolve_manager_name(reigning_manager_id, name_resolver, reigning_champion_row.get("display_name", ""))
 
     st.markdown(
         f"The Music League began in {first_year} and has run for {season_count} successive seasons, featuring {champion_count} champions. "
@@ -415,11 +412,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
     pie_column, bar_column = st.columns(2)
 
     with pie_column:
-        champion_managers = [
-            (manager_id, len(data["champion_years"]), data["champion_years"])
-            for manager_id, data in placements.items()
-            if data["champion_years"]
-        ]
+        champion_managers = [(manager_id, len(data["champion_years"]), data["champion_years"]) for manager_id, data in placements.items() if data["champion_years"]]
         # Descending by count; ties broken by most-recent championship year first.
         champion_managers.sort(key=lambda item: (-item[1], -max(item[2])))
 
@@ -516,13 +509,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             y=[row["champion_count"] + row["runner_up_count"] + row["third_place_count"] for row in bar_rows],
             base=[0] * len(bar_rows),
             marker={"color": "rgba(0,0,0,0)"},
-            customdata=[
-                f"<b>{row['name']}</b><br>"
-                f"Champion: {_years_label(row['champion_years'], f'{EMOJI_NO_FIRST_PLACE}')}<br>"
-                f"Runner-Up: {_years_label(row['runner_up_years'], f'{EMOJI_NO_SECOND_PLACE}')}<br>"
-                f"3rd Place: {_years_label(row['third_place_years'], f'{EMOJI_NO_THIRD_PLACE}')}"
-                for row in bar_rows
-            ],
+            customdata=[f"<b>{row['name']}</b><br>Champion: {_years_label(row['champion_years'], f'{EMOJI_NO_FIRST_PLACE}')}<br>Runner-Up: {_years_label(row['runner_up_years'], f'{EMOJI_NO_SECOND_PLACE}')}<br>3rd Place: {_years_label(row['third_place_years'], f'{EMOJI_NO_THIRD_PLACE}')}" for row in bar_rows],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
         )
@@ -551,14 +538,12 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
     score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
     with score_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
             unsafe_allow_html=True,
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
             unsafe_allow_html=True,
         )
     button_label = "View Matchup" if "week" in entry else "View Season"
@@ -694,7 +679,7 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
             format_func=lambda value: NORMALIZATION_LABELS[value],
             key="manager_stat_normalization",
             # label_visibility="collapsed",
-            help=NORMALIZATION_HELP
+            help=NORMALIZATION_HELP,
         )
 
     selected_stat_label = MANAGER_STAT_FULL_LABELS[selected_stat]

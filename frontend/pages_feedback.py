@@ -54,7 +54,7 @@ ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Fea
 # using that commit's public raw-content URL.
 FEEDBACK_ATTACHMENTS_DIRECTORY = "feedback-attachments"
 MAX_SCREENSHOT_COUNT = 3
-MAX_SCREENSHOT_MB = 1 # real screenshots run well under this
+MAX_SCREENSHOT_MB = 1  # real screenshots run well under this
 
 # Issues filed before this type was renamed from "Improvement" to
 # "Enhancement" still have "**Type:** Improvement" in their body -
@@ -91,7 +91,6 @@ ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
 ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
 
 ISSUES_PAGE_SIZE = 10
-
 
 
 # ========================================
@@ -242,11 +241,7 @@ def _all_releases() -> list[dict]:
         timeout=10,
     )
     response.raise_for_status()
-    releases = [
-        {"tag": release["tag_name"], "published_at": release["published_at"], "url": release["html_url"]}
-        for release in response.json()
-        if release.get("published_at")
-    ]
+    releases = [{"tag": release["tag_name"], "published_at": release["published_at"], "url": release["html_url"]} for release in response.json() if release.get("published_at")]
     releases.sort(key=lambda release: release["published_at"])
     return releases
 
@@ -296,6 +291,7 @@ def _issues_with_pending_merged() -> list[dict] | None:
 def _mb_to_bytes(mb):
     return mb * 1024 * 1024
 
+
 # ========================================
 # RENDER
 # ========================================
@@ -343,7 +339,7 @@ def _render_feedback_form() -> None:
         type=["png"],
         accept_multiple_files=True,
         key=versioned_key("feedback_screenshot"),
-        max_upload_size=MAX_SCREENSHOT_MB # per file
+        max_upload_size=MAX_SCREENSHOT_MB,  # NOTE per file
     )
 
     # st.file_uploader has no built-in cap on file COUNT (only the
@@ -355,7 +351,7 @@ def _render_feedback_form() -> None:
         if len(uploaded_screenshots) > MAX_SCREENSHOT_COUNT:
             screenshot_error = f"Attach at most {MAX_SCREENSHOT_COUNT} screenshots ({len(uploaded_screenshots)} selected)."
         else:
-            oversized = [f.name for f in uploaded_screenshots if f.size > _mb_to_bytes(MAX_SCREENSHOT_MB)] # NOTE f.size is checking bytes
+            oversized = [f.name for f in uploaded_screenshots if f.size > _mb_to_bytes(MAX_SCREENSHOT_MB)]  # NOTE f.size is checking bytes
             if oversized:
                 screenshot_error = f"Screenshot(s) over {MAX_SCREENSHOT_MB}MB: {', '.join(oversized)}."
     if screenshot_error:
@@ -380,9 +376,7 @@ def _render_feedback_form() -> None:
     # selectboxes above already fill theirs) is what closes that gap.
     submit_column, clear_column, _ = st.columns([1, 1, 6])
     with submit_column:
-        submit_clicked = st.button(
-            "Submit", disabled=not (title.strip() and description.strip()) or screenshot_error is not None, use_container_width=True
-        )
+        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()) or screenshot_error is not None, use_container_width=True)
     with clear_column:
         if st.button("Clear Feedback", use_container_width=True):
             _reset_form_fields()
@@ -489,9 +483,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     with type_column:
         selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key=versioned_key("feedback_filter_type"))
     with state_column:
-        selected_state = st.selectbox(
-            "Issue State", ["Open", "Closed"], index=None, placeholder="Any", key=versioned_key("feedback_filter_state")
-        )
+        selected_state = st.selectbox("Issue State", ["Open", "Closed"], index=None, placeholder="Any", key=versioned_key("feedback_filter_state"))
     with release_column:
         # "-" (open/ongoing issues - see the rows loop below) is
         # deliberately not one of the filterable options here, only a
@@ -508,9 +500,7 @@ def _render_issues_table(issues: list[dict]) -> None:
             key=versioned_key("feedback_filter_release"),
         )
     with page_column:
-        selected_page = st.selectbox(
-            "App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page")
-        )
+        selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
 
     # Same searchable-selectbox pattern as the Players tab's player
     # search - a plain text_input with substring matching below, not a
@@ -520,9 +510,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     # Transactions table.
     search_column, page_counter_column = st.columns([3, 1])
     with search_column:
-        searched_title = st.text_input(
-            "Search Issue Title(s)", placeholder="Type to search titles...", key=versioned_key("feedback_search_title")
-        )
+        searched_title = st.text_input("Search Issue Title(s)", placeholder="Type to search titles...", key=versioned_key("feedback_search_title"))
 
     st.session_state["feedback_filter_type"] = selected_type
     st.session_state["feedback_filter_state"] = selected_state

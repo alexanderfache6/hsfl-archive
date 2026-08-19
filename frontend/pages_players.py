@@ -83,7 +83,7 @@ NFL_POINTS_GAME_HELP = "Excludes bye weeks. Qualified game count in `()`."
 # return/defensive TDs) - used for the Fantasy Points per Game chart's
 # "Big Play Fantasy Points %" view (that week's TD-derived fantasy points
 # as a % of the player's total fantasy points that week).
-TOUCHDOWN_STAT_IDS = {"stat_6", "stat_15", "stat_22", "stat_50", "stat_53", "stat_76", "stat_77", "stat_78"} # NOTE from archive/stat_id_labels.json
+TOUCHDOWN_STAT_IDS = {"stat_6", "stat_15", "stat_22", "stat_50", "stat_53", "stat_76", "stat_77", "stat_78"}  # NOTE from archive/stat_id_labels.json
 POINTS_CHART_VIEW_LABELS = {"points": "Fantasy Points", "big_play_percentage": "Big Play Fantasy Points %"}
 BIG_PLAY_PERCENTAGE_HELP = "Excludes bye weeks and 0-point games. Share of that week's fantasy points that came from touchdown-scoring stats. Qualified game count in `()`."
 
@@ -101,8 +101,6 @@ FANTASY_STAT_VIEW_MODE_LABELS = {"normal": "Normal View", "manager": "Manager Vi
 # land on a fractional dtick (e.g. 0.5) - those get a forced
 # integer-only axis instead.
 YARDAGE_STAT_LABELS = {"Pass Yds", "Rush Yds", "Rec Yds"}
-
-
 
 
 PLAYER_FILTER_WIDGET_BASE_KEYS = ("player_selected_player_id", "player_season_filter")
@@ -222,9 +220,7 @@ def _bye_weeks_by_season(player_id: str) -> dict[int, int]:
 # ========================================
 
 
-def _render_flow_chart(
-    stints: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], flow_key: str, player_id: str
-) -> None:
+def _render_flow_chart(stints: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], flow_key: str, player_id: str) -> None:
     st.subheader("Transfers")
     bye_weeks_by_season = _bye_weeks_by_season(player_id)
     nodes = []
@@ -398,11 +394,7 @@ def _render_points_metrics(timeline: list[dict], player_id: str, position: str, 
     # double-count the same week).
     starter_entries = [entry for entry in timeline if entry["status"] == "starter"]
     bye_starts = sum(1 for entry in starter_entries if bye_weeks_by_season.get(entry["season"]) == entry["week"])
-    missed_starts = sum(
-        1
-        for entry in starter_entries
-        if bye_weeks_by_season.get(entry["season"]) != entry["week"] and get_espn_week_stats(player_id, entry["season"], entry["week"], nfl_player_stats) is None
-    )
+    missed_starts = sum(1 for entry in starter_entries if bye_weeks_by_season.get(entry["season"]) != entry["week"] and get_espn_week_stats(player_id, entry["season"], entry["week"], nfl_player_stats) is None)
     zero_point_starts = sum(1 for entry in starter_entries if entry["points"] == 0 and not _is_missed_or_bye(entry))
 
     start_column, bench_column, bye_start_column, missed_start_column, zero_start_column = st.columns(5)
@@ -529,19 +521,10 @@ def _render_fantasy_points_per_game_chart_normal(
         if view_mode == "big_play_percentage":
             big_play_percentage, big_play_points = _big_play_percentage(entry, position)
             points.append(big_play_percentage or 0.0)
-            hover_text.append(
-                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
-                f"{manager_hover_line}"
-                f"{'Starter' if is_starter else 'Bench'}<br>"
-                f"Points: {entry['points']:.2f}<br>"
-                f"Points from Big Plays: {big_play_points or 0.0:.2f}<br>"
-                f"Big Play Points %: {big_play_percentage or 0.0:.1f}%"
-            )
+            hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>{manager_hover_line}{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}<br>Points from Big Plays: {big_play_points or 0.0:.2f}<br>Big Play Points %: {big_play_percentage or 0.0:.1f}%")
         else:
             points.append(entry["points"])
-            hover_text.append(
-                f"<b>{entry['season']} · Week {entry['week']}</b><br>{manager_hover_line}{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}"
-            )
+            hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>{manager_hover_line}{'Starter' if is_starter else 'Bench'}<br>Points: {entry['points']:.2f}")
 
     x_positions = list(range(len(full_game_list)))
 
@@ -709,9 +692,7 @@ def _render_fantasy_points_per_game_chart_normal(
     )
     figure.update_xaxes(visible=False, row=1, col=1)
     figure.update_yaxes(visible=False, fixedrange=True, range=[-1, 1], row=1, col=1)
-    figure.update_xaxes(
-        title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text, row=2, col=1
-    )
+    figure.update_xaxes(title="Season", tickangle=0, tickmode="array", tickvals=tick_positions, ticktext=tick_text, row=2, col=1)
     figure.update_yaxes(title=yaxis_title, row=2, col=1, **yaxis)
 
     for index, entry in enumerate(full_game_list):
@@ -740,6 +721,7 @@ def _peer_season_totals(position: str, season: int, players_data: dict, ownershi
         rows.append({"player_id": player_id, "name": info["name"], "total": total, "games": games, "per_game": total / games})
     return rows
 
+
 def _calculate_percentile(peer_rows, selected_row, metric):
     all_values = [row[metric] for row in peer_rows]
     percentile = sum(1 for value in all_values if value <= selected_row[metric]) / len(all_values) * 100
@@ -756,6 +738,7 @@ def _format_rank(rank: int) -> str:
     if rank > PERCENTILE_MAX_OTHER_DOTS_PER_SEASON:
         return f"{PERCENTILE_MAX_OTHER_DOTS_PER_SEASON}+"
     return str(rank)
+
 
 def _render_percentiles_tab(
     selected_player_id: str,
@@ -807,12 +790,7 @@ def _render_percentiles_tab(
             other_y.append(row[metric])
             other_rank = _calculate_rank(peer_rows, row, metric)
             other_percentile = _calculate_percentile(peer_rows, row, metric)
-            other_hover.append(
-                f"<b>{row['name']}</b><br>{season}<br>"
-                f"{PERCENTILE_METRIC_LABELS[metric]}: {row[metric]:.2f}<br>"
-                f"Rank: {_format_rank(other_rank)}/{len(peer_rows)}<br>"
-                f"Percentile: {other_percentile:.0f}"
-            )
+            other_hover.append(f"<b>{row['name']}</b><br>{season}<br>{PERCENTILE_METRIC_LABELS[metric]}: {row[metric]:.2f}<br>Rank: {_format_rank(other_rank)}/{len(peer_rows)}<br>Percentile: {other_percentile:.0f}")
 
         if selected_row:
             # Percentile rank against EVERY qualified peer that season
@@ -822,13 +800,7 @@ def _render_percentiles_tab(
             rank = _calculate_rank(peer_rows, selected_row, metric)
             selected_x.append(season)
             selected_y.append(selected_row[metric])
-            selected_hover.append(
-                f"<b>{player_names_by_id[selected_player_id]}</b><br>"
-                f"{season}<br>"
-                f"{PERCENTILE_METRIC_LABELS[metric]}: {selected_row[metric]:.2f}<br>"
-                f"Rank: {_format_rank(rank)}/{len(peer_rows)}<br>"
-                f"Percentile: {percentile:.0f}"
-            )
+            selected_hover.append(f"<b>{player_names_by_id[selected_player_id]}</b><br>{season}<br>{PERCENTILE_METRIC_LABELS[metric]}: {selected_row[metric]:.2f}<br>Rank: {_format_rank(rank)}/{len(peer_rows)}<br>Percentile: {percentile:.0f}")
             table_rows.append(
                 {
                     "Season": season,
@@ -849,14 +821,22 @@ def _render_percentiles_tab(
 
     figure = go.Figure()
     figure.add_scatter(
-        x=other_x, y=other_y, mode="markers", name="Other Players",
+        x=other_x,
+        y=other_y,
+        mode="markers",
+        name="Other Players",
         marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
-        customdata=other_hover, hovertemplate="%{customdata}<extra></extra>",
+        customdata=other_hover,
+        hovertemplate="%{customdata}<extra></extra>",
     )
     figure.add_scatter(
-        x=selected_x, y=selected_y, mode="markers", name=player_names_by_id[selected_player_id],
+        x=selected_x,
+        y=selected_y,
+        mode="markers",
+        name=player_names_by_id[selected_player_id],
         marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PERCENTILE_SELECTED_PLAYER, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
-        customdata=selected_hover, hovertemplate="%{customdata}<extra></extra>",
+        customdata=selected_hover,
+        hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
         title=f"{selected_position} {PERCENTILE_METRIC_LABELS[metric]} by Season",
@@ -971,14 +951,8 @@ def _render_nfl_stat_chart(
         if entry.get("unrostered"):
             values.append(0.0)
             colors.append(COLOR_PLAYER_UNROSTERED)
-            hover_text.append(
-                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
-                "Not on a fantasy roster"
-            )
-            bye_hover_text.append(
-                f"<b>{entry['season']} · Week {entry['week']}</b><br>"
-                "Bye Week"
-            )
+            hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>Not on a fantasy roster")
+            bye_hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>Bye Week")
             has_unrostered = True
             continue
         value = float(entry.get("stats", {}).get(selected_stat_id, 0) or 0)
@@ -1001,9 +975,7 @@ def _render_nfl_stat_chart(
         y_dtick = max(1, -(-int(max_value) // CHART_YAXIS_MAX_TICKS))
         y_axis_config = {"dtick": y_dtick, "tickformat": "d"}
 
-    figure = go.Figure(
-        go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False)
-    )
+    figure = go.Figure(go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False))
     figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_CHART_STAT}, name=stat_label, showlegend=True)
     if any(is_bye_week):
         figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_BYE_WEEK}, name="Bye Week", showlegend=True)
@@ -1140,10 +1112,7 @@ def _render_espn_nfl_stat_chart(
         if is_missing_record[-1] and not is_bye:
             notes.append("Game Missed")
         notes_html = "<br>".join(notes)
-        hover_text.append(
-            f"<b>{entry['season']} · Week {entry['week']}</b><br>"
-            f"{notes_html}{'<br>' if notes_html else ''}{stat_label}: {values[-1]:g}"
-        )
+        hover_text.append(f"<b>{entry['season']} · Week {entry['week']}</b><br>{notes_html}{'<br>' if notes_html else ''}{stat_label}: {values[-1]:g}")
 
     # "{stat} Per Game" - average ESPN value across every real NFL game
     # (bye weeks excluded, everything else - rostered or not - counted),
@@ -1168,16 +1137,14 @@ def _render_espn_nfl_stat_chart(
     total_value = average_value if is_averaged_field else sum(qualified_values)
 
     games_played_column, games_missed_column, total_column, stat_per_game_column = st.columns(4)
-    games_played_column.metric(
-        "Games Played", len(qualified_values), help="Number of games with a recorded NFL stat, excluding the player's bye week."
-    )
+    games_played_column.metric("Games Played", len(qualified_values), help="Number of games with a recorded NFL stat, excluding the player's bye week.")
     games_missed_column.metric(
         "Games Missed",
         games_missed,
         help="Number of games missed due to injury or suspension, excluding the player's bye week. (Assumption - this occurs for games where there are NFL stats recorded.",
     )
     total_column.metric(f"Total {stat_label}", f"{total_value:.2f}" if is_averaged_field else f"{total_value:g}", help="Stat total.")
-    stat_per_game_column.metric(f"{stat_label} Per Game", f"{average_value:.2f}", help='Stat per game average.')
+    stat_per_game_column.metric(f"{stat_label} Per Game", f"{average_value:.2f}", help="Stat per game average.")
 
     x_positions = list(range(len(full_game_list)))
     positions_by_season: dict[int, list[int]] = {}
@@ -1208,9 +1175,7 @@ def _render_espn_nfl_stat_chart(
     # dedicated "Missing Game" marker series below (same black as the
     # normal bars, but a separate legend/toggle entry) rather than
     # rendering as an indistinguishable 0-height normal bar.
-    normal_values = [
-        value if (color == COLOR_NFL_STAT and not missing) else None for value, color, missing in zip(values, colors, is_missing_record)
-    ]
+    normal_values = [value if (color == COLOR_NFL_STAT and not missing) else None for value, color, missing in zip(values, colors, is_missing_record)]
     mismatch_values = [value if color == COLOR_NFL_STAT_MISMATCH else None for value, color in zip(values, colors)]
 
     figure = go.Figure(
@@ -1490,11 +1455,7 @@ def render_players_page() -> None:
         stat_select_column, chart_view_mode_column = st.columns(2)
         with stat_select_column:
             points_view_mode = st.selectbox(
-                "Select Fantasy Stat to View",
-                list(POINTS_CHART_VIEW_LABELS),
-                format_func=lambda value: POINTS_CHART_VIEW_LABELS[value],
-                key="player_points_chart_view_mode",
-                help="Big Play % are the percent of points generated by TDs (not the associated yards/reception). This is to highlight TD dependent players."
+                "Select Fantasy Stat to View", list(POINTS_CHART_VIEW_LABELS), format_func=lambda value: POINTS_CHART_VIEW_LABELS[value], key="player_points_chart_view_mode", help="Big Play % are the percent of points generated by TDs (not the associated yards/reception). This is to highlight TD dependent players."
             )
         with chart_view_mode_column:
             chart_view_mode = st.selectbox(

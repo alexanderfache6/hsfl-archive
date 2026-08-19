@@ -50,7 +50,7 @@ from player_modal import open_player_stats_modal
 # CONSTANTS
 # ========================================
 
-MAX_WEEK = 17 # TODO this should be taken from /archive/nfl_season_lengths.json
+MAX_WEEK = 17  # TODO this should be taken from /archive/nfl_season_lengths.json
 
 FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matchups_week", "matchups_team2_manager_id", "matchups_matchup_type")
 
@@ -385,10 +385,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # list, so this reuses it rather than re-deriving the same logic.
     team2_options = []
     if team1_manager_id:
-        opponent_ids = {
-            matchup["home"]["manager_id"] if matchup["away"]["manager_id"] == team1_manager_id else matchup["away"]["manager_id"]
-            for matchup in load_matchups(season, week, team1_manager_id, None, matchup_type)
-        }
+        opponent_ids = {matchup["home"]["manager_id"] if matchup["away"]["manager_id"] == team1_manager_id else matchup["away"]["manager_id"] for matchup in load_matchups(season, week, team1_manager_id, None, matchup_type)}
         team2_options = sorted(opponent_ids, key=lambda mid: manager_labels.get(mid, ""))
     # Same stale-selection guard as Season above - narrowing
     # season/week/matchup_type after Manager 2 was already picked can
@@ -421,11 +418,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # selectboxes above already fill theirs) is what closes that gap.
     apply_col, clear_col, _ = st.columns([1, 1, 6])
     with apply_col:
-        applied = st.button("Apply Filters",
-            disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
-            use_container_width=True
-        )
+        applied = st.button("Apply Filters", disabled=team1_manager_id is None, help="Select Manager 1 first" if team1_manager_id is None else None, use_container_width=True)
     with clear_col:
         if st.button("Clear Filters", use_container_width=True):
             for base_key in FILTER_WIDGET_BASE_KEYS:
@@ -479,10 +472,7 @@ def _render_filter_description(applied_filters: dict, name_resolver: dict[str, s
     team1_manager_id = applied_filters["team1_manager_id"]
     team2_manager_id = applied_filters["team2_manager_id"]
     if team1_manager_id and team2_manager_id:
-        parts.append(
-            f"{_manager_pill('Manager 1', team1_manager_id, name_resolver, manager_color_map)} "
-            f"vs {_manager_pill('Manager 2', team2_manager_id, name_resolver, manager_color_map)}"
-        )
+        parts.append(f"{_manager_pill('Manager 1', team1_manager_id, name_resolver, manager_color_map)} vs {_manager_pill('Manager 2', team2_manager_id, name_resolver, manager_color_map)}")
     elif team1_manager_id:
         parts.append(_manager_pill("Manager 1", team1_manager_id, name_resolver, manager_color_map))
 
@@ -547,13 +537,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
 
         x_labels.append(f"{matchup['season']} Wk{matchup['week']}")
         diffs.append(diff)
-        hover_text.append(
-            f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b>"
-            f"<br>{manager1_name} vs {manager2_name}"
-            f"<br>{team1_side['team_name']} vs {team2_side['team_name']}"
-            f"<br>{team1_side['score']:g} vs {team2_side['score']:g}"
-            f"<br>Point Differential: {diff:+.2f}"
-        )
+        hover_text.append(f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b><br>{manager1_name} vs {manager2_name}<br>{team1_side['team_name']} vs {team2_side['team_name']}<br>{team1_side['score']:g} vs {team2_side['score']:g}<br>Point Differential: {diff:+.2f}")
 
     # Numeric x positions (0, 1, 2, ...) with the season/week strings
     # supplied as tick labels instead - a true category axis's mapping
@@ -590,12 +574,20 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     loss_diffs = [diff if diff <= 0 else None for diff in diffs]
     figure = go.Figure()
     figure.add_bar(
-        x=x_positions, y=win_diffs, marker_color=manager1_color, name="Win",
-        customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
+        x=x_positions,
+        y=win_diffs,
+        marker_color=manager1_color,
+        name="Win",
+        customdata=hover_text,
+        hovertemplate="%{customdata}<extra></extra>",
     )
     figure.add_bar(
-        x=x_positions, y=loss_diffs, marker_color=COLOR_PLAYER_BENCH, name="Loss/Tie",
-        customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
+        x=x_positions,
+        y=loss_diffs,
+        marker_color=COLOR_PLAYER_BENCH,
+        name="Loss/Tie",
+        customdata=hover_text,
+        hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
         title="Point Differential",
@@ -659,10 +651,7 @@ def _render_roster_table(
     ROSTER_ROW_HEIGHT = "2.4rem"
 
     def _cell(text: str, align: str = "left", color: str = "inherit", weight: str = "400") -> str:
-        return (
-            f"<div style='display:flex; align-items:center; justify-content:{'flex-end' if align == 'right' else 'flex-start'}; "
-            f"height:{ROSTER_ROW_HEIGHT}; padding:0 8px; font-weight:{weight}; color:{color}; font-size:0.85em;'>{text}</div>"
-        )
+        return f"<div style='display:flex; align-items:center; justify-content:{'flex-end' if align == 'right' else 'flex-start'}; height:{ROSTER_ROW_HEIGHT}; padding:0 8px; font-weight:{weight}; color:{color}; font-size:0.85em;'>{text}</div>"
 
     # st.container(key=...) tags its DOM node with a unique "st-key-*"
     # class, which lets this <style> block tighten row spacing ONLY
@@ -674,10 +663,7 @@ def _render_roster_table(
     # content, clipping it half-outside the visible container.
     container_key = f"roster_{row_key_prefix}"
     st.markdown(
-        f"<style>"
-        f".st-key-{container_key} div[data-testid='stHorizontalBlock'] {{ gap: 0.5rem; }}"
-        f".st-key-{container_key} div[data-testid='stHorizontalBlock']:not(:last-of-type) {{ margin-bottom: -0.6rem; }}"
-        f"</style>",
+        f"<style>.st-key-{container_key} div[data-testid='stHorizontalBlock'] {{ gap: 0.5rem; }}.st-key-{container_key} div[data-testid='stHorizontalBlock']:not(:last-of-type) {{ margin-bottom: -0.6rem; }}</style>",
         unsafe_allow_html=True,
     )
     with st.container(border=show_border, key=container_key):
@@ -739,9 +725,7 @@ def _render_roster_table(
             st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
 
 
-def _render_matchup_card(
-    matchup: dict, team1_manager_id: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str], show_optimal: bool
-) -> None:
+def _render_matchup_card(matchup: dict, team1_manager_id: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str], show_optimal: bool) -> None:
     home, away = matchup["home"], matchup["away"]
     # Team 1's side always renders on the left when Team 1 is filtered,
     # regardless of whether they were actually home or away in this
