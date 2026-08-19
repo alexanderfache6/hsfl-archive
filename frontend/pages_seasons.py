@@ -17,13 +17,22 @@ from colors import (
     COLOR_BRACKET_OUTLINE,
     COLOR_CHAMPION,
     COLOR_MANAGER_BACKUP,
+    COLOR_MAX_EXTREME,
+    COLOR_MIN_EXTREME,
     COLOR_POINTS_NEGATIVE,
     COLOR_POINTS_POSITIVE,
     COLOR_RUNNER_UP,
     COLOR_THIRD_PLACE,
     COLOR_TRANSACTION_TYPES,
 )
-from constants import MATCHUP_TYPE_LABELS, RECORD_ROW_COLUMN_RATIOS
+from constants import (
+    EMOJI_FIRST_PLACE,
+    EMOJI_LAST_PLACE,
+    EMOJI_SECOND_PLACE,
+    EMOJI_THIRD_PLACE,
+    MATCHUP_TYPE_LABELS,
+    RECORD_ROW_COLUMN_RATIOS,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -31,6 +40,7 @@ from data_loader import (
     build_manager_name_resolver,
     contrasting_text_color,
     discover_seasons,
+    load_all_time_champions,
     load_matchups,
     load_metadata,
     load_playoffs,
@@ -41,6 +51,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
+from helpers import ordinal_word
 
 # ========================================
 # CONSTANTS
@@ -826,9 +837,9 @@ def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
             return ""
         wins, losses, ties = (int(part) for part in value.split("-"))
         if losses == 0 and ties == 0 and wins > 0:
-            return "background-color: rgba(46, 125, 50, 0.85)"
+            return f"background-color: {COLOR_MAX_EXTREME}"
         if wins == 0 and ties == 0 and losses > 0:
-            return "background-color: rgba(198, 40, 40, 0.85)"
+            return f"background-color: {COLOR_MIN_EXTREME}"
         return ""
 
     week_columns = [f"Wk {week_table['week']}" for week_table in weekly_tables]
@@ -955,7 +966,7 @@ def _render_coach_table(season: int, name_resolver: dict[str, str]) -> None:
     # there's no "perfect bad" analog to a 0-9-0 week. Same 85% opacity
     # green used there.
     def _highlight_perfect_coaching_week(value: float) -> str:
-        return "background-color: rgba(46, 125, 50, 0.85)" if value == 0 else ""
+        return f"background-color: {COLOR_MAX_EXTREME}" if value == 0 else ""
 
     styled_dataframe = dataframe.style.map(_highlight_perfect_coaching_week, subset=week_columns)
 
@@ -1143,9 +1154,9 @@ def _render_true_ranking_table(season: int, name_resolver: dict[str, str]) -> No
         colors = []
         for value in series:
             if value == max_value:
-                colors.append("background-color: rgba(46, 125, 50, 0.85)")
+                colors.append(f"background-color: {COLOR_MAX_EXTREME}")
             elif value == min_value:
-                colors.append("background-color: rgba(198, 40, 40, 0.85)")
+                colors.append(f"background-color: {COLOR_MIN_EXTREME}")
             else:
                 colors.append("")
         return colors
@@ -1686,6 +1697,213 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(dataframe)))
 
 
+def _return_plural(check, singular, plural) -> str:
+    return singular if check == 1 else plural
+
+def _return_s(check):
+    return 's' if check != 1 else ''
+
+def _highlight_manager_name(name: str, manager_id: str, manager_color_map: dict[str, str], style: str = "") -> str:
+    """Wraps just the name text in that manager's own color - same
+    background-color/contrasting-text-color/rounded-corners pill used for
+    manager pills elsewhere (see _manager_pill in pages_matchups.py), but
+    around a bare name/team name rather than a "Label (name)" phrase."""
+    background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
+    text_color = contrasting_text_color(background_color)
+    return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600; font-style:{style}; white-space:nowrap;'>{name}</span>"
+
+
+def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+    """One-paragraph season blurb above the Podium - champion (with their
+    combined record), who finished last, the biggest post-season riser/
+    faller by Rank Gained (see _render_final_standings_table), and the
+    most dominant scoring team by combined Point Difference (see
+    _render_season_summary_table). Rank Gained is only meaningful once an
+    actual post-season bracket exists - when it doesn't, ranked_team_ids
+    falls back to the regular-season standings themselves, so every
+    team's "gain" would trivially be 0 and is skipped instead."""
+    team_info = team_id_to_manager_map(season)
+    post_season_stats = load_post_season_stats(season)
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    if not weekly_tables:
+        return
+
+    regular_season_standings = {row["team_id"]: row for row in weekly_tables[-1]["standings"]}
+
+    has_post_season = bool(post_season_stats and post_season_stats.get("final_placements"))
+    if has_post_season:
+        ranked_team_ids = sorted(post_season_stats["final_placements"].items(), key=lambda entry: entry[1])
+    else:
+        ranked_team_ids = [(row["team_id"], row["rank"]) for row in weekly_tables[-1]["standings"]]
+
+    rows = []
+    for team_id, rank in ranked_team_ids:
+        info = team_info.get(team_id, {})
+        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+        team_name = info.get("team_name", "")
+
+        regular_row = regular_season_standings.get(team_id, {})
+        wins, losses, ties = regular_row.get("wins", 0), regular_row.get("losses", 0), regular_row.get("ties", 0)
+        points_for, points_against = regular_row.get("points_for", 0.0), regular_row.get("points_against", 0.0)
+
+        if post_season_stats:
+            post_season_record = post_season_stats["championship"].get(team_id) or post_season_stats["consolation"].get(team_id)
+            if post_season_record:
+                wins += post_season_record["wins"]
+                losses += post_season_record["losses"]
+                ties += post_season_record["ties"]
+                points_for += post_season_record["points_for"]
+                points_against += post_season_record["points_against"]
+
+        manager_id = info.get("manager_id", "")
+        win_streak = regular_row.get("win_streak")
+        active_streak = int(win_streak[1:]) * (1 if win_streak[0] == "W" else -1) if win_streak else 0
+        rows.append(
+            {
+                "manager_id": manager_id,
+                "manager_name": _highlight_manager_name(manager_name, manager_id, manager_color_map),
+                "team_name": _highlight_manager_name(team_name, manager_id, manager_color_map, "italic"),
+                "rank": rank,
+                "regular_season_rank": regular_row.get("rank", rank),
+                "wins": wins,
+                "losses": losses,
+                "ties": ties,
+                "point_difference": points_for - points_against,
+                "active_streak": active_streak,
+            }
+        )
+
+    if not rows:
+        return
+
+    last_place_rank = max(row["rank"] for row in rows)
+    champion_row = next((row for row in rows if row["rank"] == 1), None)
+    runner_up_row = next((row for row in rows if row["rank"] == 2), None)
+    third_place_row = next((row for row in rows if row["rank"] == 3), None)
+    last_place_row = next((row for row in rows if row["rank"] == last_place_rank), None)
+    most_dominant_row = max(rows, key=lambda row: row["point_difference"])
+    least_dominant_row = min(rows, key=lambda row: row["point_difference"])
+
+    placement_counts_by_manager_id: dict[str, dict[int, int]] = {}
+    for season_entry in load_all_time_champions()["champions"]:
+        if season_entry["season"] > season: # NOTE for each season only run stats through the current season, no future all time stats
+            continue
+        for placement_row in season_entry["top_3"]:
+            manager_id = placement_row.get("manager_id", "")
+            if not manager_id:
+                continue
+            manager_counts = placement_counts_by_manager_id.setdefault(manager_id, {1: 0, 2: 0, 3: 0})
+            if placement_row["rank"] in manager_counts:
+                manager_counts[placement_row["rank"]] += 1
+
+    sentences = []
+
+    if champion_row:
+        record = f"{champion_row['wins']}-{champion_row['losses']}-{champion_row['ties']}" if champion_row["ties"] else f"{champion_row['wins']}-{champion_row['losses']}"
+        sentences.append(f"{champion_row['team_name']}, run by team manager {champion_row['manager_name']}, won the {season} championship with a final record of {record}.")
+        championship_count = placement_counts_by_manager_id.get(champion_row["manager_id"], {}).get(1, 0)
+        sentences.append(
+            f"This is {champion_row['manager_name']}'s {ordinal_word(championship_count)} championship ({EMOJI_FIRST_PLACE * championship_count})."
+            if championship_count > 1
+            else f"This is {champion_row['manager_name']}'s first championship{'!' * championship_count}"
+        )
+
+    if runner_up_row:
+        runner_up_count = placement_counts_by_manager_id.get(runner_up_row["manager_id"], {}).get(2, 0)
+        sentences.append(f"{runner_up_row['manager_name']} has been runner up {runner_up_count} time{'s' if runner_up_count != 1 else ''} ({EMOJI_SECOND_PLACE * runner_up_count}).")
+
+    if third_place_row:
+        third_place_count = placement_counts_by_manager_id.get(third_place_row["manager_id"], {}).get(3, 0)
+        sentences.append(f"{third_place_row['manager_name']} has finished in third place {third_place_count} time{'s' if third_place_count != 1 else ''} ({EMOJI_THIRD_PLACE * third_place_count}).")
+
+    if last_place_row and last_place_row is not champion_row:
+        sentences.append(f"{last_place_row['team_name']} finished in {ordinal_word(last_place_rank)} place and faces the {EMOJI_LAST_PLACE} punishment.")
+
+    if champion_row and runner_up_row and third_place_row:
+        current_podium_makeup = frozenset({champion_row["manager_id"], runner_up_row["manager_id"], third_place_row["manager_id"]})
+        current_top2_pairing = frozenset({champion_row["manager_id"], runner_up_row["manager_id"]})
+
+        podium_makeup_by_season: dict[int, frozenset[str]] = {}
+        top2_pairing_by_season: dict[int, tuple[frozenset[str], str]] = {}
+        for season_entry in load_all_time_champions()["champions"]:
+            entry_season = season_entry["season"]
+            if entry_season > season:
+                continue
+            top3_by_rank = {row["rank"]: row.get("manager_id", "") for row in season_entry["top_3"]}
+            if all(top3_by_rank.get(rank) for rank in (1, 2, 3)):
+                podium_makeup_by_season[entry_season] = frozenset({top3_by_rank[1], top3_by_rank[2], top3_by_rank[3]})
+            if top3_by_rank.get(1) and top3_by_rank.get(2):
+                top2_pairing_by_season[entry_season] = (frozenset({top3_by_rank[1], top3_by_rank[2]}), top3_by_rank[1])
+
+        rematch_seasons = sorted(
+            past_season
+            for past_season, (pairing, _) in top2_pairing_by_season.items()
+            if past_season != season and pairing == current_top2_pairing
+        )
+        if rematch_seasons:
+            rematch_details = []
+            for past_season in rematch_seasons:
+                past_winner_manager_id = top2_pairing_by_season[past_season][1]
+                past_winner_manager_name = resolve_manager_name(past_winner_manager_id, name_resolver)
+                rematch_details.append(
+                    f"{past_season} ({_highlight_manager_name(past_winner_manager_name, past_winner_manager_id, manager_color_map)})"
+                )
+            sentences.append(f"The top 2 is a rematch of the {', '.join(rematch_details)} Fantasy Super Bowl{_return_s(len(rematch_details))}.")
+
+        unique_podium_count = len(set(podium_makeup_by_season.values()))
+        sentences.append(f"There {_return_plural(unique_podium_count, 'has', 'have')} been {unique_podium_count} unique podium combination{_return_s(unique_podium_count)}.")
+
+        repeat_seasons = sorted(
+            past_season
+            for past_season, makeup in podium_makeup_by_season.items()
+            if past_season != season and makeup == current_podium_makeup
+        )
+        if repeat_seasons:
+            sentences.append(f"This podium combination also occurred in {', '.join(str(s) for s in repeat_seasons)}.") # NOTE has never occurred yet
+
+    # NOTE above are final ranks
+    sentences.append(
+        "<br><br>"
+    )
+    # NOTE below are stats
+
+    if has_post_season:
+        biggest_riser = max(rows, key=lambda row: row["regular_season_rank"] - row["rank"])
+        biggest_faller = min(rows, key=lambda row: row["regular_season_rank"] - row["rank"])
+        riser_gain = biggest_riser["regular_season_rank"] - biggest_riser["rank"]
+        faller_drop = biggest_faller["regular_season_rank"] - biggest_faller["rank"]
+        if riser_gain > 0:
+            sentences.append(
+                f"{biggest_riser['team_name']} climbed the most in the post season, moving from "
+                f"{ordinal_word(biggest_riser['regular_season_rank'])} to {ordinal_word(biggest_riser['rank'])} (<span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{riser_gain:+.0f}</span>)."
+            )
+        if faller_drop < 0:
+            sentences.append(
+                f"{biggest_faller['team_name']} fell the furthest, dropping from {ordinal_word(biggest_faller['regular_season_rank'])} to {ordinal_word(biggest_faller['rank'])}  (<span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{faller_drop:+.0f}</span>)."
+            )
+
+        hottest_row = max(rows, key=lambda row: row["active_streak"])
+        coldest_row = min(rows, key=lambda row: row["active_streak"])
+        if hottest_row["active_streak"] > 0:
+            streak_label = "hottest" if hottest_row["active_streak"] >= 3 else "greatest"
+            sentences.append(
+                f"{hottest_row['team_name']} entered the postseason on the {streak_label} winning streak with <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{hottest_row['active_streak']}</span> straight wins."
+            )
+        if coldest_row["active_streak"] < 0:
+            skid_length = abs(coldest_row["active_streak"])
+            streak_label = "free fall" if skid_length > 3 else "losing streak"
+            sentences.append(
+                f"{coldest_row['team_name']} entered the postseason in {streak_label}, having lost <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{skid_length}</span> straight."
+            )
+
+    sentences.append(
+        f"{most_dominant_row['team_name']} was the most dominant scoring team, outscoring opponents by <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{most_dominant_row['point_difference']:+.2f}</span> points."
+    )
+    sentences.append(f"{least_dominant_row['team_name']} preferred starting their bench, being outscored by <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{least_dominant_row['point_difference']:+.2f}</span> points.")
+
+    st.markdown(" ".join(sentences), unsafe_allow_html=True)
+
+
 def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
     top_three = _top_three_final_standings(season, name_resolver)
     if len(top_three) < 3:
@@ -2082,6 +2300,8 @@ def render_seasons_page() -> None:
     )
 
     with season_summary_tab:
+        _render_season_summary_paragraph(selected_season, name_resolver, manager_color_map)
+        st.markdown("<div style='height:1rem;'></div>", unsafe_allow_html=True)
         _render_season_podium(selected_season, name_resolver)
         st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
         _render_season_summary_table(selected_season, name_resolver)
