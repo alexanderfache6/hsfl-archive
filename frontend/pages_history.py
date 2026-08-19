@@ -16,7 +16,16 @@ from colors import (
     COLOR_RUNNER_UP,
     COLOR_THIRD_PLACE,
 )
-from constants import ORDINAL_WORDS, RECORD_ROW_COLUMN_RATIOS
+from constants import (
+    EMOJI_FIRST_PLACE,
+    EMOJI_LAST_PLACE,
+    EMOJI_NO_FIRST_PLACE,
+    EMOJI_NO_SECOND_PLACE,
+    EMOJI_NO_THIRD_PLACE,
+    EMOJI_SECOND_PLACE,
+    EMOJI_THIRD_PLACE,
+    RECORD_ROW_COLUMN_RATIOS,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -30,6 +39,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
+from helpers import ordinal_word
 
 # ========================================
 # CONSTANTS
@@ -153,13 +163,6 @@ def _full_table_height(row_count: int) -> int:
     return 38 + 35 * row_count
 
 
-def _ordinal_word(n: int) -> str:
-    if n < len(ORDINAL_WORDS):
-        return ORDINAL_WORDS[n]
-    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
-    return f"{n}{suffix}"
-
-
 def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
     """{manager_id: {"champion_years": [...], "runner_up_years": [...],
     "third_place_years": [...]}} - only managers who were ever top-3 in
@@ -182,7 +185,7 @@ def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
     return placements
 
 
-def _years_label(years: list[int], empty_placeholder: str = "😢") -> str:
+def _years_label(years: list[int], empty_placeholder: str = "") -> str:
     return ", ".join(str(year) for year in sorted(years)) if years else empty_placeholder
 
 
@@ -341,7 +344,7 @@ def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[s
     st.markdown(
         f"The Music League began in {first_year} and has run for {season_count} successive seasons, featuring {champion_count} champions. "
         f"The most winning manager is {most_winning_manager_name} with {most_wins} championships. "
-        f"The reigning champion is {reigning_manager_name} who won their {_ordinal_word(reigning_ordinal)} championship."
+        f"The reigning champion is {reigning_manager_name} who won their {ordinal_word(reigning_ordinal)} championship."
     )
 
 
@@ -360,10 +363,10 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
         rows.append(
             {
                 "Season": season_entry["season"],
-                "Champion 🏆": name_for(top_3.get(1, {})),
-                "Runner-Up 🥈": name_for(top_3.get(2, {})),
-                "3rd Place 🥉": name_for(top_3.get(3, {})),
-                "Last Place 🥞": name_for(season_entry["last_place"]),
+                f"Champion {EMOJI_FIRST_PLACE}": name_for(top_3.get(1, {})),
+                f"Runner-Up {EMOJI_SECOND_PLACE}": name_for(top_3.get(2, {})),
+                f"3rd Place {EMOJI_THIRD_PLACE}": name_for(top_3.get(3, {})),
+                f"Last Place {EMOJI_LAST_PLACE}": name_for(season_entry["last_place"]),
             }
         )
     dataframe = pd.DataFrame(rows)
@@ -373,7 +376,7 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
     # championship seasons are visually traceable to their color at a
     # glance. 75% opacity per user request, so the text stays legible.
     def _highlight_champion_column(column: pd.Series) -> list[str]:
-        if column.name != "Champion 🏆":
+        if column.name != f"Champion {EMOJI_FIRST_PLACE}":
             return [""] * len(column)
         styles = []
         for manager_id in champion_manager_ids:
@@ -515,9 +518,9 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             marker={"color": "rgba(0,0,0,0)"},
             customdata=[
                 f"<b>{row['name']}</b><br>"
-                f"Champion: {_years_label(row['champion_years'], '😭')}<br>"
-                f"Runner-Up: {_years_label(row['runner_up_years'], '😢')}<br>"
-                f"3rd Place: {_years_label(row['third_place_years'], '☹️')}"
+                f"Champion: {_years_label(row['champion_years'], f'{EMOJI_NO_FIRST_PLACE}')}<br>"
+                f"Runner-Up: {_years_label(row['runner_up_years'], f'{EMOJI_NO_SECOND_PLACE}')}<br>"
+                f"3rd Place: {_years_label(row['third_place_years'], f'{EMOJI_NO_THIRD_PLACE}')}"
                 for row in bar_rows
             ],
             hovertemplate="%{customdata}<extra></extra>",

@@ -51,7 +51,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import ordinal_word
+from helpers import _return_plural, _return_s, ordinal_word
 
 # ========================================
 # CONSTANTS
@@ -1696,12 +1696,6 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
 
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(dataframe)))
 
-
-def _return_plural(check, singular, plural) -> str:
-    return singular if check == 1 else plural
-
-def _return_s(check):
-    return 's' if check != 1 else ''
 
 def _highlight_manager_name(name: str, manager_id: str, manager_color_map: dict[str, str], style: str = "") -> str:
     """Wraps just the name text in that manager's own color - same
