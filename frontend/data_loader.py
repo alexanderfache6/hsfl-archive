@@ -429,6 +429,19 @@ def load_transactions(year: int) -> dict:
 
 
 @st.cache_resource
+def load_draft(year: int) -> dict | None:
+    """{"season", "draft_type" ("snake"/"auction"), "picks": [{"overall_pick",
+    "player_id", "player_name", "position", "nfl_team", "team_id",
+    "auction_amount"}], "notes"} - auction_amount is null for every pick
+    in a snake draft, and for keeper picks in an auction draft (no live
+    bid took place - see the file's own "notes" field)."""
+    path = PARSED_DIRECTORY / str(year) / "draft.json"
+    if not path.exists():
+        return None
+    return _read_json(path)
+
+
+@st.cache_resource
 def load_post_season_stats(year: int) -> dict | None:
     path = AGGREGATED_DIRECTORY / str(year) / "post_season_stats.json"
     if not path.exists():
