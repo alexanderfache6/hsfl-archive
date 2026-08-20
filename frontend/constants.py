@@ -52,6 +52,9 @@ SCATTER_PLOT_DRAFT_MARKER_SIZE = 12
 CHART_LINE_AUCTION_WIDTH = 8
 CHART_LINE_OTHER_WIDTH = 2
 
+# for consistent y-axis tick density (Plotly's own nticks parameter)
+MAX_YAXIS_TICKS = 20
+
 # ----------------------------------------
 # column size
 # ----------------------------------------

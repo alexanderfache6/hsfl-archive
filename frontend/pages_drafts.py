@@ -26,6 +26,7 @@ from constants import (
     BENCH_POSITION_ORDER,
     CHART_LINE_AUCTION_WIDTH,
     CHART_LINE_OTHER_WIDTH,
+    MAX_YAXIS_TICKS,
     NFL_TEAM_ABBREVIATIONS,
     SCATTER_PLOT_DRAFT_MARKER_SIZE,
     SCATTER_PLOT_MARKER_SIZE,
@@ -74,7 +75,7 @@ def _render_draft_pick_card(
 
     with st.container(border=True):
         st.caption(badge)
-        player_column, manager_column = st.columns([3, 4])
+        player_column, manager_column = st.columns([4, 5])
 
         with player_column:
             # DEF entries carry an empty nfl_team in the archived data
@@ -82,8 +83,10 @@ def _render_draft_pick_card(
             # - filled back in from the DEF's own player_name (e.g.
             # "49ers") same as the matchups roster table does.
             nfl_team = pick.get("nfl_team") or NFL_TEAM_ABBREVIATIONS.get(pick["player_name"].split(" ")[-1], "")
+            position_background_color = BENCH_POSITION_COLOR.get(pick["position"], COLOR_TABLE_ROSTER)
+            position_text_color = contrasting_text_color(position_background_color)
             st.markdown(
-                f"<span style='color:{COLOR_TABLE_ROSTER}; font-weight:600; margin-right:8px;'>{pick['position']}</span><span style='font-weight:600;'>{pick['player_name']}</span> <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>",
+                f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600; margin-right:8px;'>{pick['position']}</span><span style='font-weight:600;'>{pick['player_name']}</span> <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>",
                 unsafe_allow_html=True,
             )
 
@@ -115,6 +118,95 @@ def _render_draft_pick_card(
 DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount"]
 
 
+def _render_pick_distribution_chart(
+    picks: list[dict],
+    value_fn,
+    bucket_size: int,
+    bucket_label_fn,
+    subheader: str,
+    xaxis_title: str,
+    widget_key: str,
+    empty_message: str,
+    reverse_buckets: bool = False,
+) -> None:
+    """Shared by the Auction Price Distribution (auction seasons) and
+    Draft Position Distribution (snake seasons) charts in the Stats tab -
+    both are "bucket some per-pick numeric value, count players per
+    bucket, let a Position selectbox overlay that position's own bars
+    (BENCH_POSITION_COLOR) on top of the whole draft's (faded gray)"
+    chart, just with a different value/bucket-size/label source.
+    reverse_buckets=True (used for the snake Round chart) puts the
+    LOWEST-value bucket on the right instead of the left, so "more
+    valuable" reads right-to-left the same way it already does on the
+    auction chart (higher $ bins sit further right there, and Round 1 -
+    the most valuable snake picks - needs that same visual position)."""
+    st.subheader(subheader)
+    position_options = ["All"] + [position for position in BENCH_POSITION_ORDER if any(pick["position"] == position for pick in picks)]
+    selected_position = st.selectbox("Select position", position_options, key=widget_key)
+
+    all_values = [value_fn(pick) for pick in picks if value_fn(pick) is not None]
+    values = [value_fn(pick) for pick in picks if value_fn(pick) is not None and (selected_position == "All" or pick["position"] == selected_position)]
+    if not values:
+        st.info(empty_message)
+        return
+
+    # Every bucket from 1 up to the highest value is shown even if empty
+    # (no skipped buckets). The bucket range comes from the WHOLE draft's
+    # max value (all_values), not the filtered position's own max, so
+    # switching Position doesn't rescale the axis out from under you.
+    max_value = max(all_values)
+    bucket_starts = list(range(1, max_value + 1, bucket_size))
+    if reverse_buckets:
+        bucket_starts = bucket_starts[::-1]
+    bucket_labels = [bucket_label_fn(bucket_start, bucket_size) for bucket_start in bucket_starts]
+
+    def _bucket_counts(bucket_values: list[float]) -> list[int]:
+        counts = {bucket_start: 0 for bucket_start in bucket_starts}
+        for value in bucket_values:
+            counts[1 + ((value - 1) // bucket_size) * bucket_size] += 1
+        return [counts[bucket_start] for bucket_start in bucket_starts]
+
+    is_filtered = selected_position != "All"
+    figure = go.Figure()
+    if is_filtered:
+        # Series 1 - the whole draft, faded gray, drawn UNDERNEATH
+        # series 2 (added first, in barmode "overlay" - Plotly draws
+        # later traces on top of earlier ones) so the selected position's
+        # own bars are still fully visible on top of it.
+        figure.add_trace(
+            go.Bar(
+                x=bucket_labels,
+                y=_bucket_counts(all_values),
+                name="All",
+                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
+                hovertemplate="<b>%{x}</b><br>All Player Count: %{y}<extra></extra>",
+            )
+        )
+    # Series 2's own color: the position's real BENCH_POSITION_COLOR when
+    # filtered (matches that same color used everywhere else this app
+    # plots positions), or the same faded gray as "All" when not filtered
+    # - unfiltered, series 2 IS the "All" data, so it should look like
+    # it, not like a real position's own color.
+    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position)} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5}
+    figure.add_trace(
+        go.Bar(
+            x=bucket_labels,
+            y=_bucket_counts(values),
+            name=selected_position if is_filtered else "All",
+            marker=series_2_marker,
+            hovertemplate=f"<b>%{{x}}</b><br>{selected_position if is_filtered else 'All'} Player Count: %{{y}}<extra></extra>",
+        )
+    )
+    figure.update_layout(
+        barmode="overlay",
+        xaxis={"title": xaxis_title, "type": "category"},
+        yaxis={"title": "Player Count", "tickformat": "d", "nticks": MAX_YAXIS_TICKS},
+        showlegend=is_filtered,
+        margin={"t": 20, "l": 60, "r": 20, "b": 50},
+    )
+    st.plotly_chart(figure, width="stretch")
+
+
 def _render_draft_recap_tab(season: int) -> None:
     draft = load_draft(season)
     if not draft:
@@ -126,115 +218,216 @@ def _render_draft_recap_tab(season: int) -> None:
     manager_color_map = build_manager_color_map()
     draft_type = draft["draft_type"]
 
-    # Same versioned-widget-key pattern as the Matchups/Players tabs'
-    # Clear Filters (see pages_matchups.py's _render_filters) - each
-    # filter's ACTUAL key includes a generation counter, so Clear Filters
-    # can force brand-new widget instances instead of relying on
-    # session_state deletion alone.
-    generation = st.session_state.setdefault("drafts_filters_generation", 0)
+    draft_type_article = "an" if draft_type == "auction" else "a"
+    st.markdown(f"The {season} draft consisted of {len(team_info)} teams, drafting {len(draft['picks'])} players. Draft followed {draft_type_article} {draft_type} format.")
 
-    def versioned_key(base_key: str) -> str:
-        return f"{base_key}_gen{generation}"
+    selections_tab, stats_tab = st.tabs(["Selections", "Stats"])
 
-    for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
-        widget_key = versioned_key(base_key)
-        if widget_key not in st.session_state and base_key in st.session_state:
-            st.session_state[widget_key] = st.session_state[base_key]
+    with selections_tab:
+        # Same versioned-widget-key pattern as the Matchups/Players tabs'
+        # Clear Filters (see pages_matchups.py's _render_filters) - each
+        # filter's ACTUAL key includes a generation counter, so Clear
+        # Filters can force brand-new widget instances instead of relying
+        # on session_state deletion alone.
+        generation = st.session_state.setdefault("drafts_filters_generation", 0)
 
-    # Auction $ only means anything for an auction draft - a snake
-    # draft's picks all carry a null auction_amount, so the filter would
-    # just always empty the results.
-    search_column, manager_column, position_column, min_amount_column, max_amount_column = st.columns([3, 2, 1, 1, 1])
-    search_text = search_column.text_input("Search player name", key=versioned_key("drafts_recap_search"))
-    manager_options = ["All"] + sorted({info["manager_id"] for info in team_info.values()}, key=lambda manager_id: resolve_manager_name(manager_id, name_resolver))
-    selected_manager_id = manager_column.selectbox(
-        "Manager",
-        manager_options,
-        format_func=lambda manager_id: "All" if manager_id == "All" else resolve_manager_name(manager_id, name_resolver),
-        key=versioned_key("drafts_recap_manager"),
-    )
-    position_options = ["All"] + [position for position in BENCH_POSITION_ORDER if any(pick["position"] == position for pick in draft["picks"])]
-    selected_position = position_column.selectbox("Position", position_options, key=versioned_key("drafts_recap_position"))
-    min_amount = min_amount_column.number_input(
-        "Min Auction $",
-        min_value=0,
-        step=1,
-        value=None,
-        disabled=draft_type != "auction",
-        help="Only applies to auction drafts" if draft_type != "auction" else None,
-        key=versioned_key("drafts_recap_min_amount"),
-    )
-    max_amount = max_amount_column.number_input(
-        "Max Auction $",
-        min_value=0,
-        step=1,
-        value=None,
-        disabled=draft_type != "auction",
-        help="Only applies to auction drafts" if draft_type != "auction" else None,
-        key=versioned_key("drafts_recap_max_amount"),
-    )
+        def versioned_key(base_key: str) -> str:
+            return f"{base_key}_gen{generation}"
 
-    st.session_state["drafts_recap_search"] = search_text
-    st.session_state["drafts_recap_manager"] = selected_manager_id
-    st.session_state["drafts_recap_position"] = selected_position
-    st.session_state["drafts_recap_min_amount"] = min_amount
-    st.session_state["drafts_recap_max_amount"] = max_amount
+        for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
+            widget_key = versioned_key(base_key)
+            if widget_key not in st.session_state and base_key in st.session_state:
+                st.session_state[widget_key] = st.session_state[base_key]
 
-    # NOTE use same `apply_column, clear_column, _ = st.columns([1, 1, 6])` for any filtering pages
-    apply_column, clear_column, _ = st.columns([1, 1, 6])
-    with apply_column:
-        applied = st.button("Apply Filters", use_container_width=True, key="drafts_recap_apply_filters")
-    with clear_column:
-        if st.button("Clear Filters", use_container_width=True, key="drafts_recap_clear_filters"):
-            for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
-                st.session_state.pop(base_key, None)
-            st.session_state.pop("drafts_applied_filters", None)
-            st.session_state["drafts_filters_generation"] = generation + 1
-            st.rerun()
+        # Auction $ only means anything for an auction draft - a snake
+        # draft's picks all carry a null auction_amount, so the filter
+        # would just always empty the results.
+        search_column, manager_column, position_column, min_amount_column, max_amount_column = st.columns([3, 2, 1, 1, 1])
+        # Same "Search for a player" selectbox pattern as pages_players.py
+        # - pre-filtered to only players actually picked in THIS draft,
+        # rather than every player in the archive.
+        drafted_player_names = sorted({pick["player_name"] for pick in draft["picks"]})
+        selected_player_name = search_column.selectbox(
+            "Search for a player",
+            drafted_player_names,
+            index=None,
+            placeholder="Type a player's name...",
+            key=versioned_key("drafts_recap_search"),
+        )
+        manager_options = ["All"] + sorted({info["manager_id"] for info in team_info.values()}, key=lambda manager_id: resolve_manager_name(manager_id, name_resolver))
+        selected_manager_id = manager_column.selectbox(
+            "Manager",
+            manager_options,
+            format_func=lambda manager_id: "All" if manager_id == "All" else resolve_manager_name(manager_id, name_resolver),
+            key=versioned_key("drafts_recap_manager"),
+        )
+        position_options = ["All"] + [position for position in BENCH_POSITION_ORDER if any(pick["position"] == position for pick in draft["picks"])]
+        selected_position = position_column.selectbox("Position", position_options, key=versioned_key("drafts_recap_position"))
+        # Auction $ has no meaning at all for a snake draft (every pick's
+        # auction_amount is null) - rather than a disabled/greyed-out
+        # input explaining that, the columns are just left blank.
+        min_amount = max_amount = None
+        if draft_type == "auction":
+            min_amount = min_amount_column.number_input(
+                "Min Auction $",
+                min_value=0,
+                step=5,
+                value=None,
+                key=versioned_key("drafts_recap_min_amount"),
+            )
+            max_amount = max_amount_column.number_input(
+                "Max Auction $",
+                min_value=0,
+                step=5,
+                value=None,
+                key=versioned_key("drafts_recap_max_amount"),
+            )
 
-    if applied:
-        st.session_state["drafts_applied_filters"] = {
-            "search_text": search_text,
-            "manager_id": selected_manager_id,
-            "position": selected_position,
-            "min_amount": min_amount,
-            "max_amount": max_amount,
-        }
+        st.session_state["drafts_recap_search"] = selected_player_name
+        st.session_state["drafts_recap_manager"] = selected_manager_id
+        st.session_state["drafts_recap_position"] = selected_position
+        st.session_state["drafts_recap_min_amount"] = min_amount
+        st.session_state["drafts_recap_max_amount"] = max_amount
 
-    # Defaults to every pick shown (not "Set your filters above and click
-    # Apply Filters." like the other filtering tabs) - Draft Recap's own
-    # whole point is a browsable list of the season's picks, so it should
-    # be populated on first load rather than gated behind an Apply click.
-    applied_filters = st.session_state.get(
-        "drafts_applied_filters",
-        {"search_text": "", "manager_id": "All", "position": "All", "min_amount": None, "max_amount": None},
-    )
+        # NOTE use same `apply_column, clear_column, _ = st.columns([1, 1, 6])` for any filtering pages
+        apply_column, clear_column, _ = st.columns([1, 1, 6])
+        with apply_column:
+            applied = st.button("Apply Filters", use_container_width=True, key="drafts_recap_apply_filters")
+        with clear_column:
+            if st.button("Clear Filters", use_container_width=True, key="drafts_recap_clear_filters"):
+                for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
+                    st.session_state.pop(base_key, None)
+                st.session_state.pop("drafts_applied_filters", None)
+                st.session_state["drafts_filters_generation"] = generation + 1
+                st.rerun()
 
-    picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"])
-    if applied_filters["search_text"]:
-        picks = [pick for pick in picks if applied_filters["search_text"].lower() in pick["player_name"].lower()]
-    if applied_filters["manager_id"] != "All":
-        picks = [pick for pick in picks if team_info.get(pick["team_id"], {}).get("manager_id") == applied_filters["manager_id"]]
-    if applied_filters["position"] != "All":
-        picks = [pick for pick in picks if pick["position"] == applied_filters["position"]]
-    if draft_type == "auction" and applied_filters["min_amount"] is not None:
-        picks = [pick for pick in picks if pick["auction_amount"] is not None and pick["auction_amount"] >= applied_filters["min_amount"]]
-    if draft_type == "auction" and applied_filters["max_amount"] is not None:
-        picks = [pick for pick in picks if pick["auction_amount"] is not None and pick["auction_amount"] <= applied_filters["max_amount"]]
+        if applied:
+            st.session_state["drafts_applied_filters"] = {
+                "player_name": selected_player_name,
+                "manager_id": selected_manager_id,
+                "position": selected_position,
+                "min_amount": min_amount,
+                "max_amount": max_amount,
+            }
 
-    if not picks:
-        st.info("No picks match these filters.")
-        return
+        # Defaults to every pick shown (not "Set your filters above and
+        # click Apply Filters." like the other filtering tabs) - Draft
+        # Recap's own whole point is a browsable list of the season's
+        # picks, so it should be populated on first load rather than
+        # gated behind an Apply click.
+        applied_filters = st.session_state.get(
+            "drafts_applied_filters",
+            {"player_name": None, "manager_id": "All", "position": "All", "min_amount": None, "max_amount": None},
+        )
 
-    st.caption(f"Showing {len(picks)} of {len(draft['picks'])} picks.")
+        picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"])
+        if applied_filters["player_name"]:
+            picks = [pick for pick in picks if pick["player_name"] == applied_filters["player_name"]]
+        if applied_filters["manager_id"] != "All":
+            picks = [pick for pick in picks if team_info.get(pick["team_id"], {}).get("manager_id") == applied_filters["manager_id"]]
+        if applied_filters["position"] != "All":
+            picks = [pick for pick in picks if pick["position"] == applied_filters["position"]]
+        if draft_type == "auction" and applied_filters["min_amount"] is not None:
+            picks = [pick for pick in picks if pick["auction_amount"] is not None and pick["auction_amount"] >= applied_filters["min_amount"]]
+        if draft_type == "auction" and applied_filters["max_amount"] is not None:
+            picks = [pick for pick in picks if pick["auction_amount"] is not None and pick["auction_amount"] <= applied_filters["max_amount"]]
 
-    # Cards only fill half the page width - at full width a two-column
-    # [player | manager] row leaves an awkward amount of empty space on
-    # a wide monitor for content this short.
-    _, cards_column, _ = st.columns([1, 2, 1])
-    with cards_column:
-        for pick in picks:
-            _render_draft_pick_card(pick, draft_type, len(team_info), team_info, name_resolver, manager_color_map)
+        if not picks:
+            st.info("No picks match these filters.")
+        else:
+            st.caption(f"Showing {len(picks)} of {len(draft['picks'])} picks.")
+
+            # Cards only fill half the page width - at full width a
+            # two-column [player | manager] row leaves an awkward amount
+            # of empty space on a wide monitor for content this short.
+            _, cards_column, _ = st.columns([1, 2, 1])
+            with cards_column:
+                for pick in picks:
+                    _render_draft_pick_card(pick, draft_type, len(team_info), team_info, name_resolver, manager_color_map)
+
+    with stats_tab:
+        # Counted from the FULL draft (draft["picks"]), not whatever the
+        # Selections tab's own filters currently have applied - "number
+        # of {position}s in this year's draft" is a fact about the draft
+        # itself.
+        position_counts = {position: sum(1 for pick in draft["picks"] if pick["position"] == position) for position in BENCH_POSITION_ORDER}
+        # st.metric's own label doesn't support unsafe_allow_html, so the
+        # position pill is a separate st.markdown right above a metric
+        # whose own label is now just "Drafted" - the pill is what
+        # identifies which position each number belongs to.
+        position_metric_columns = st.columns(len(BENCH_POSITION_ORDER))
+        for position_metric_column, position in zip(position_metric_columns, BENCH_POSITION_ORDER):
+            position_background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
+            position_text_color = contrasting_text_color(position_background_color)
+            with position_metric_column:
+                st.markdown(
+                    f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{position}</span>",
+                    unsafe_allow_html=True,
+                )
+                st.metric("Drafted", position_counts[position], help=f"The number of {position}s in this year's draft.")
+
+        if draft_type == "auction":
+            # Skew computed separately PER POSITION GROUP - a QB-only
+            # skew can read very differently than the overall skew below
+            # (e.g. a position with a few $50+ studs and a long $1 tail
+            # skews harder than one where everyone landed mid-range).
+            skew_help = "Right skewness of auction price selections. A higher number indicates extreme price selection and greater dependence on $1 picks. Fantasy range ~1-3"
+            position_skew_columns = st.columns(len(BENCH_POSITION_ORDER))
+            for position_skew_column, position in zip(position_skew_columns, BENCH_POSITION_ORDER):
+                position_priced_picks = [pick for pick in draft["picks"] if pick["position"] == position and pick.get("auction_amount") is not None]
+                position_skew = pd.Series([pick["auction_amount"] for pick in position_priced_picks]).skew() if len(position_priced_picks) >= 3 else None
+                position_skew_column.metric(f"{position} Price Skew", f"{position_skew:.2f}" if position_skew is not None else "—", help=skew_help)
+
+            # Same trio as Manager Recap's own "Auction Metrics" (see
+            # _render_manager_recap_tab), just aggregated across the
+            # WHOLE draft (every manager combined) instead of one
+            # manager's own picks.
+            total_spent = sum(pick["auction_amount"] for pick in draft["picks"] if pick.get("auction_amount") is not None)
+            total_remaining_budget = len(team_info) * AUCTION_BUDGET - total_spent
+            total_one_dollar_pick_count = sum(1 for pick in draft["picks"] if pick.get("auction_amount") == 1)
+            all_priced_picks = [pick for pick in draft["picks"] if pick.get("auction_amount") is not None]
+
+            remaining_column, one_dollar_column, skew_column, _ = st.columns(4)
+            remaining_column.metric("Total Remaining Salary Cap", f"${total_remaining_budget}", help="Remaining $ budget once all selections were made.")
+            one_dollar_column.metric("Total $1 Picks", total_one_dollar_pick_count, help="The number of $1 picks made.")
+
+            # Fisher-Pearson (bias-corrected) skewness - pandas'
+            # Series.skew() needs at least 3 points to be defined.
+            overall_auction_price_skew = pd.Series([pick["auction_amount"] for pick in all_priced_picks]).skew() if len(all_priced_picks) >= 3 else None
+            skew_column.metric(
+                "Overall Auction Price Skew",
+                f"{overall_auction_price_skew:.2f}" if overall_auction_price_skew is not None else "—",
+                help=skew_help,
+            )
+
+        if draft_type == "auction":
+            # $5-wide bins starting at 1 (1-5, 6-10, ...), not 0-4/5-9.
+            _render_pick_distribution_chart(
+                draft["picks"],
+                value_fn=lambda pick: pick.get("auction_amount"),  # None (keepers) excluded - no real bid ever happened, see load_draft's docstring
+                bucket_size=5,
+                bucket_label_fn=lambda bucket_start, bucket_size: f"${bucket_start}-{bucket_start + bucket_size - 1}",
+                subheader="Auction Price Distribution",
+                xaxis_title="Auction Price",
+                widget_key="drafts_stats_auction_price_position",
+                empty_message="No auction picks match this filter.",
+            )
+        elif draft_type == "snake":
+            # Bucket size = that season's own team count, so each bucket
+            # is exactly one real snake round - "Round 1", "Round 2", ...
+            # not an arbitrary price-style range label.
+            num_teams = len(team_info)
+            _render_pick_distribution_chart(
+                draft["picks"],
+                value_fn=lambda pick: pick["overall_pick"],
+                bucket_size=num_teams,
+                bucket_label_fn=lambda bucket_start, bucket_size: f"Round {((bucket_start - 1) // bucket_size) + 1}",
+                subheader="Draft Position Distribution",
+                xaxis_title="Round",
+                widget_key="drafts_stats_pick_position",
+                empty_message="No picks match this filter.",
+                reverse_buckets=True,
+            )
 
 
 def _render_manager_recap_tab(season: int) -> None:
@@ -786,6 +979,8 @@ def _render_fantasy_value_section(selected_player: str, player_picks: list[dict]
     snake, KEEPER_DEFAULT_COST for keepers) once for every drafted
     player, not just the one being viewed here."""
     st.subheader("Fantasy Value")
+
+    st.warning("value assessment is very raw, take with large grain of salt")
 
     metrics_by_season = load_player_fantasy_value_metrics()["player_fantasy_value_metrics"]
     player_id = player_picks[0].get("player_id")
