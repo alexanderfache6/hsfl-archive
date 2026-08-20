@@ -21,12 +21,15 @@ comparison - is_keeper flags this on the entry so it's not confused with
 a genuine $50 bid.
 """
 
-from utils import ARCHIVE_DIRECTORY, PARSED_DIRECTORY, parsed_path, read_json, write_json
+import sys
+from pathlib import Path
 
-# Flat stand-in cost for a keeper pick (no real auction bid ever
-# happened) - roughly the midpoint of a $200 budget, picked so a keeper
-# neither looks free (cost near 0, value_per_game -> huge) nor looks
-# like a top-dollar auction buy.
+from utils import ARCHIVE_DIRECTORY, PARSED_DIRECTORY, parsed_path, read_json, team_id_to_manager, write_json
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "frontend"))
+from helpers import check_keeper_pick_criteria
+
+# default auction era keeper cost since no auction value
 KEEPER_DEFAULT_COST = 50
 
 
@@ -51,23 +54,26 @@ def build_player_fantasy_value_metrics(years: list[int], player_ownership: dict[
             continue
         draft = read_json(draft_path)
         total_picks = len(draft["picks"])
+        num_teams = len(team_id_to_manager(year))
         print(f"{year=}")
-        print(f"{total_picks=}")
 
         for pick in draft["picks"]:
             player_id = pick.get("player_id")
             if not player_id:
                 continue
 
-            weekly_points = [entry["points"] for entry in player_ownership.get(player_id, []) if entry["season"] == year]
-            if not weekly_points:
+            weekly_stats = [(entry["points"], len(entry["stats"]) > 0) for entry in player_ownership.get(player_id, []) if entry["season"] == year]
+            games_played = sum(week[1] for week in weekly_stats)  # NOTE count of nonzero stats is games played
+
+            # if player_id == "2557997":
+            #     print(f"{year} {games_played}")
+
+            if not games_played:
                 continue
 
-            games_played = len(weekly_points)
-            total_fantasy_points = sum(weekly_points)
+            total_fantasy_points = sum(week[0] for week in weekly_stats)
             fantasy_points_per_game = total_fantasy_points / games_played
 
-            is_keeper = draft["draft_type"] == "auction" and pick.get("auction_amount") is None
             cost = _draft_cost(draft["draft_type"], pick.get("auction_amount"), pick["overall_pick"], total_picks)
             fantasy_value_per_season = total_fantasy_points / cost
             fantasy_value_per_game = fantasy_points_per_game / cost
@@ -78,7 +84,7 @@ def build_player_fantasy_value_metrics(years: list[int], player_ownership: dict[
                     "player_name": pick["player_name"],
                     "position": pick["position"],
                     "games_played": games_played,
-                    "is_keeper": is_keeper,
+                    "is_keeper": check_keeper_pick_criteria({**pick, "draft_type": draft["draft_type"], "num_teams": num_teams}),
                     "draft_type": draft["draft_type"],
                     "overall_pick": pick["overall_pick"],
                     "auction_amount": pick.get("auction_amount"),

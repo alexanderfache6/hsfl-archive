@@ -42,7 +42,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import manager_pill
+from helpers import check_auction_pick_criteria, check_keeper_pick_criteria, manager_pill
 
 # ========================================
 # RENDER
@@ -654,11 +654,10 @@ def _render_keepers_tab() -> None:
         if not draft:
             continue
         else:
-            number_of_first_round_selections = len(team_info)
             for current_pick in draft["picks"]:
                 # NOTE snake - first round were keepers
                 # NOTE auction - keepers have no auction value
-                if (draft["draft_type"] == "auction" and current_pick.get("auction_amount") is None) or (draft["draft_type"] == "snake" and current_pick.get("overall_pick") <= number_of_first_round_selections):
+                if check_keeper_pick_criteria({**current_pick, "draft_type": draft["draft_type"], "num_teams": len(team_info)}):
                     entry = keeper_data.setdefault(current_pick["player_name"], {"count": 0, "position": current_pick["position"], "years": [], "by_manager": {}})
                     entry["count"] += 1
                     entry["position"] = current_pick["position"]
@@ -853,30 +852,22 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
 
     player_picks = sorted(picks_by_player[selected_player], key=lambda pick: pick["season"])
 
-    # A "1st round" selection is either an actual Round 1 pick in a snake
-    # draft, OR a keeper in an auction draft (auction_amount null - see
-    # load_draft's docstring) - a keeper is set before the live auction
-    # even starts, occupying what's effectively that team's top pick, so
-    # it's counted here the same as a real Round 1 selection.
-    first_round_count = sum(1 for pick in player_picks if (pick["draft_type"] == "snake" and pick["num_teams"] and ((pick["overall_pick"] - 1) // pick["num_teams"]) + 1 == 1) or (pick["draft_type"] == "auction" and pick["auction_amount"] is None))
     years_drafted_count = len({pick["season"] for pick in player_picks})
-    keeper_pick_count = sum(1 for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is None)
+    keeper_pick_count = sum(1 for pick in player_picks if check_keeper_pick_criteria(pick))
 
     metric_column, _ = st.columns(2)
     with metric_column:
-        first_round_metric_column, years_drafted_metric_column, keeper_metric_column = st.columns(3)
-        first_round_metric_column.metric("1st Round Selections", first_round_count, help="Number of 1st round selections.")
+        years_drafted_metric_column, keeper_metric_column = st.columns(2)
         years_drafted_metric_column.metric("Years Drafted", years_drafted_count, help="Number of years drafted.")
         keeper_metric_column.metric("Keeper Pick", keeper_pick_count, help="Number of years selected as keeper.")
 
-    # Pick covers EVERY year regardless of draft_type (a real overall_pick
-    # exists no matter how that year's draft ran) - Auction Price is still
-    # only for auction seasons that had a real bid, and a separate red-dot
-    # Keeper series marks auction seasons with NO real bid (auction_amount
-    # null - see load_draft's docstring); a keeper's own point already
-    # sits on the Pick line too, the red dot just flags it.
-    auction_picks = [pick for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is not None]
-    keeper_picks = [pick for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is None]
+    # NOTE
+    # picks cover all years
+    # auction price only for auction seasons
+    # keepers have no auction price
+    # keepers are first round selection in snake
+    auction_picks = [pick for pick in player_picks if check_auction_pick_criteria(pick)]
+    keeper_picks = [pick for pick in player_picks if check_keeper_pick_criteria(pick)]
 
     line_figure = go.Figure()
     line_figure.add_trace(
