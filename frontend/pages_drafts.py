@@ -8,14 +8,36 @@ a single selected season. See execution-plan.md Phase G."""
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from colors import COLOR_CHART_STAT, COLOR_MANAGER_BACKUP, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
-from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, NFL_TEAM_ABBREVIATIONS
+from colors import (
+    COLOR_CHART_AUCTION,
+    COLOR_CHART_PICK,
+    COLOR_CHART_SCATTER_MARKER_OUTLINE,
+    COLOR_CHART_STAT,
+    COLOR_MANAGER_BACKUP,
+    COLOR_PERCENTILE_OTHER_PLAYERS,
+    COLOR_PERCENTILE_SELECTED_PLAYER,
+    COLOR_POINTS_NEGATIVE,
+    COLOR_POINTS_POSITIVE,
+    COLOR_TABLE_ROSTER,
+)
+from constants import (
+    AUCTION_BUDGET,
+    BENCH_POSITION_COLOR,
+    BENCH_POSITION_ORDER,
+    CHART_LINE_AUCTION_WIDTH,
+    CHART_LINE_OTHER_WIDTH,
+    NFL_TEAM_ABBREVIATIONS,
+    SCATTER_PLOT_DRAFT_MARKER_SIZE,
+    SCATTER_PLOT_MARKER_SIZE,
+)
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
     contrasting_text_color,
     discover_seasons,
     load_draft,
+    load_player_fantasy_value_metrics,
+    load_player_ownership,
     resolve_manager_name,
     team_id_to_manager_map,
 )
@@ -161,9 +183,9 @@ def _render_draft_recap_tab(season: int) -> None:
     # NOTE use same `apply_column, clear_column, _ = st.columns([1, 1, 6])` for any filtering pages
     apply_column, clear_column, _ = st.columns([1, 1, 6])
     with apply_column:
-        applied = st.button("Apply Filters", use_container_width=True)
+        applied = st.button("Apply Filters", use_container_width=True, key="drafts_recap_apply_filters")
     with clear_column:
-        if st.button("Clear Filters", use_container_width=True):
+        if st.button("Clear Filters", use_container_width=True, key="drafts_recap_clear_filters"):
             for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("drafts_applied_filters", None)
@@ -179,10 +201,14 @@ def _render_draft_recap_tab(season: int) -> None:
             "max_amount": max_amount,
         }
 
-    applied_filters = st.session_state.get("drafts_applied_filters")
-    if applied_filters is None:
-        st.info("Set your filters above and click Apply Filters.")
-        return
+    # Defaults to every pick shown (not "Set your filters above and click
+    # Apply Filters." like the other filtering tabs) - Draft Recap's own
+    # whole point is a browsable list of the season's picks, so it should
+    # be populated on first load rather than gated behind an Apply click.
+    applied_filters = st.session_state.get(
+        "drafts_applied_filters",
+        {"search_text": "", "manager_id": "All", "position": "All", "min_amount": None, "max_amount": None},
+    )
 
     picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"])
     if applied_filters["search_text"]:
@@ -334,8 +360,18 @@ def _render_manager_recap_tab(season: int) -> None:
                     {
                         "Player": pick["player_name"],
                         "Team": pick.get("nfl_team") or NFL_TEAM_ABBREVIATIONS.get(pick["player_name"].split(" ")[-1], ""),
-                        "Pick": pick["overall_pick"],
-                        **({"Auction Value": f"${pick['auction_amount']}" if pick.get("auction_amount") is not None else "—"} if draft_type == "auction" else {}),
+                        # Pick is a STRING here (not overall_pick's real
+                        # int) - keeping the whole column string-typed
+                        # avoids the pandas/pyarrow int64-vs-NaN dance
+                        # entirely (a mixed int/None column upcasts to
+                        # float64, which either breaks pyarrow serialization
+                        # outright or - even once "fixed" - still needs a
+                        # Styler.format() call that st.dataframe doesn't
+                        # reliably honor for text formatting, rendering
+                        # the total row's blank as literal "None"/"nan").
+                        # A plain "" string sidesteps all of that.
+                        "Pick": str(pick["overall_pick"]),
+                        **({"Auction Value": f"${pick['auction_amount']:.0f}" if pick.get("auction_amount") is not None else "—"} if draft_type == "auction" else {}),
                     }
                     for pick in position_picks
                 ]
@@ -560,6 +596,418 @@ def _render_keepers_tab() -> None:
         st.plotly_chart(loyalty_figure, width="stretch")
 
 
+def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]], selected_player: str | None) -> None:
+    """Every player's own Pick-by-year line, all at once - only Pick (no
+    Auction Price/y2, "only picks" per the request), lines only (no
+    markers), the searched player highlighted in
+    COLOR_PERCENTILE_SELECTED_PLAYER, everyone else who shares that same
+    position in COLOR_PERCENTILE_OTHER_PLAYERS - other positions are
+    excluded entirely, not just dimmed, since a WR's pick history isn't a
+    meaningful comparison for a QB. No click interactivity - just the
+    selected player against everyone else at that position."""
+    if not selected_player:
+        st.info("Search for a player above to compare them against others at their position.")
+        return
+
+    entire_figure = go.Figure()
+
+    selected_position = None
+    if selected_player and selected_player in picks_by_player:
+        selected_picks = sorted(picks_by_player[selected_player], key=lambda pick: pick["season"])
+        selected_position = selected_picks[-1]["position"]
+        entire_figure.add_trace(
+            go.Scatter(
+                x=[pick["season"] for pick in selected_picks],
+                y=[pick["overall_pick"] for pick in selected_picks],
+                name=selected_player,
+                mode="lines+markers",
+                line={"color": COLOR_PERCENTILE_SELECTED_PLAYER, "width": CHART_LINE_AUCTION_WIDTH},
+                marker={"color": COLOR_PERCENTILE_SELECTED_PLAYER, "size": SCATTER_PLOT_DRAFT_MARKER_SIZE},
+                legendgroup="selected",
+                hovertemplate=f"<b>%{{x}}</b><br>{selected_player}<br>Pick: %{{y}}<extra></extra>",
+            )
+        )
+
+    other_players = [player for player in picks_by_player if player != selected_player and (selected_position is None or picks_by_player[player][-1]["position"] == selected_position)]
+    other_legend_shown = False
+    for player in other_players:
+        player_picks = sorted(picks_by_player[player], key=lambda pick: pick["season"])
+        entire_figure.add_trace(
+            go.Scatter(
+                x=[pick["season"] for pick in player_picks],
+                y=[pick["overall_pick"] for pick in player_picks],
+                name=f"Other {selected_position}",
+                mode="lines",
+                line={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "width": CHART_LINE_OTHER_WIDTH},
+                legendgroup="other",
+                showlegend=not other_legend_shown,
+                hovertemplate=f"<b>%{{x}}</b><br>{player}<br>Pick: %{{y}}<extra></extra>",
+            )
+        )
+        other_legend_shown = True
+
+    entire_figure.update_layout(
+        title=f"Draft History - All {selected_position}",
+        xaxis={"title": "Year", "dtick": 1},
+        yaxis={"title": "Pick", "range": [165, -5], "tickvals": [1, 20, 40, 60, 80, 100, 120, 140, 160]},
+        legend={"orientation": "h", "y": 1.1, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
+        margin={"t": 70, "l": 60, "r": 20, "b": 50},
+    )
+    st.plotly_chart(entire_figure, width="stretch")
+
+
+def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]], selected_player: str | None) -> None:
+    if not selected_player:
+        st.info("Search for a player above to see their draft history.")
+        return
+
+    player_picks = sorted(picks_by_player[selected_player], key=lambda pick: pick["season"])
+
+    # A "1st round" selection is either an actual Round 1 pick in a snake
+    # draft, OR a keeper in an auction draft (auction_amount null - see
+    # load_draft's docstring) - a keeper is set before the live auction
+    # even starts, occupying what's effectively that team's top pick, so
+    # it's counted here the same as a real Round 1 selection.
+    first_round_count = sum(1 for pick in player_picks if (pick["draft_type"] == "snake" and pick["num_teams"] and ((pick["overall_pick"] - 1) // pick["num_teams"]) + 1 == 1) or (pick["draft_type"] == "auction" and pick["auction_amount"] is None))
+    years_drafted_count = len({pick["season"] for pick in player_picks})
+    keeper_pick_count = sum(1 for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is None)
+
+    metric_column, _ = st.columns(2)
+    with metric_column:
+        first_round_metric_column, years_drafted_metric_column, keeper_metric_column = st.columns(3)
+        first_round_metric_column.metric("1st Round Selections", first_round_count, help="Number of 1st round selections.")
+        years_drafted_metric_column.metric("Years Drafted", years_drafted_count, help="Number of years drafted.")
+        keeper_metric_column.metric("Keeper Pick", keeper_pick_count, help="Number of years selected as keeper.")
+
+    # Pick covers EVERY year regardless of draft_type (a real overall_pick
+    # exists no matter how that year's draft ran) - Auction Price is still
+    # only for auction seasons that had a real bid, and a separate red-dot
+    # Keeper series marks auction seasons with NO real bid (auction_amount
+    # null - see load_draft's docstring); a keeper's own point already
+    # sits on the Pick line too, the red dot just flags it.
+    auction_picks = [pick for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is not None]
+    keeper_picks = [pick for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is None]
+
+    line_figure = go.Figure()
+    line_figure.add_trace(
+        go.Scatter(
+            x=[pick["season"] for pick in player_picks],
+            y=[pick["overall_pick"] for pick in player_picks],
+            name="Pick",
+            mode="lines+markers",
+            line={"color": COLOR_CHART_PICK, "width": CHART_LINE_AUCTION_WIDTH},
+            marker={"color": COLOR_CHART_PICK, "size": SCATTER_PLOT_DRAFT_MARKER_SIZE},
+            yaxis="y",
+            hovertemplate="<b>%{x}</b><br>Pick: %{y}<extra></extra>",
+        )
+    )
+    if auction_picks:
+        line_figure.add_trace(
+            go.Scatter(
+                x=[pick["season"] for pick in auction_picks],
+                y=[pick["auction_amount"] for pick in auction_picks],
+                name="Auction Price",
+                mode="markers",
+                marker={"color": COLOR_CHART_AUCTION, "size": SCATTER_PLOT_DRAFT_MARKER_SIZE},
+                yaxis="y2",
+                hovertemplate="<b>%{x}</b><br>Auction Price: $%{y}<extra></extra>",
+            )
+        )
+    if keeper_picks:
+        line_figure.add_trace(
+            go.Scatter(
+                x=[pick["season"] for pick in keeper_picks],
+                y=[pick["overall_pick"] for pick in keeper_picks],
+                name="Keeper",
+                mode="markers",
+                marker={"color": COLOR_POINTS_NEGATIVE, "size": SCATTER_PLOT_DRAFT_MARKER_SIZE},
+                yaxis="y",
+                hovertemplate="<b>%{x}</b><br>Pick: %{y} (Keeper)<extra></extra>",
+            )
+        )
+
+    line_figure.update_layout(
+        title="Draft History",
+        xaxis={"title": "Year", "dtick": 1},
+        # range=[160, 1] (not autorange="reversed") - Plotly maps
+        # range[0] to the axis's bottom and range[1] to its top
+        # regardless of numeric order, so this fixes Pick 1 at the top
+        # and Pick 160 at the bottom on a set scale (rather than a scale
+        # that rescales to whatever this one player's own picks span).
+        # Padded 5 past each end (165/-5, not 160/1) - a marker sitting
+        # exactly ON the range boundary (e.g. an actual Pick 160) renders
+        # half-clipped by the plot's own edge otherwise.
+        yaxis={"title": "Pick", "range": [165, -5], "tickvals": [1, 20, 40, 60, 80, 100, 120, 140, 160]},
+        # Padded 5 past the bottom end (-5, not 1) so a marker sitting
+        # exactly at $1 doesn't render half-clipped by the plot's own
+        # edge, same reasoning as Pick's padding above - $100 stays
+        # unpadded at the top.
+        # Explicit tickvals starting at 1 (not Plotly's own automatic
+        # "nice round number" ticks, which would include a $0 label - not
+        # a real possible auction price, the minimum bid is $1).
+        yaxis2={
+            "title": "Auction Price ($)",
+            "overlaying": "y",
+            "side": "right",
+            "range": [-5, 100],
+            "tickvals": [1, 20, 40, 60, 80, 100],
+            "showgrid": False,
+            "showline": False,
+            "zeroline": False,
+        },
+        # Plotly's default legend position (top-right, inside the plot
+        # area) sits right on top of yaxis2's title/ticks, which also
+        # live on the right - moved above the plot as a horizontal strip
+        # instead, clear of both y-axes.
+        legend={"orientation": "h", "y": 1.15, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
+        margin={"t": 80, "l": 60, "r": 60, "b": 50},
+    )
+    st.plotly_chart(line_figure, width="stretch")
+
+    _render_fantasy_value_section(selected_player, player_picks)
+
+
+FANTASY_VALUE_STAT_FIELDS = {
+    ("Total Fantasy Points", False): "total_fantasy_points",
+    ("Total Fantasy Points", True): "fantasy_value_per_season",
+    ("Per Game Fantasy Points", False): "fantasy_points_per_game",
+    ("Per Game Fantasy Points", True): "fantasy_value_per_game",
+    ("Per Game Fantasy Points Box Plots", False): "fantasy_points_per_game",
+    ("Per Game Fantasy Points Box Plots", True): "fantasy_value_per_game",
+}
+
+
+def _render_fantasy_value_section(selected_player: str, player_picks: list[dict]) -> None:
+    """Reads code/stats-aggregation/generate_player_fantasy_value_metrics.py's
+    precomputed archive/player_fantasy_value_metrics.json (run weekly,
+    not recomputed here) rather than deriving fantasy value from
+    player_ownership.json/draft.json directly - that script already
+    resolves per-season cost (real $ for auction, a pseudo-cost for
+    snake, KEEPER_DEFAULT_COST for keepers) once for every drafted
+    player, not just the one being viewed here."""
+    st.subheader("Fantasy Value")
+
+    metrics_by_season = load_player_fantasy_value_metrics()["player_fantasy_value_metrics"]
+    player_id = player_picks[0].get("player_id")
+
+    seasons = sorted(int(season) for season, entries in metrics_by_season.items() if any(entry["player_id"] == player_id for entry in entries))
+    if not seasons:
+        st.info("No fantasy value data available for this player yet - run generate_player_fantasy_value_metrics.py.")
+        return
+
+    stat_column, adjustment_column, view_column = st.columns(3)
+    selected_stat = stat_column.selectbox(
+        "Select stat to view",
+        ["Total Fantasy Points", "Per Game Fantasy Points", "Per Game Fantasy Points Box Plots"],
+        key="drafts_player_analysis_fantasy_stat",
+    )
+    selected_adjustment = adjustment_column.selectbox(
+        "Adjustment",
+        ["Fantasy Points", "Adjusted Fantasy Points"],
+        key="drafts_player_analysis_fantasy_adjustment",
+        help="Adjusted fantasy points try to take into account draft position and cost to assess fantasy value. Fantasy value is fantasy points divided by cost. Auction draft cost (1) auction price or (2) $50 if keeper. Snake draft cost (3) number of players - pick.",
+    )
+    is_box_plot = selected_stat == "Per Game Fantasy Points Box Plots"
+    # Box Plots ONLY work for the searched player individually (one box
+    # per season of THEIR OWN weekly points) - "The Field" has no
+    # meaning here. Forced back to "Individual" in session_state (not
+    # just disabled in the UI) so switching Stat to Box Plots can't leave
+    # a stale "The Field" selection sitting underneath the disabled
+    # widget, which would still be what gets read below.
+    if is_box_plot:
+        st.session_state["drafts_player_analysis_fantasy_view"] = "Individual"
+    selected_view = view_column.selectbox(
+        "View",
+        ["Individual", "The Field"],
+        disabled=is_box_plot,
+        help="View detailed individual stats or stats vs all players in same position." if is_box_plot else None,
+        key="drafts_player_analysis_fantasy_view",
+    )
+    is_adjusted = selected_adjustment == "Adjusted Fantasy Points"
+    stat_field = FANTASY_VALUE_STAT_FIELDS[(selected_stat, is_adjusted)]
+
+    fantasy_figure = go.Figure()
+
+    if selected_stat == "Per Game Fantasy Points Box Plots":
+        # One box per season of the SEARCHED PLAYER's OWN weekly fantasy
+        # points - not the field (that's what "The Field" view is for on
+        # the other two stats, and it's disabled here for exactly that
+        # reason). Needs the real weekly numbers, which
+        # player_fantasy_value_metrics.json doesn't carry (it's already
+        # aggregated to one row per player-season) - reads
+        # player_ownership.json's own per-week timeline instead.
+        weekly_points_by_season: dict[int, list[float]] = {}
+        for entry in load_player_ownership()["player_ownership"].get(player_id, []):
+            weekly_points_by_season.setdefault(entry["season"], []).append(entry["points"])
+
+        for season in seasons:
+            weekly_points = weekly_points_by_season.get(season, [])
+            if not weekly_points:
+                continue
+            if is_adjusted:
+                own_entry = next((entry for entry in metrics_by_season[str(season)] if entry["player_id"] == player_id), None)
+                cost = own_entry["cost"] if own_entry else None
+                if not cost:
+                    continue
+                values = [points / cost for points in weekly_points]
+            else:
+                values = weekly_points
+            fantasy_figure.add_trace(
+                go.Box(
+                    y=values,
+                    x=[str(season)] * len(values),
+                    name=str(season),
+                    marker={"color": COLOR_CHART_STAT},
+                    line={"color": COLOR_CHART_STAT},
+                    showlegend=False,
+                )
+            )
+        yaxis_title = ("Adjusted " if is_adjusted else "") + "Points per Game"
+    elif selected_view == "The Field":
+        # Same "peer scatter + one highlighted player" pattern as
+        # pages_players.py's percentile chart - every OTHER player's own
+        # (season, stat) point plotted as one shared trace, the searched
+        # player's own points as a second, outlined trace on top. "The
+        # Field" is scoped to the searched player's OWN position only -
+        # a kicker's fantasy value isn't a meaningful comparison against
+        # a QB's, same reasoning as the Vs Position chart above.
+        selected_position = player_picks[-1]["position"]
+        other_x, other_y, other_hover = [], [], []
+        selected_x, selected_y, selected_hover = [], [], []
+        for season in seasons:
+            for entry in metrics_by_season[str(season)]:
+                if entry["position"] != selected_position:
+                    continue
+                value = entry[stat_field]
+                if value is None:
+                    continue
+                if entry["player_id"] == player_id:
+                    selected_x.append(str(season))
+                    selected_y.append(value)
+                    selected_hover.append(f"<b>{selected_player}</b><br>{season}<br>{selected_stat}: {value:.2f}")
+                else:
+                    other_x.append(str(season))
+                    other_y.append(value)
+                    other_hover.append(f"<b>{entry['player_name']}</b><br>{season}<br>{selected_stat}: {value:.2f}")
+        fantasy_figure.add_trace(
+            go.Scatter(
+                x=other_x,
+                y=other_y,
+                mode="markers",
+                name="Other Players",
+                marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
+                customdata=other_hover,
+                hovertemplate="%{customdata}<extra></extra>",
+            )
+        )
+        fantasy_figure.add_trace(
+            go.Scatter(
+                x=selected_x,
+                y=selected_y,
+                mode="markers",
+                name=selected_player,
+                marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PERCENTILE_SELECTED_PLAYER, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+                customdata=selected_hover,
+                hovertemplate="%{customdata}<extra></extra>",
+            )
+        )
+        yaxis_title = f"Adjusted {selected_stat}" if is_adjusted else selected_stat
+    else:
+        season_values = []
+        for season in seasons:
+            own_entry = next((entry for entry in metrics_by_season[str(season)] if entry["player_id"] == player_id), None)
+            season_values.append(own_entry[stat_field] if own_entry else None)
+        fantasy_figure.add_trace(
+            go.Bar(
+                x=[str(season) for season in seasons],
+                y=season_values,
+                name=selected_stat,
+                marker={"color": COLOR_CHART_STAT},
+                hovertemplate=f"<b>%{{x}}</b><br>{selected_stat}: %{{y:.2f}}<extra></extra>",
+            )
+        )
+        yaxis_title = f"Adjusted {selected_stat}" if is_adjusted else selected_stat
+
+    games_played_by_season = []
+    for season in seasons:
+        own_entry = next((entry for entry in metrics_by_season[str(season)] if entry["player_id"] == player_id), None)
+        games_played_by_season.append(own_entry["games_played"] if own_entry else None)
+
+    fantasy_figure.add_trace(
+        go.Scatter(
+            x=[str(season) for season in seasons],
+            y=games_played_by_season,
+            name="Games Played",
+            mode="lines+markers",
+            line={"color": COLOR_CHART_PICK, "width": CHART_LINE_AUCTION_WIDTH},
+            marker={"color": COLOR_CHART_PICK, "size": SCATTER_PLOT_MARKER_SIZE},
+            yaxis="y2",
+            hovertemplate="<b>%{x}</b><br>Games Played: %{y}<extra></extra>",
+        )
+    )
+
+    max_games_played = max((value for value in games_played_by_season if value is not None), default=1)
+
+    fantasy_figure.update_layout(
+        title=f"{yaxis_title} per Season",
+        xaxis={"title": "Season", "type": "category"},
+        yaxis={"title": yaxis_title},
+        yaxis2={"title": "Games Played", "overlaying": "y", "side": "right", "showgrid": False, "range": [0, max_games_played + 1]},
+        legend={"orientation": "h", "y": 1.1, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
+        margin={"t": 70, "l": 60, "r": 60, "b": 50},
+    )
+    st.plotly_chart(fantasy_figure, width="stretch")
+
+
+def _render_player_analysis_tab() -> None:
+    # Aggregated once across every season - "this will apply for all
+    # archive" - not scoped to the season selected at the top of the page.
+    picks_by_player: dict[str, list[dict]] = {}
+    for season in discover_seasons():
+        draft = load_draft(season)
+        if not draft:
+            continue
+        num_teams = len(team_id_to_manager_map(season))
+        total_picks = len(draft["picks"])
+        for pick in draft["picks"]:
+            picks_by_player.setdefault(pick["player_name"], []).append(
+                {
+                    "season": season,
+                    "draft_type": draft["draft_type"],
+                    "overall_pick": pick["overall_pick"],
+                    "auction_amount": pick.get("auction_amount"),
+                    "num_teams": num_teams,
+                    "position": pick["position"],
+                    "player_id": pick.get("player_id"),
+                    "total_picks": total_picks,
+                }
+            )
+
+    if not picks_by_player:
+        st.info("No draft data recorded in the archive yet.")
+        return
+
+    # Search sits above the tab layout - both tabs react to the same
+    # selected player, no separate Apply/Clear step needed (the tabs
+    # themselves are the navigation, unlike the versioned-key filter rows
+    # elsewhere in this page).
+    selected_player = st.selectbox(
+        "Search for a player",
+        sorted(picks_by_player),
+        index=None,
+        placeholder="Type a player's name...",
+        key="drafts_player_analysis_player",
+    )
+
+    individual_tab, vs_position_tab = st.tabs(["Individual", "Vs Position"])
+
+    with individual_tab:
+        _render_player_analysis_individual_tab(picks_by_player, selected_player)
+
+    with vs_position_tab:
+        _render_entire_player_analysis_chart(picks_by_player, selected_player)
+
+
 def render_drafts_page() -> None:
     seasons = discover_seasons()
     if not seasons:
@@ -570,7 +1018,7 @@ def render_drafts_page() -> None:
     # defaulting to the most recent one.
     selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="drafts_season")
 
-    draft_recap_tab, manager_recap_tab, keepers_tab, draft_analysis_tab, player_analysis_tab = st.tabs(["Draft Recap", "Manager Recap", "Keepers", "Draft Analysis", "Player Analysis"])
+    draft_recap_tab, manager_recap_tab, keepers_tab, player_analysis_tab = st.tabs(["Draft Recap", "Manager Recap", "Keepers", "Player Analysis"])
 
     with draft_recap_tab:
         _render_draft_recap_tab(selected_season)
@@ -581,8 +1029,5 @@ def render_drafts_page() -> None:
     with keepers_tab:
         _render_keepers_tab()
 
-    with draft_analysis_tab:
-        pass
-
     with player_analysis_tab:
-        pass
+        _render_player_analysis_tab()

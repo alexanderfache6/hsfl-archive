@@ -45,6 +45,13 @@ CHART_LEGEND_OUTSIDE_RIGHT = {
 # for consistent scatter plot marker size
 SCATTER_PLOT_MARKER_SIZE = 8
 
+# for draft charts' (pages_drafts.py) larger markers
+SCATTER_PLOT_DRAFT_MARKER_SIZE = 12
+
+# for the Player Analysis tab's Auction Price line width
+CHART_LINE_AUCTION_WIDTH = 8
+CHART_LINE_OTHER_WIDTH = 2
+
 # ----------------------------------------
 # column size
 # ----------------------------------------

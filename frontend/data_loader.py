@@ -531,6 +531,23 @@ def load_player_ownership() -> dict:
 
 
 @st.cache_resource
+def load_player_fantasy_value_metrics() -> dict:
+    """{"player_fantasy_value_metrics": {"<season>": [{"player_id",
+    "player_name", "position", "games_played", "is_keeper", "draft_type",
+    "overall_pick", "auction_amount", "cost", "total_fantasy_points",
+    "fantasy_points_per_game", "fantasy_value_per_season",
+    "fantasy_value_per_game"}, ...]}} - built by
+    code/stats-aggregation/generate_player_fantasy_value_metrics.py
+    (run weekly, not on request) for every player who was both drafted
+    that season and has real weekly fantasy output. Empty dict if the
+    generator hasn't been run yet."""
+    path = ARCHIVE_DIRECTORY / "player_fantasy_value_metrics.json"
+    if not path.exists():
+        return {"player_fantasy_value_metrics": {}}
+    return _read_json(path)
+
+
+@st.cache_resource
 def load_nfl_player_stats() -> dict:
     """{"<player_id>": {"espn_id", "name", "position", "seasons": {"2018":
     {"weeks": {"3": {"team", "opponent", "result", "stats": {...}}}}}}} -

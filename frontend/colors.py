@@ -94,6 +94,10 @@ COLOR_PLAYER_UNROSTERED = "#D32F2F"
 
 COLOR_NFL_STAT_MISMATCH = "#AD1457"
 
+# draft pick/auction charts
+COLOR_CHART_PICK = "#ADD8E6"
+COLOR_CHART_AUCTION = "#90EE90"
+
 # ----------------------------------------
 # bracket
 # ----------------------------------------
