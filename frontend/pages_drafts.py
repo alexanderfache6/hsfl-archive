@@ -8,7 +8,7 @@ a single selected season. See execution-plan.md Phase G."""
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from colors import COLOR_CHART_STAT, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
+from colors import COLOR_CHART_STAT, COLOR_MANAGER_BACKUP, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
 from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, NFL_TEAM_ABBREVIATIONS
 from data_loader import (
     build_manager_color_map,
@@ -401,6 +401,165 @@ def _render_manager_recap_tab(season: int) -> None:
             st.plotly_chart(bar_figure, width="stretch")
 
 
+def _render_keepers_tab() -> None:
+    st.info("Keeper history is aggregated across every season in the archive.")
+
+    # A "keeper" is only identifiable within an AUCTION season - its
+    # picks carry a null auction_amount because no live bid ever
+    # happened (see load_draft's docstring). A snake draft's picks are
+    # ALSO all null-auction_amount (the field just doesn't apply there),
+    # so including snake seasons here would wrongly count every single
+    # snake pick as a keeper.
+    # Tracks each player's own position alongside their keeper count - a
+    # player's position is assumed stable across keeper seasons (last
+    # occurrence wins if it somehow isn't), used to color/group bars by
+    # position below.
+    name_resolver = build_manager_name_resolver()
+    manager_color_map = build_manager_color_map()
+
+    keeper_data: dict[str, dict] = {}
+    for season in discover_seasons():
+        draft = load_draft(season)
+        if not draft or draft["draft_type"] != "auction":
+            continue
+        team_info = team_id_to_manager_map(season)
+        for pick in draft["picks"]:
+            if pick.get("auction_amount") is None:
+                entry = keeper_data.setdefault(pick["player_name"], {"count": 0, "position": pick["position"], "years": [], "by_manager": {}})
+                entry["count"] += 1
+                entry["position"] = pick["position"]
+                entry["years"].append(season)
+                manager_id = team_info.get(pick["team_id"], {}).get("manager_id", "")
+                manager_entry = entry["by_manager"].setdefault(manager_id, {"count": 0, "years": []})
+                manager_entry["count"] += 1
+                manager_entry["years"].append(season)
+
+    chart_column, loyalty_column = st.columns(2)
+
+    with chart_column:
+        if not keeper_data:
+            st.info("No keeper picks recorded in the archive yet.")
+            return
+
+        # Sorted descending by count - go.Bar's horizontal orientation
+        # draws its y-categories bottom-to-top in list order, so the
+        # sorted list is reversed here to put the LARGEST count at the
+        # TOP of the chart (i.e. visually descending top-to-bottom).
+        sorted_players = sorted(keeper_data.items(), key=lambda item: item[1]["count"], reverse=True)[::-1]
+        all_players = [player for player, _ in sorted_players]
+
+        bar_figure = go.Figure()
+        # One real go.Bar trace per position (not a single trace with a
+        # per-point color array) - same reasoning as the per-manager
+        # legend traces elsewhere in this app: only a real trace per
+        # legend entry makes clicking that entry in the legend actually
+        # toggle just its own bars.
+        for position in BENCH_POSITION_ORDER:
+            position_players = [player for player, data in sorted_players if data["position"] == position]
+            if not position_players:
+                continue
+            position_counts = [keeper_data[player]["count"] for player in position_players]
+            position_years_text = [", ".join(str(year) for year in sorted(keeper_data[player]["years"])) for player in position_players]
+            bar_figure.add_trace(
+                go.Bar(
+                    x=position_counts,
+                    y=position_players,
+                    orientation="h",
+                    name=position,
+                    marker={"color": BENCH_POSITION_COLOR.get(position)},
+                    customdata=position_years_text,
+                    hovertemplate=f"<b>%{{y}}</b><br>Frequency: %{{x}}<br>Years: %{{customdata}}<br>{position}<extra></extra>",
+                )
+            )
+        bar_figure.update_layout(
+            title="Keeper Frequency",
+            xaxis_title="Frequency",
+            yaxis_title="Player",
+            # "total ascending" (not a fixed categoryarray) so the axis
+            # recomputes from only the currently VISIBLE traces when a
+            # position is hidden via the legend - ties in count aren't
+            # guaranteed to break in any particular order.
+            yaxis={"categoryorder": "total ascending"},
+            legend_title_text="Position",
+            margin={"t": 50, "l": 150, "r": 20, "b": 50},
+            height=max(300, 30 * len(all_players)),
+        )
+        st.plotly_chart(bar_figure, width="stretch")
+
+    with loyalty_column:
+        # "loyalty" - the share of a player's total keeper count owned by
+        # their single most-frequent manager (1.0 = always kept by the
+        # same manager, lower = spread across managers) - not the same
+        # ranking as the frequency chart on the left, so this needs its
+        # own (loyalty, then count) sort rather than reusing sorted_players.
+        for entry in keeper_data.values():
+            entry["loyalty"] = max(manager_entry["count"] for manager_entry in entry["by_manager"].values()) / entry["count"]
+
+        # Ascending, for the same bottom-to-top reasoning as the left
+        # chart - the HIGHEST loyalty (then highest count as tiebreak)
+        # needs to be LAST in this list to land at the TOP.
+        loyalty_sorted_players = sorted(keeper_data.items(), key=lambda item: (item[1]["loyalty"], item[1]["count"]))
+        loyalty_all_players = [player for player, _ in loyalty_sorted_players]
+
+        # Reverse alphabetical (Z->A) - legend.traceorder="reversed" (a
+        # layout-level property) didn't visibly change the on-screen
+        # legend order, so the trace ADD order itself is reversed here
+        # instead, which is guaranteed to control both the legend AND
+        # the stack order together.
+        manager_ids_present = sorted(
+            {manager_id for data in keeper_data.values() for manager_id in data["by_manager"] if manager_id},
+            key=lambda manager_id: resolve_manager_name(manager_id, name_resolver),
+            reverse=True,
+        )
+
+        # One combined hover string per PLAYER (not per manager segment) -
+        # every manager's trace reuses the exact same text at that
+        # player's row, so hovering anywhere on the stacked bar shows the
+        # full manager breakdown as a single tooltip rather than each
+        # segment popping its own. Rows sorted by that manager's most
+        # recent keeper year, descending.
+        player_hover_text = {}
+        for player in loyalty_all_players:
+            data = keeper_data[player]
+            managers_by_recency = sorted(data["by_manager"].items(), key=lambda item: max(item[1]["years"]), reverse=True)
+            manager_lines = [f"{resolve_manager_name(manager_id, name_resolver)}: {', '.join(str(year) for year in sorted(manager_entry['years']))}" for manager_id, manager_entry in managers_by_recency]
+            player_hover_text[player] = "<br>".join([f"<b>{player}</b>", f"Manager Count: {len(data['by_manager'])}", *manager_lines])
+
+        loyalty_figure = go.Figure()
+        for manager_id in manager_ids_present:
+            manager_name = resolve_manager_name(manager_id, name_resolver)
+            manager_counts = [keeper_data[player]["by_manager"].get(manager_id, {"count": 0})["count"] for player in loyalty_all_players]
+            manager_customdata = [player_hover_text[player] for player in loyalty_all_players]
+
+            loyalty_figure.add_trace(
+                go.Bar(
+                    x=manager_counts,
+                    y=loyalty_all_players,
+                    orientation="h",
+                    name=manager_name,
+                    marker={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
+                    customdata=manager_customdata,
+                    hovertemplate="%{customdata}<extra></extra>",
+                )
+            )
+
+        loyalty_figure.update_layout(
+            title="Keeper Loyalty",
+            xaxis_title="Frequency",
+            yaxis_title="Player",
+            barmode="stack",
+            yaxis={"categoryorder": "array", "categoryarray": loyalty_all_players},
+            legend_title_text="Manager",
+            # Legend is a color key only here (stacking makes hiding a
+            # single manager's segment confusing to interpret) - both
+            # click handlers are disabled so it can't toggle traces.
+            legend={"itemclick": False, "itemdoubleclick": False},
+            margin={"t": 50, "l": 150, "r": 20, "b": 50},
+            height=max(300, 30 * len(loyalty_all_players)),
+        )
+        st.plotly_chart(loyalty_figure, width="stretch")
+
+
 def render_drafts_page() -> None:
     seasons = discover_seasons()
     if not seasons:
@@ -411,13 +570,16 @@ def render_drafts_page() -> None:
     # defaulting to the most recent one.
     selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="drafts_season")
 
-    draft_recap_tab, manager_recap_tab, draft_analysis_tab, player_analysis_tab = st.tabs(["Draft Recap", "Manager Recap", "Draft Analysis", "Player Analysis"])
+    draft_recap_tab, manager_recap_tab, keepers_tab, draft_analysis_tab, player_analysis_tab = st.tabs(["Draft Recap", "Manager Recap", "Keepers", "Draft Analysis", "Player Analysis"])
 
     with draft_recap_tab:
         _render_draft_recap_tab(selected_season)
 
     with manager_recap_tab:
         _render_manager_recap_tab(selected_season)
+
+    with keepers_tab:
+        _render_keepers_tab()
 
     with draft_analysis_tab:
         pass
