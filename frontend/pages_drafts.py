@@ -631,7 +631,7 @@ def _render_manager_recap_tab(season: int) -> None:
 
 
 def _render_keepers_tab() -> None:
-    st.info("Keeper history is aggregated across every season in the archive.")
+    st.info("Keeper history are first round selections aggregated across every season in the archive.")
 
     # A "keeper" is only identifiable within an AUCTION season - its
     # picks carry a null auction_amount because no live bid ever
@@ -649,19 +649,24 @@ def _render_keepers_tab() -> None:
     keeper_data: dict[str, dict] = {}
     for season in discover_seasons():
         draft = load_draft(season)
-        if not draft or draft["draft_type"] != "auction":
-            continue
         team_info = team_id_to_manager_map(season)
-        for pick in draft["picks"]:
-            if pick.get("auction_amount") is None:
-                entry = keeper_data.setdefault(pick["player_name"], {"count": 0, "position": pick["position"], "years": [], "by_manager": {}})
-                entry["count"] += 1
-                entry["position"] = pick["position"]
-                entry["years"].append(season)
-                manager_id = team_info.get(pick["team_id"], {}).get("manager_id", "")
-                manager_entry = entry["by_manager"].setdefault(manager_id, {"count": 0, "years": []})
-                manager_entry["count"] += 1
-                manager_entry["years"].append(season)
+
+        if not draft:
+            continue
+        else:
+            number_of_first_round_selections = len(team_info)
+            for current_pick in draft["picks"]:
+                # NOTE snake - first round were keepers
+                # NOTE auction - keepers have no auction value
+                if (draft["draft_type"] == "auction" and current_pick.get("auction_amount") is None) or (draft["draft_type"] == "snake" and current_pick.get("overall_pick") <= number_of_first_round_selections):
+                    entry = keeper_data.setdefault(current_pick["player_name"], {"count": 0, "position": current_pick["position"], "years": [], "by_manager": {}})
+                    entry["count"] += 1
+                    entry["position"] = current_pick["position"]
+                    entry["years"].append(season)
+                    manager_id = team_info.get(current_pick["team_id"], {}).get("manager_id", "")
+                    manager_entry = entry["by_manager"].setdefault(manager_id, {"count": 0, "years": []})
+                    manager_entry["count"] += 1
+                    manager_entry["years"].append(season)
 
     chart_column, loyalty_column = st.columns(2)
 
@@ -670,19 +675,11 @@ def _render_keepers_tab() -> None:
             st.info("No keeper picks recorded in the archive yet.")
             return
 
-        # Sorted descending by count - go.Bar's horizontal orientation
-        # draws its y-categories bottom-to-top in list order, so the
-        # sorted list is reversed here to put the LARGEST count at the
-        # TOP of the chart (i.e. visually descending top-to-bottom).
+        # NOTE horizontal bar chart, players yaxis, count xaxis, sorted descending
         sorted_players = sorted(keeper_data.items(), key=lambda item: item[1]["count"], reverse=True)[::-1]
         all_players = [player for player, _ in sorted_players]
 
         bar_figure = go.Figure()
-        # One real go.Bar trace per position (not a single trace with a
-        # per-point color array) - same reasoning as the per-manager
-        # legend traces elsewhere in this app: only a real trace per
-        # legend entry makes clicking that entry in the legend actually
-        # toggle just its own bars.
         for position in BENCH_POSITION_ORDER:
             position_players = [player for player, data in sorted_players if data["position"] == position]
             if not position_players:
@@ -699,7 +696,7 @@ def _render_keepers_tab() -> None:
                     customdata=position_years_text,
                     hovertemplate=f"<b>%{{y}}</b><br>Frequency: %{{x}}<br>Years: %{{customdata}}<br>{position}<extra></extra>",
                 )
-            )
+            )  # NOTE single bar and legend per position
         bar_figure.update_layout(
             title="Keeper Frequency",
             xaxis_title="Frequency",
@@ -713,6 +710,7 @@ def _render_keepers_tab() -> None:
             margin={"t": 50, "l": 150, "r": 20, "b": 50},
             height=max(300, 30 * len(all_players)),
         )
+        st.caption("Keeper frequency is sorted by total number of selections.")
         st.plotly_chart(bar_figure, width="stretch")
 
     with loyalty_column:
@@ -724,10 +722,8 @@ def _render_keepers_tab() -> None:
         for entry in keeper_data.values():
             entry["loyalty"] = max(manager_entry["count"] for manager_entry in entry["by_manager"].values()) / entry["count"]
 
-        # Ascending, for the same bottom-to-top reasoning as the left
-        # chart - the HIGHEST loyalty (then highest count as tiebreak)
-        # needs to be LAST in this list to land at the TOP.
-        loyalty_sorted_players = sorted(keeper_data.items(), key=lambda item: (item[1]["loyalty"], item[1]["count"]))
+        # NOTE sorted by count then loyalty
+        loyalty_sorted_players = sorted(keeper_data.items(), key=lambda item: (item[1]["count"], item[1]["loyalty"]))
         loyalty_all_players = [player for player, _ in loyalty_sorted_players]
 
         # Reverse alphabetical (Z->A) - legend.traceorder="reversed" (a
@@ -786,6 +782,7 @@ def _render_keepers_tab() -> None:
             margin={"t": 50, "l": 150, "r": 20, "b": 50},
             height=max(300, 30 * len(loyalty_all_players)),
         )
+        st.caption("Keeper loyalty is sorted by total number of selections then unique manager count.")
         st.plotly_chart(loyalty_figure, width="stretch")
 
 
