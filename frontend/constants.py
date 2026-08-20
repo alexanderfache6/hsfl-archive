@@ -99,6 +99,25 @@ NFL_TEAM_ABBREVIATIONS = {
 # order of positions on a bench roster
 BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
 
+# source matplotlib.colormaps["Dark2"].colors
+BENCH_POSITION_COLOR = {
+    "QB": "#1B9E77",
+    "RB": "#D95F02",
+    "WR": "#7570B3",
+    "TE": "#E7298A",
+    "K": "#66A61E",
+    "DEF": "#E6AB02",
+}
+
+# ----------------------------------------
+# drafts
+# ----------------------------------------
+
+# ESPN's default per-team auction budget - not itself stored anywhere in
+# the archived draft.json data, but every auction season's picks sum to
+# (or just under, when a keeper ate part of the budget) this per team,
+# confirming it's the actual league setting rather than a guess.
+AUCTION_BUDGET = 200  # TODO needs to come from season recap
 
 # ----------------------------------------
 # matchups

@@ -5,12 +5,15 @@ a single selected season. See execution-plan.md Phase G."""
 # IMPORTS
 # ========================================
 
+import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
-from colors import COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
-from constants import BENCH_POSITION_ORDER, NFL_TEAM_ABBREVIATIONS
+from colors import COLOR_CHART_STAT, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
+from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, NFL_TEAM_ABBREVIATIONS
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
+    contrasting_text_color,
     discover_seasons,
     load_draft,
     resolve_manager_name,
@@ -249,14 +252,153 @@ def _render_manager_recap_tab(season: int) -> None:
         if st.session_state.get(position_widget_key) not in position_options:
             st.session_state[position_widget_key] = "All"
         selected_position = st.selectbox("Position", position_options, key=position_widget_key)
-        if selected_position != "All":
-            manager_picks = [pick for pick in manager_picks if pick["position"] == selected_position]
+        selection_cards = manager_picks if selected_position == "All" else [pick for pick in manager_picks if pick["position"] == selected_position]
 
-        for pick in manager_picks:
+        for pick in selection_cards:
             _render_draft_pick_card(pick, draft_type, len(team_info), team_info, name_resolver, manager_color_map)
 
     with metrics_column:
         st.subheader("Metrics")
+
+        if draft_type == "auction":
+            with st.expander("Auction Metrics", expanded=False):
+                total_spent = sum(pick["auction_amount"] for pick in manager_picks if pick.get("auction_amount") is not None)
+                remaining_budget = AUCTION_BUDGET - total_spent
+                one_dollar_pick_count = sum(1 for pick in manager_picks if pick.get("auction_amount") == 1)
+                priced_picks = [pick for pick in manager_picks if pick.get("auction_amount") is not None]
+
+                remaining_column, one_dollar_column = st.columns(2)
+                remaining_column.metric("Remaining Salary Cap", f"${remaining_budget}", help="Remaining $ budget once all selections were made.")
+                one_dollar_column.metric("$1 Picks", one_dollar_pick_count, help="The number of $1 picks made.")
+
+                # Fisher-Pearson (bias-corrected) skewness of this
+                # manager's own auction prices - pandas' Series.skew()
+                # needs at least 3 points to be defined, same reason a
+                # 1-2 pick manager wouldn't get a meaningful distribution
+                # shape at all.
+                skew_column, _ = st.columns(2)
+                auction_price_skew = pd.Series([pick["auction_amount"] for pick in priced_picks]).skew() if len(priced_picks) >= 3 else None
+                skew_column.metric("Auction Price Skew", f"{auction_price_skew:.2f}" if auction_price_skew is not None else "—", help="Right skewness of auction price selections. A higher number indicates extreme price selection and greater dependence on $1 picks. Fantasy range ~1-3")
+
+                if priced_picks:
+                    st.markdown("<div style='height:1rem;'></div>", unsafe_allow_html=True)
+
+                    # Manually binned (rather than go.Histogram) so each
+                    # bin's hover can list its own picks - a real
+                    # go.Histogram trace only ever aggregates, it can't
+                    # surface the underlying player/price pairs that made
+                    # up a bin's count.
+                    max_price = max(pick["auction_amount"] for pick in priced_picks)
+                    bin_starts = list(range(0, ((max_price // 10) + 1) * 10, 10))
+                    bin_labels = [f"${bin_start}-{bin_start + 9}" for bin_start in bin_starts]
+                    bin_counts = []
+                    bin_hover_text = []
+                    for bin_start, bin_label in zip(bin_starts, bin_labels):
+                        picks_in_bin = sorted(
+                            (pick for pick in priced_picks if bin_start <= pick["auction_amount"] < bin_start + 10),
+                            key=lambda pick: -pick["auction_amount"],
+                        )  # NOTE sort by pick price descending
+                        bin_counts.append(len(picks_in_bin))
+                        bin_hover_text.append("<br>".join([f"<b>Bin {bin_label}</b>"] + [f"{pick['player_name']} ${pick['auction_amount']}" for pick in picks_in_bin]))
+
+                    histogram_figure = go.Figure(
+                        go.Bar(
+                            x=bin_labels,
+                            y=bin_counts,
+                            marker={"color": COLOR_CHART_STAT},
+                            customdata=bin_hover_text,
+                            hovertemplate="%{customdata}<extra></extra>",
+                        )
+                    )
+                    histogram_figure.update_layout(
+                        title="Auction Price Distribution",
+                        xaxis_title="Auction Price",
+                        yaxis_title="Player Count",
+                        margin={"t": 50, "l": 60, "r": 20, "b": 50},
+                    )
+                    st.plotly_chart(histogram_figure, width="stretch")
+
+        with st.expander("Depth Chart Summary", expanded=False):
+            for position in BENCH_POSITION_ORDER:
+                position_picks = sorted((pick for pick in manager_picks if pick["position"] == position), key=lambda pick: pick["overall_pick"])
+                if not position_picks:
+                    continue
+
+                position_background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
+                position_text_color = contrasting_text_color(position_background_color)
+                st.markdown(
+                    f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{position}</span>",
+                    unsafe_allow_html=True,
+                )
+                rows = [
+                    {
+                        "Player": pick["player_name"],
+                        "Team": pick.get("nfl_team") or NFL_TEAM_ABBREVIATIONS.get(pick["player_name"].split(" ")[-1], ""),
+                        "Pick": pick["overall_pick"],
+                        **({"Auction Value": f"${pick['auction_amount']}" if pick.get("auction_amount") is not None else "—"} if draft_type == "auction" else {}),
+                    }
+                    for pick in position_picks
+                ]
+                if draft_type == "auction":
+                    total_auction_price = sum(pick["auction_amount"] for pick in position_picks if pick.get("auction_amount") is not None)
+                    rows.append({"Player": "Total Auction Price", "Team": "", "Pick": "", "Auction Value": f"${total_auction_price}"})
+
+                def _bold_total_row(row: pd.Series) -> list[str]:
+                    return ["font-weight:bold"] * len(row) if row["Player"] == "Total Auction Price" else [""] * len(row)
+
+                dataframe = pd.DataFrame(rows)
+                st.dataframe(dataframe.style.apply(_bold_total_row, axis=1), hide_index=True, width="stretch")
+
+        with st.expander("Depth Chart Breakdown", expanded=False):
+            position_groups = [position for position in BENCH_POSITION_ORDER if any(pick["position"] == position for pick in manager_picks)]
+            picks_by_position = {position: [pick for pick in manager_picks if pick["position"] == position] for position in position_groups}
+
+            pie_figure = go.Figure(
+                go.Pie(
+                    labels=position_groups,
+                    values=[len(picks_by_position[position]) for position in position_groups],
+                    sort=False,
+                    rotation=0,  # first slice starts at 12 o'clock
+                    direction="clockwise",
+                    marker={"colors": [BENCH_POSITION_COLOR.get(position) for position in position_groups]},
+                    textinfo="label+value",
+                    showlegend=False,
+                    customdata=["<br>".join(pick["player_name"] for pick in picks_by_position[position]) for position in position_groups],
+                    hovertemplate="<b>%{label}</b><br>%{customdata}<extra></extra>",
+                )
+            )
+            pie_figure.update_layout(title="Player Count by Position", margin={"t": 40, "b": 20, "l": 20, "r": 20})
+            st.plotly_chart(pie_figure, width="stretch")
+
+            st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
+
+            # Auction drafts get $ spent per pick (total position spend /
+            # picks in that position) - a snake draft has no auction
+            # amounts at all, so it gets the closest equivalent instead:
+            # average overall_pick, i.e. how early that position group
+            # tended to get drafted.
+            if draft_type == "auction":
+                bar_label = "Average Auction Price per Pick"
+                bar_values = [sum(pick["auction_amount"] for pick in picks_by_position[position] if pick.get("auction_amount") is not None) / max(1, sum(1 for pick in picks_by_position[position] if pick.get("auction_amount") is not None)) for position in position_groups]
+            else:
+                bar_label = "Average Pick"
+                bar_values = [sum(pick["overall_pick"] for pick in picks_by_position[position]) / len(picks_by_position[position]) for position in position_groups]
+
+            bar_figure = go.Figure(
+                go.Bar(
+                    x=position_groups,
+                    y=bar_values,
+                    marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups]},
+                    hovertemplate="<b>%{x}</b><br>" + bar_label + ": %{y:.2f}<extra></extra>",
+                )
+            )
+            bar_figure.update_layout(
+                title=f"{'Average Auction Price per Pick' if draft_type == 'auction' else 'Average Pick'}",
+                xaxis_title="Position",
+                yaxis_title=bar_label,
+                margin={"t": 50, "l": 70, "r": 20, "b": 50},
+            )
+            st.plotly_chart(bar_figure, width="stretch")
 
 
 def render_drafts_page() -> None:
