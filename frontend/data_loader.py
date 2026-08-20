@@ -429,6 +429,19 @@ def load_transactions(year: int) -> dict:
 
 
 @st.cache_resource
+def load_draft(year: int) -> dict | None:
+    """{"season", "draft_type" ("snake"/"auction"), "picks": [{"overall_pick",
+    "player_id", "player_name", "position", "nfl_team", "team_id",
+    "auction_amount"}], "notes"} - auction_amount is null for every pick
+    in a snake draft, and for keeper picks in an auction draft (no live
+    bid took place - see the file's own "notes" field)."""
+    path = PARSED_DIRECTORY / str(year) / "draft.json"
+    if not path.exists():
+        return None
+    return _read_json(path)
+
+
+@st.cache_resource
 def load_post_season_stats(year: int) -> dict | None:
     path = AGGREGATED_DIRECTORY / str(year) / "post_season_stats.json"
     if not path.exists():
@@ -515,6 +528,23 @@ def load_players() -> dict:
 @st.cache_resource
 def load_player_ownership() -> dict:
     return _read_json(ARCHIVE_DIRECTORY / "player_ownership.json")
+
+
+@st.cache_resource
+def load_player_fantasy_value_metrics() -> dict:
+    """{"player_fantasy_value_metrics": {"<season>": [{"player_id",
+    "player_name", "position", "games_played", "is_keeper", "draft_type",
+    "overall_pick", "auction_amount", "cost", "total_fantasy_points",
+    "fantasy_points_per_game", "fantasy_value_per_season",
+    "fantasy_value_per_game"}, ...]}} - built by
+    code/stats-aggregation/generate_player_fantasy_value_metrics.py
+    (run weekly, not on request) for every player who was both drafted
+    that season and has real weekly fantasy output. Empty dict if the
+    generator hasn't been run yet."""
+    path = ARCHIVE_DIRECTORY / "player_fantasy_value_metrics.json"
+    if not path.exists():
+        return {"player_fantasy_value_metrics": {}}
+    return _read_json(path)
 
 
 @st.cache_resource

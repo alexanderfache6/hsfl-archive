@@ -17,6 +17,7 @@ Run locally: streamlit run app.py
 # ========================================
 
 import streamlit as st
+from pages_drafts import render_drafts_page
 from pages_feedback import render_feedback_page
 from pages_history import render_history_page
 from pages_matchups import render_matchups_page
@@ -32,10 +33,6 @@ def render_managers_page() -> None:
     st.info("coming soon")
 
 
-def render_drafts_page() -> None:
-    st.info("coming soon")
-
-
 # ========================================
 # RENDER
 # ========================================
@@ -47,7 +44,7 @@ seasons_page = st.Page(render_seasons_page, title="Seasons", url_path="seasons")
 # managers_page = st.Page(render_managers_page, title="Managers", url_path="managers")
 players_page = st.Page(render_players_page, title="Players", url_path="players")
 matchups_page = st.Page(render_matchups_page, title="Matchups", url_path="matchups")
-# drafts_page = st.Page(render_drafts_page, title="Drafts", url_path="drafts")
+drafts_page = st.Page(render_drafts_page, title="Drafts", url_path="drafts")
 feedback_page = st.Page(render_feedback_page, title="Feedback", url_path="feedback")
 
 # Stashed so other pages (e.g. pages_history.py's record links) can
@@ -58,5 +55,5 @@ st.session_state["_seasons_page"] = seasons_page
 
 st.title("The Music League")
 
-navigation = st.navigation([history_page, seasons_page, players_page, matchups_page, feedback_page])
+navigation = st.navigation([history_page, seasons_page, players_page, matchups_page, drafts_page, feedback_page])
 navigation.run()
