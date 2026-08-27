@@ -27,6 +27,10 @@ from colors import (
 from constants import (
     BENCH_POSITION_ORDER,
     CHART_LEGEND_OUTSIDE_RIGHT,
+    EMOJI_FIRST_PLACE,
+    EMOJI_LAST_PLACE,
+    EMOJI_SECOND_PLACE,
+    EMOJI_THIRD_PLACE,
     MATCHUP_TYPE_LABELS,
     MATCHUP_TYPE_OPTIONS,
     NFL_TEAM_ABBREVIATIONS,
@@ -41,8 +45,10 @@ from data_loader import (
     contrasting_text_color,
     load_all_time_manager_stats,
     load_matchups,
+    load_post_season_stats,
     load_starting_slot_counts,
     resolve_manager_name,
+    team_id_to_manager_map,
 )
 from helpers import manager_pill
 from player_modal import open_player_stats_modal
@@ -476,7 +482,15 @@ def _render_filter_description(applied_filters: dict, name_resolver: dict[str, s
     st.markdown(f"<h3 style='margin:0;'>{' · '.join(parts) if parts else 'All matchups'}</h3>", unsafe_allow_html=True)
 
 
-def _render_aggregate(matchups: list[dict], team1_manager_id: str | None) -> None:
+def _ordinal_rank(n: int) -> str:
+    """Numeral ordinal (1st, 2nd, 3rd, 4th, ...) - unlike helpers.ordinal_word,
+    which spells out 1-15 as words ("first", "second"), a rank metric
+    should always read as a numeral."""
+    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, matchup_type_filter: str | None, week_filter: int | None, team2_manager_id: str | None) -> None:
     if not team1_manager_id:
         st.metric("Matchups", len(matchups))
         return
@@ -505,6 +519,48 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None) -> Non
     win_pct_column.metric("Win %", f"{win_pct:.1%}")
     points_for_column.metric("Points For", f"{points_for:.2f}")
     points_against_column.metric("Points Against", f"{points_against:.2f}")
+
+    # A week filter or a Manager 2 filter narrows matchups down to a
+    # handful of head-to-head games - season/bracket/rank summaries
+    # aren't meaningful at that granularity, so skip the whole row.
+    if week_filter or team2_manager_id:
+        return
+
+    # Only meaningful across the manager's whole history - a single
+    # season or a single matchup type filtered out makes "how many
+    # seasons qualified" a trivial 0-or-1 question, not worth a row.
+    if not season_filter and matchup_type_filter == "all":
+        seasons_competed = {matchup["season"] for matchup in matchups}
+        championship_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "championship"}
+        consolation_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "consolation"}
+
+        seasons_column, championship_column, consolation_column = st.columns(3)
+        seasons_column.metric("Seasons", len(seasons_competed))
+        championship_column.metric("Championship Qualifying Seasons", len(championship_seasons))
+        consolation_column.metric("Consolation Qualifying Seasons", len(consolation_seasons))
+    elif season_filter:
+        post_season_stats = load_post_season_stats(season_filter)
+        team_info = team_id_to_manager_map(season_filter)
+        team_id = next((team_id for team_id, info in team_info.items() if info.get("manager_id") == team1_manager_id), None)
+        final_placements = post_season_stats["final_placements"] if post_season_stats else {}
+        final_rank = final_placements.get(team_id) if team_id else None
+
+        matchup_types = {matchup["matchup_type"] for matchup in matchups}
+        if "championship" in matchup_types:
+            bracket = "Championship"
+        elif "consolation" in matchup_types:
+            bracket = "Consolation"
+        else:
+            bracket = "-"
+
+        bracket_column, final_rank_column = st.columns(2)
+        bracket_column.metric("Bracket", bracket)
+        if final_rank is not None:
+            placement_emoji = {1: EMOJI_FIRST_PLACE, 2: EMOJI_SECOND_PLACE, 3: EMOJI_THIRD_PLACE}.get(final_rank)
+            if placement_emoji is None and final_placements and final_rank == max(final_placements.values()):
+                placement_emoji = EMOJI_LAST_PLACE
+            rank_display = f"{_ordinal_rank(final_rank)} {placement_emoji}" if placement_emoji else _ordinal_rank(final_rank)
+            final_rank_column.metric("Final Rank", rank_display)
 
 
 def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -582,7 +638,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     )
     figure.update_layout(
         title="Point Differential",
-        xaxis={"title": "Season / Week", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
+        xaxis={"title": "Season · Week" if season_filter else "Season", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend=CHART_LEGEND_OUTSIDE_RIGHT,
@@ -885,7 +941,14 @@ def render_matchups_page() -> None:
         return
 
     _render_filter_description(applied_filters, name_resolver, manager_color_map)
-    _render_aggregate(matchups, applied_filters["team1_manager_id"])
+    _render_aggregate(
+        matchups,
+        applied_filters["team1_manager_id"],
+        applied_filters["season"],
+        applied_filters["matchup_type"],
+        applied_filters["week"],
+        applied_filters["team2_manager_id"],
+    )
     _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
     st.divider()
 
