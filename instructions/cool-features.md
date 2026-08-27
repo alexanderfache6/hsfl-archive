@@ -1,6 +1,5 @@
 # history
 - [x] add spreadsheet table stats views
-- [ ] Auto-generated season "story" blurb per year (already have _render_season_summary_paragraph-style logic) extended into a short recap paragraph per season, not just all-time.
 
 # seasons
 - [x] schedule tab, kinda similar games view but restricted
@@ -11,6 +10,8 @@
 - [x] transactions tab
 - [x] create schedule tab for each week
 - [ ] Weekly "Power Rankings" chart blending win%, points for, and all-play record into one index, tracked week over week.
+- [ ] countdown till next games
+- [ ] show last update time
 
 # managers
 - [ ] show points missed out on
@@ -35,6 +36,7 @@
 - [ ] adp/price compared to that season's stats
 - [ ] draft value over years, see chart of all positions (ie WR) who is best value
 - [ ] full order, final rosters, most expensive auction stuff. across all drafts average pick, average cost
+- [ ] live - remaining players, budget, best value
 - [ ] 
 
 # feedback

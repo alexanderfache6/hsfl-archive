@@ -44,6 +44,7 @@ from data_loader import (
     load_starting_slot_counts,
     resolve_manager_name,
 )
+from helpers import manager_pill
 from player_modal import open_player_stats_modal
 
 # ========================================
@@ -446,18 +447,6 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     return st.session_state.get("matchups_applied_filters")
 
 
-def _manager_pill(label: str, manager_id: str, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> str:
-    """A small colored pill around the WHOLE "{label} ({name})" text
-    (e.g. "Manager 1 (Alex F)") - same background-color/contrasting-
-    text-color/rounded-corners treatment as the manager name blocks on
-    each matchup card below, so this recap line visually ties back to
-    the same color key."""
-    name = resolve_manager_name(manager_id, name_resolver)
-    background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
-    text_color = contrasting_text_color(background_color)
-    return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{label} ({name})</span>"
-
-
 def _render_filter_description(applied_filters: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """A plain-language recap of exactly which filters are in effect,
     e.g. "Season: 2013 · Week: 11 · Manager 1: Alex F vs Manager 2:
@@ -472,9 +461,11 @@ def _render_filter_description(applied_filters: dict, name_resolver: dict[str, s
     team1_manager_id = applied_filters["team1_manager_id"]
     team2_manager_id = applied_filters["team2_manager_id"]
     if team1_manager_id and team2_manager_id:
-        parts.append(f"{_manager_pill('Manager 1', team1_manager_id, name_resolver, manager_color_map)} vs {_manager_pill('Manager 2', team2_manager_id, name_resolver, manager_color_map)}")
+        team1_pill = manager_pill(team1_manager_id, name_resolver, manager_color_map, "Manager 1")
+        team2_pill = manager_pill(team2_manager_id, name_resolver, manager_color_map, "Manager 2")
+        parts.append(f"{team1_pill} vs {team2_pill}")
     elif team1_manager_id:
-        parts.append(_manager_pill("Manager 1", team1_manager_id, name_resolver, manager_color_map))
+        parts.append(manager_pill(team1_manager_id, name_resolver, manager_color_map, "Manager 1"))
 
     if applied_filters["matchup_type"] and applied_filters["matchup_type"] != "all":
         parts.append(MATCHUP_TYPE_LABELS[applied_filters["matchup_type"]])

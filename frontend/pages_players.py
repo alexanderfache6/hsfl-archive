@@ -15,22 +15,21 @@ from colors import (
     COLOR_CHART_SCATTER_MARKER_OUTLINE,
     COLOR_CHART_STAT,
     COLOR_CHART_VERTICAL_DASHED_YEARS,
-    COLOR_FANTASY_STAT,
     COLOR_MANAGER_BACKUP,
     COLOR_NFL_BYE_WEEK,
     COLOR_NFL_GAME_MISSED,
-    COLOR_NFL_STAT,
-    COLOR_NFL_STAT_MISMATCH,
     COLOR_PERCENTILE_OTHER_PLAYERS,
     COLOR_PERCENTILE_SELECTED_PLAYER,
     COLOR_PLAYER_BENCH,
     COLOR_PLAYER_STARTER,
     COLOR_PLAYER_UNROSTERED,
+    COLOR_STAT,
+    COLOR_STAT_MISMATCH,
 )
 from constants import (
     CHART_LEGEND_INSIDE_TOP_RIGHT,
     CHART_LEGEND_OUTSIDE_RIGHT,
-    SCATTER_PLOT_MARKER_SIZE,
+    CHART_MARKER_SIZE_MEDIUM,
 )
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
@@ -89,8 +88,8 @@ BIG_PLAY_PERCENTAGE_HELP = "Excludes bye weeks and 0-point games. Share of that 
 
 # Fantasy Points per Game chart's own display mode - "Manager View" is
 # the original per-manager-colored c hart untouched; "Normal View" drops
-# the manager identity entirely (flat COLOR_FANTASY_STAT/
-# COLOR_FANTASY_STAT_BENCH bars instead), still keeping Bye Week/Not on
+# the manager identity entirely (flat COLOR_STAT/
+# COLOR_STAT_BENCH bars instead), still keeping Bye Week/Not on
 # a Fantasy Roster as-is either way.
 FANTASY_STAT_VIEW_MODE_LABELS = {"normal": "Normal View", "manager": "Manager View"}
 
@@ -433,8 +432,8 @@ def _render_fantasy_points_per_game_chart(
     """Dispatches on chart_view_mode: both views share the exact same
     chart (_render_fantasy_points_per_game_chart_normal) - the only
     difference is the bar coloring passed in. "manager": started weeks
-    colored per-manager, benched weeks COLOR_FANTASY_STAT_BENCH (light
-    gray). "normal": manager_color_map=None, flat COLOR_FANTASY_STAT
+    colored per-manager, benched weeks COLOR_STAT_BENCH (light
+    gray). "normal": manager_color_map=None, flat COLOR_STAT
     for every bar regardless of start/bench status."""
     _render_fantasy_points_per_game_chart_normal(
         timeline,
@@ -468,9 +467,9 @@ def _render_fantasy_points_per_game_chart_normal(
     ESPN-record-based definition as the NFL Stats tab's) for any non-bye
     week with no real NFL game recorded at all. manager_color_map=None
     ("Normal View"): every real fantasy week (started OR benched) also
-    bars flat COLOR_FANTASY_STAT. manager_color_map given
+    bars flat COLOR_STAT. manager_color_map given
     ("Manager View"): started weeks bar in that week's manager color,
-    benched weeks COLOR_FANTASY_STAT_BENCH (light gray) - the ONLY
+    benched weeks COLOR_STAT_BENCH (light gray) - the ONLY
     difference between the two views."""
     full_game_list = _build_full_game_list(timeline, nfl_season_lengths)
     bye_weeks_by_season = _bye_weeks_by_season(player_id)
@@ -582,7 +581,7 @@ def _render_fantasy_points_per_game_chart_normal(
                 x=[x_positions[i] for i in group_zero_indices],
                 y=[0] * len(group_zero_indices),
                 mode="markers",
-                marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": color, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+                marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": color, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
                 customdata=[hover_text[i] for i in group_zero_indices],
                 hovertemplate="%{customdata}<extra></extra>",
                 legendgroup=name,
@@ -593,8 +592,8 @@ def _render_fantasy_points_per_game_chart_normal(
 
     if manager_color_map is None:
         # "Normal View" - one combined group covering every real fantasy
-        # week (started OR benched), flat COLOR_FANTASY_STAT.
-        _add_bar_group(started_indices + bench_indices, stat_series_name, COLOR_FANTASY_STAT)
+        # week (started OR benched), flat COLOR_STAT.
+        _add_bar_group(started_indices + bench_indices, stat_series_name, COLOR_STAT)
     else:
         # "Manager View" - one real trace per manager, started AND
         # benched weeks both included (no separate gray "Bench" group
@@ -619,7 +618,7 @@ def _render_fantasy_points_per_game_chart_normal(
             x=[x_positions[i] for i in missing_indices],
             y=[0] * len(missing_indices),
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_GAME_MISSED, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_GAME_MISSED, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[missing_hover_text[i] for i in missing_indices],
             hovertemplate="%{customdata}<extra></extra>",
             name="Games Missed",
@@ -642,7 +641,7 @@ def _render_fantasy_points_per_game_chart_normal(
             # note above); fall back to 0 so the marker still renders.
             y=[points[i] or 0 for i in bye_indices],
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_BYE_WEEK, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_BYE_WEEK, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             name="Bye Week",
@@ -668,7 +667,7 @@ def _render_fantasy_points_per_game_chart_normal(
             x=[x_positions[i] for i in indices],
             y=[0] * len(indices),
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": color, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": color, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[hover_text[i] for i in indices],
             hovertemplate="%{customdata}<extra></extra>",
             name=name,
@@ -825,7 +824,7 @@ def _render_percentiles_tab(
         y=other_y,
         mode="markers",
         name="Other Players",
-        marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
+        marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
         customdata=other_hover,
         hovertemplate="%{customdata}<extra></extra>",
     )
@@ -834,7 +833,7 @@ def _render_percentiles_tab(
         y=selected_y,
         mode="markers",
         name=player_names_by_id[selected_player_id],
-        marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PERCENTILE_SELECTED_PLAYER, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+        marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_PERCENTILE_SELECTED_PLAYER, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
         customdata=selected_hover,
         hovertemplate="%{customdata}<extra></extra>",
     )
@@ -976,11 +975,11 @@ def _render_nfl_stat_chart(
         y_axis_config = {"dtick": y_dtick, "tickformat": "d"}
 
     figure = go.Figure(go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False))
-    figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_CHART_STAT}, name=stat_label, showlegend=True)
+    figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_CHART_STAT}, name=stat_label, showlegend=True)
     if any(is_bye_week):
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_BYE_WEEK}, name="Bye Week", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_BYE_WEEK}, name="Bye Week", showlegend=True)
     if has_unrostered:
-        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_PLAYER_UNROSTERED}, name="Not on a Fantasy Roster", showlegend=True)
+        figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_PLAYER_UNROSTERED}, name="Not on a Fantasy Roster", showlegend=True)
     figure.update_layout(
         title=f"{stat_label} per Game",
         xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
@@ -1005,7 +1004,7 @@ def _render_nfl_stat_chart(
             x=[x_positions[i] for i in zero_indices],
             y=[0] * len(zero_indices),
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": [colors[i] for i in zero_indices], "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[hover_text[i] for i in zero_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -1022,7 +1021,7 @@ def _render_nfl_stat_chart(
             x=[x_positions[i] for i in bye_indices],
             y=[values[i] for i in bye_indices],
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_BYE_WEEK, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_BYE_WEEK, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
@@ -1044,9 +1043,9 @@ def _render_espn_nfl_stat_chart(
     stat_N equivalent at all, so ESPN is the value source for EVERY
     week, regardless of fantasy-roster status (unlike the DEF fallback
     above, which has no data at all for a week the player wasn't
-    rostered). Every real game bars black (COLOR_NFL_STAT) - fantasy-
+    rostered). Every real game bars black (COLOR_STAT) - fantasy-
     roster status no longer affects bar color here, only a data
-    mismatch does (COLOR_NFL_STAT_MISMATCH) - same year-only x-ticks/
+    mismatch does (COLOR_STAT_MISMATCH) - same year-only x-ticks/
     season-boundary-line/bye-marker treatment as the DEF fallback and
     the Fantasy Points chart."""
     selected_field = st.selectbox(
@@ -1102,10 +1101,10 @@ def _render_espn_nfl_stat_chart(
             if fantasy_value is not None and value is not None and fantasy_value != round(value):
                 is_mismatch = True
         if is_mismatch:
-            colors.append(COLOR_NFL_STAT_MISMATCH)
+            colors.append(COLOR_STAT_MISMATCH)
             has_mismatch = True
         else:
-            colors.append(COLOR_NFL_STAT)
+            colors.append(COLOR_STAT)
         notes = []
         if entry.get("unrostered"):
             notes.append("Not on a fantasy roster")
@@ -1175,14 +1174,14 @@ def _render_espn_nfl_stat_chart(
     # dedicated "Missing Game" marker series below (same black as the
     # normal bars, but a separate legend/toggle entry) rather than
     # rendering as an indistinguishable 0-height normal bar.
-    normal_values = [value if (color == COLOR_NFL_STAT and not missing) else None for value, color, missing in zip(values, colors, is_missing_record)]
-    mismatch_values = [value if color == COLOR_NFL_STAT_MISMATCH else None for value, color in zip(values, colors)]
+    normal_values = [value if (color == COLOR_STAT and not missing) else None for value, color, missing in zip(values, colors, is_missing_record)]
+    mismatch_values = [value if color == COLOR_STAT_MISMATCH else None for value, color in zip(values, colors)]
 
     figure = go.Figure(
         go.Bar(
             x=x_positions,
             y=normal_values,
-            marker_color=COLOR_NFL_STAT,
+            marker_color=COLOR_STAT,
             name=stat_label,
             legendgroup=stat_label,
             customdata=hover_text,
@@ -1194,7 +1193,7 @@ def _render_espn_nfl_stat_chart(
         figure.add_bar(
             x=x_positions,
             y=mismatch_values,
-            marker_color=COLOR_NFL_STAT_MISMATCH,
+            marker_color=COLOR_STAT_MISMATCH,
             name="Data Mismatch",
             legendgroup="Data Mismatch",
             customdata=hover_text,
@@ -1224,14 +1223,14 @@ def _render_espn_nfl_stat_chart(
     # toggling the "stat_label"/"Data Mismatch" legend entry off also
     # hides its own 0-value dots instead of leaving them stranded behind.
     zero_indices = [index for index, value in enumerate(values) if value == 0 and not is_bye_week[index] and not is_missing_record[index]]
-    zero_normal_indices = [i for i in zero_indices if colors[i] == COLOR_NFL_STAT]
-    zero_mismatch_indices = [i for i in zero_indices if colors[i] == COLOR_NFL_STAT_MISMATCH]
+    zero_normal_indices = [i for i in zero_indices if colors[i] == COLOR_STAT]
+    zero_mismatch_indices = [i for i in zero_indices if colors[i] == COLOR_STAT_MISMATCH]
     if zero_normal_indices:
         figure.add_scatter(
             x=[x_positions[i] for i in zero_normal_indices],
             y=[0] * len(zero_normal_indices),
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_STAT, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_STAT, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[hover_text[i] for i in zero_normal_indices],
             hovertemplate="%{customdata}<extra></extra>",
             legendgroup=stat_label,
@@ -1242,7 +1241,7 @@ def _render_espn_nfl_stat_chart(
             x=[x_positions[i] for i in zero_mismatch_indices],
             y=[0] * len(zero_mismatch_indices),
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_STAT_MISMATCH, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_STAT_MISMATCH, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[hover_text[i] for i in zero_mismatch_indices],
             hovertemplate="%{customdata}<extra></extra>",
             legendgroup="Data Mismatch",
@@ -1260,7 +1259,7 @@ def _render_espn_nfl_stat_chart(
             x=[x_positions[i] for i in missing_indices],
             y=[0] * len(missing_indices),
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_GAME_MISSED, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_GAME_MISSED, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[missing_hover_text[i] for i in missing_indices],
             hovertemplate="%{customdata}<extra></extra>",
             name="Games Missed",
@@ -1278,7 +1277,7 @@ def _render_espn_nfl_stat_chart(
             x=[x_positions[i] for i in bye_indices],
             y=[values[i] for i in bye_indices],
             mode="markers",
-            marker={"size": SCATTER_PLOT_MARKER_SIZE, "color": COLOR_NFL_BYE_WEEK, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+            marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_BYE_WEEK, "symbol": "circle", "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
             customdata=[bye_hover_text[i] for i in bye_indices],
             hovertemplate="%{customdata}<extra></extra>",
             name="Bye Week",
@@ -1450,6 +1449,7 @@ def render_players_page() -> None:
     st.warning("Some players (typically retired) do not have espn data so metrics/charts may look funky.")
     st.subheader(f"{player_names_by_id[selected_player_id]} ({selected_position}) · {year_label}")
 
+    # fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab, value_analysis_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles", "Value Analysis"])        fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab, value_analysis_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles", "Value Analysis"])
     fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
         stat_select_column, chart_view_mode_column = st.columns(2)
@@ -1486,3 +1486,20 @@ def render_players_page() -> None:
     with percentiles_tab:
         seasons = sorted({entry["season"] for entry in timeline})
         _render_percentiles_tab(selected_player_id, seasons, players_data, ownership_data, player_names_by_id, timeline, nfl_season_lengths)
+
+    # # TODO not ready yet
+    # with value_analysis_tab:
+    #     # picks_by_player is keyed by player NAME (draft.json's own
+    #     # field), not player_id like the rest of this page - reuses the
+    #     # SAME selected_player_id/player_names_by_id already resolved
+    #     # above rather than adding a second, redundant player search.
+    #     # build_picks_by_player/render_fantasy_value_section live in
+    #     # helpers.py, shared with pages_drafts.py's Player Analysis tab
+    #     # (this chart used to live there - moved here, not duplicated).
+    #     picks_by_player = build_picks_by_player()
+    #     selected_player_name = player_names_by_id[selected_player_id]
+    #     player_picks = picks_by_player.get(selected_player_name)
+    #     if not player_picks:
+    #         st.info(f"No draft data recorded for {selected_player_name}.")
+    #     else:
+    #         render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="players_value_analysis")
