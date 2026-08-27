@@ -9,19 +9,18 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from colors import (
-    COLOR_CHART_AUCTION_LINE,
-    COLOR_CHART_AUCTION_MARKER,
-    COLOR_CHART_PICK,
+    COLOR_AUCTION,
+    COLOR_AUCTION_DARK,
     COLOR_CHART_STAT,
+    COLOR_KEEPER,
     COLOR_MANAGER_BACKUP,
-    COLOR_NFL_GAME_MISSED,
     COLOR_PERCENTILE_OTHER_PLAYERS,
-    COLOR_PERCENTILE_SELECTED_PLAYER,
-    COLOR_POINTS_NEGATIVE,
+    COLOR_PICK,
     COLOR_POINTS_POSITIVE,
     COLOR_TABLE_ROSTER,
+    COLOR_UNDRAFTED,
 )
-from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_AUCTION_WIDTH, CHART_LINE_OTHER_WIDTH, MAX_YAXIS_TICKS, NFL_TEAM_ABBREVIATIONS, SCATTER_PLOT_MARKER_SIZE_LARGE, SCATTER_PLOT_MARKER_SIZE_MEDIUM
+from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, MAX_YAXIS_TICKS, NFL_TEAM_ABBREVIATIONS
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
@@ -54,7 +53,7 @@ def _render_draft_pick_card(
     # - an auction draft's overall_pick is just nomination order (any
     # team can nominate/win any pick), so it gets its own simpler badge
     # instead of a fabricated "round".
-    if draft_type == "snake" and num_teams:
+    if draft_type == DRAFT_SNAKE and num_teams:
         round_number = ((overall_pick - 1) // num_teams) + 1
         pick_in_round = ((overall_pick - 1) % num_teams) + 1
         badge = f"Round {round_number} · Pick {pick_in_round} · Overall #{overall_pick}"
@@ -93,7 +92,7 @@ def _render_draft_pick_card(
             amount_html = ""
             if is_keeper:
                 amount_html = "<span style='color:#888888; font-style:italic;'>Keeper</span>"
-            elif draft_type == "auction" and pick.get("auction_amount") is not None:
+            elif draft_type == DRAFT_AUCTION and pick.get("auction_amount") is not None:
                 amount_html = f"Auction Price: <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>${pick['auction_amount']}</span>"
             # Fixed-width first column (min-width, not width - lets an
             # unusually long name grow past it rather than clip) so the
@@ -107,6 +106,18 @@ def _render_draft_pick_card(
 
 
 DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount"]
+
+
+def _integer_yaxis_nticks(values: list[int]) -> int:
+    """MAX_YAXIS_TICKS is a CEILING, not a target - passing it straight
+    through as Plotly's nticks forces that many ticks even over a tiny
+    integer range (e.g. 0-5), which makes Plotly fall back to a
+    fractional dtick and repeat rounded integer labels. Capping nticks
+    at the data's own distinct-integer-value count (max_value + 1, for a
+    0-based count axis) keeps every tick unique."""
+    if not values:
+        return MAX_YAXIS_TICKS
+    return min(max(values) + 1, MAX_YAXIS_TICKS)
 
 
 def _render_pick_distribution_chart(
@@ -191,7 +202,7 @@ def _render_pick_distribution_chart(
     figure.update_layout(
         barmode="overlay",
         xaxis={"title": xaxis_title, "type": "category"},
-        yaxis={"title": "Player Count", "tickformat": "d", "nticks": MAX_YAXIS_TICKS},
+        yaxis={"title": "Player Count", "tickformat": "d", "nticks": _integer_yaxis_nticks(_bucket_counts(all_values) + _bucket_counts(values))},
         showlegend=True,
         margin={"t": 20, "l": 60, "r": 20, "b": 50},
     )
@@ -202,7 +213,7 @@ def _render_pick_price_position_chart(draft: dict, num_teams: int) -> None:
     """Every pick in the season, x=overall_pick (reversed - pick #1 on
     the RIGHT, matching the "more valuable = right side" convention used
     by the other charts on this tab), y=Auction Price for auction drafts
-    only (COLOR_CHART_AUCTION_MARKER, same green as the Individual tab's own
+    only (COLOR_AUCTION, same green as the Individual tab's own
     Auction Price series - a snake draft has no real auction_amount at
     all, see load_draft's docstring, so that series is skipped entirely
     rather than plotting a row of nothing) - plus a moving-average line
@@ -217,7 +228,7 @@ def _render_pick_price_position_chart(draft: dict, num_teams: int) -> None:
 
     figure = go.Figure()
 
-    if draft_type == "auction":
+    if draft_type == DRAFT_AUCTION:
         auction_picks = [pick for pick in picks if pick.get("auction_amount") is not None]
         auction_pick_numbers = [pick["overall_pick"] for pick in auction_picks]
         auction_amounts = [pick["auction_amount"] for pick in auction_picks]
@@ -227,7 +238,7 @@ def _render_pick_price_position_chart(draft: dict, num_teams: int) -> None:
                 y=auction_amounts,
                 name="Auction Price",
                 mode="markers",
-                marker={"color": COLOR_CHART_AUCTION_MARKER, "size": SCATTER_PLOT_MARKER_SIZE_MEDIUM},
+                marker={"color": COLOR_AUCTION, "size": CHART_MARKER_SIZE_MEDIUM},
                 customdata=[pick["player_name"] for pick in auction_picks],
                 hovertemplate="<b>%{customdata}</b><br>Pick #%{x}<br>Auction Price: $%{y}<extra></extra>",
             )
@@ -239,7 +250,7 @@ def _render_pick_price_position_chart(draft: dict, num_teams: int) -> None:
                 y=moving_average,
                 name=f"Auction Price ({num_teams} Pick Average)",
                 mode="lines",
-                line={"color": COLOR_CHART_AUCTION_LINE, "width": CHART_LINE_OTHER_WIDTH},
+                line={"color": COLOR_AUCTION_DARK, "width": CHART_LINE_WIDTH_SMALL},
                 hovertemplate=f"Pick #%{{x}}<br>{num_teams} Pick Moving Average: $%{{y:.2f}}<extra></extra>",
             )
         )
@@ -254,16 +265,16 @@ def _render_pick_price_position_chart(draft: dict, num_teams: int) -> None:
                 y=[0] * len(position_picks),
                 name=position,
                 mode="markers",
-                marker={"color": BENCH_POSITION_COLOR.get(position), "size": SCATTER_PLOT_MARKER_SIZE_MEDIUM},
+                marker={"color": BENCH_POSITION_COLOR.get(position), "size": CHART_MARKER_SIZE_MEDIUM},
                 customdata=[pick["player_name"] for pick in position_picks],
                 hovertemplate=f"<b>%{{customdata}}</b><br>Pick #%{{x}}<br>{position}<extra></extra>",
             )
         )
 
     figure.update_layout(
-        title="Auction Price by Pick" if draft_type == "auction" else "Draft Position by Pick",
-        xaxis={"title": "Overall Pick", "range": [max_pick + 1, 0]},
-        yaxis={"title": "Auction Price ($)" if draft_type == "auction" else ""},
+        title="Auction Price by Pick" if draft_type == DRAFT_AUCTION else "Draft Position by Pick",
+        xaxis={"title": "Pick", "range": [max_pick + 1, 0]},
+        yaxis={"title": "Auction Price" if draft_type == DRAFT_AUCTION else ""},
         legend=CHART_LEGEND_OUTSIDE_RIGHT,
         margin={"t": 50, "l": 60, "r": 150, "b": 50},
     )
@@ -281,8 +292,9 @@ def _render_draft_recap_tab(season: int) -> None:
     manager_color_map = build_manager_color_map()
     draft_type = draft["draft_type"]
 
-    draft_type_article = "an" if draft_type == "auction" else "a"
-    st.markdown(f"The {season} draft consisted of {len(team_info)} teams, drafting {len(draft['picks'])} players. Draft followed {draft_type_article} {draft_type} format.")
+    draft_type_article = "an" if draft_type == DRAFT_AUCTION else "a"
+    draft_auction_amount = f"with a ${AUCTION_BUDGET} budget" if draft_type == DRAFT_AUCTION else ""
+    st.markdown(f"The {season} draft consisted of {len(team_info)} teams, drafting {len(draft['picks'])} players. Draft followed {draft_type_article} {draft_type} format{draft_auction_amount}.")
 
     selections_tab, stats_tab = st.tabs(["Selections", "Stats"])
 
@@ -332,7 +344,7 @@ def _render_draft_recap_tab(season: int) -> None:
         # auction_amount is null) - rather than a disabled/greyed-out
         # input explaining that, the columns are just left blank.
         min_amount = max_amount = None
-        if draft_type == "auction":
+        if draft_type == DRAFT_AUCTION:
             min_amount = min_amount_column.number_input(
                 "Min Auction Price",
                 min_value=0,
@@ -372,9 +384,9 @@ def _render_draft_recap_tab(season: int) -> None:
             picks = [pick for pick in picks if team_info.get(pick["team_id"], {}).get("manager_id") == selected_manager_id]
         if selected_position != "All":
             picks = [pick for pick in picks if pick["position"] == selected_position]
-        if draft_type == "auction" and min_amount is not None:
+        if draft_type == DRAFT_AUCTION and min_amount is not None:
             picks = [pick for pick in picks if pick["auction_amount"] is not None and pick["auction_amount"] >= min_amount]
-        if draft_type == "auction" and max_amount is not None:
+        if draft_type == DRAFT_AUCTION and max_amount is not None:
             picks = [pick for pick in picks if pick["auction_amount"] is not None and pick["auction_amount"] <= max_amount]
 
         if not picks:
@@ -411,17 +423,17 @@ def _render_draft_recap_tab(season: int) -> None:
                 )
                 st.metric("Drafted", position_counts[position], help=f"The number of {position}s in this year's draft.")
 
-        if draft_type == "auction":
+        if draft_type == DRAFT_AUCTION:
             # Skew computed separately PER POSITION GROUP - a QB-only
             # skew can read very differently than the overall skew below
             # (e.g. a position with a few $50+ studs and a long $1 tail
             # skews harder than one where everyone landed mid-range).
             skew_help = "Right skewness of auction price selections. A higher number indicates extreme price selection and greater dependence on $1 picks. Fantasy range ~1-3"
-            position_skew_columns = st.columns(len(BENCH_POSITION_ORDER))
-            for position_skew_column, position in zip(position_skew_columns, BENCH_POSITION_ORDER):
-                position_priced_picks = [pick for pick in draft["picks"] if pick["position"] == position and pick.get("auction_amount") is not None]
-                position_skew = pd.Series([pick["auction_amount"] for pick in position_priced_picks]).skew() if len(position_priced_picks) >= 3 else None
-                position_skew_column.metric(f"{position} Price Skew", f"{position_skew:.2f}" if position_skew is not None else "—", help=skew_help)
+            # position_skew_columns = st.columns(len(BENCH_POSITION_ORDER))
+            # for position_skew_column, position in zip(position_skew_columns, BENCH_POSITION_ORDER):
+            #     position_priced_picks = [pick for pick in draft["picks"] if pick["position"] == position and pick.get("auction_amount") is not None]
+            #     position_skew = pd.Series([pick["auction_amount"] for pick in position_priced_picks]).skew() if len(position_priced_picks) >= 3 else None
+            #     position_skew_column.metric(f"{position} Price Skew", f"{position_skew:.2f}" if position_skew is not None else "—", help=skew_help)
 
             # Same trio as Manager Recap's own "Auction Metrics" (see
             # _render_manager_recap_tab), just aggregated across the
@@ -445,7 +457,7 @@ def _render_draft_recap_tab(season: int) -> None:
                 help=skew_help,
             )
 
-        if draft_type == "auction":
+        if draft_type == DRAFT_AUCTION:
             # $5-wide bins starting at 1 (1-5, 6-10, ...), not 0-4/5-9.
             _render_pick_distribution_chart(
                 draft["picks"],
@@ -457,7 +469,7 @@ def _render_draft_recap_tab(season: int) -> None:
                 widget_key="drafts_stats_auction_price_position",
                 empty_message="No auction picks match this filter.",
             )
-        elif draft_type == "snake":
+        elif draft_type == DRAFT_SNAKE:
             # Bucket size = that season's own team count, so each bucket
             # is exactly one real snake round - "Round 1", "Round 2", ...
             # not an arbitrary price-style range label.
@@ -489,6 +501,60 @@ def _render_manager_recap_tab(season: int) -> None:
     draft_type = draft["draft_type"]
 
     all_tab, individual_tab = st.tabs(["All", "Individual"])
+
+    with all_tab:
+        if draft_type == DRAFT_SNAKE:
+            st.warning("no snake draft info yet")
+        elif draft_type == DRAFT_AUCTION:
+            st.subheader("Remaining Auction Budget")
+            all_manager_ids = sorted({info["manager_id"] for info in team_info.values()}, key=lambda manager_id: resolve_manager_name(manager_id, name_resolver))
+            max_pick = max(pick["overall_pick"] for pick in draft["picks"])
+            budget_figure = go.Figure()
+            for manager_id in all_manager_ids:
+                manager_priced_picks = sorted(
+                    (pick for pick in draft["picks"] if team_info.get(pick["team_id"], {}).get("manager_id") == manager_id and pick.get("auction_amount") is not None),
+                    key=lambda pick: pick["overall_pick"],
+                )
+                # Starts at [0, AUCTION_BUDGET] (pick 0 doesn't exist -
+                # it's just the "before anything happened" starting
+                # point) so every manager's line begins at the same real
+                # $200 origin, not at wherever their own first pick
+                # happened to land in the draft order. Keepers don't
+                # step the line down at all - their auction_amount is
+                # null (no real bid ever happened, see load_draft's
+                # docstring), so they never touched the live budget.
+                pick_numbers = [0]
+                remaining_budget = [AUCTION_BUDGET]
+                running_total = AUCTION_BUDGET
+                for pick in manager_priced_picks:
+                    running_total -= pick["auction_amount"]
+                    pick_numbers.append(pick["overall_pick"])
+                    remaining_budget.append(running_total)
+
+                manager_name = resolve_manager_name(manager_id, name_resolver)
+                budget_figure.add_trace(
+                    go.Scatter(
+                        x=pick_numbers,
+                        y=remaining_budget,
+                        name=manager_name,
+                        mode="lines+markers",
+                        line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP), "width": CHART_LINE_WIDTH_SMALL},
+                        hovertemplate=f"<b>{manager_name}</b><br>Pick #%{{x}}<br>Remaining: $%{{y}}<extra></extra>",
+                    )
+                )
+
+            budget_figure.update_layout(
+                # range=[max_pick+1, -1] (not autorange="reversed") -
+                # left=max_pick+1, right=-1, so pick #1 (and the pre-draft
+                # 0 starting point) sit on the RIGHT, same "more valuable
+                # = right side" convention as the other pick charts on
+                # this page.
+                xaxis={"title": "Pick", "range": [max_pick + 1, -1]},
+                yaxis={"title": "Remaining Budget"},
+                legend=CHART_LEGEND_OUTSIDE_RIGHT,
+                margin={"t": 20, "l": 60, "r": 150, "b": 50},
+            )
+            st.plotly_chart(budget_figure, width="stretch")
 
     with individual_tab:
         manager_ids = sorted({info["manager_id"] for info in team_info.values()}, key=lambda manager_id: resolve_manager_name(manager_id, name_resolver))
@@ -527,7 +593,7 @@ def _render_manager_recap_tab(season: int) -> None:
             with metrics_column:
                 st.subheader("Metrics")
 
-                if draft_type == "auction":
+                if draft_type == DRAFT_AUCTION:
                     with st.expander("Auction Metrics", expanded=False):
                         total_spent = sum(pick["auction_amount"] for pick in manager_picks if pick.get("auction_amount") is not None)
                         remaining_budget = AUCTION_BUDGET - total_spent
@@ -612,11 +678,11 @@ def _render_manager_recap_tab(season: int) -> None:
                                 # the total row's blank as literal "None"/"nan").
                                 # A plain "" string sidesteps all of that.
                                 "Pick": str(pick["overall_pick"]),
-                                **({"Auction Value": f"${pick['auction_amount']:.0f}" if pick.get("auction_amount") is not None else "—"} if draft_type == "auction" else {}),
+                                **({"Auction Value": f"${pick['auction_amount']:.0f}" if pick.get("auction_amount") is not None else "—"} if draft_type == DRAFT_AUCTION else {}),
                             }
                             for pick in position_picks
                         ]
-                        if draft_type == "auction":
+                        if draft_type == DRAFT_AUCTION:
                             total_auction_price = sum(pick["auction_amount"] for pick in position_picks if pick.get("auction_amount") is not None)
                             rows.append({"Player": "Total Auction Price", "Team": "", "Pick": "", "Auction Value": f"${total_auction_price}"})
 
@@ -654,7 +720,7 @@ def _render_manager_recap_tab(season: int) -> None:
                     # amounts at all, so it gets the closest equivalent instead:
                     # average overall_pick, i.e. how early that position group
                     # tended to get drafted.
-                    if draft_type == "auction":
+                    if draft_type == DRAFT_AUCTION:
                         bar_label = "Average Auction Price per Pick"
                         bar_values = [sum(pick["auction_amount"] for pick in picks_by_position[position] if pick.get("auction_amount") is not None) / max(1, sum(1 for pick in picks_by_position[position] if pick.get("auction_amount") is not None)) for position in position_groups]
                     else:
@@ -677,62 +743,8 @@ def _render_manager_recap_tab(season: int) -> None:
                     )
                     st.plotly_chart(bar_figure, width="stretch")
 
-    with all_tab:
-        if draft_type == "auction":
-            st.subheader("Remaining Auction Budget")
-            all_manager_ids = sorted({info["manager_id"] for info in team_info.values()}, key=lambda manager_id: resolve_manager_name(manager_id, name_resolver))
-            max_pick = max(pick["overall_pick"] for pick in draft["picks"])
-            budget_figure = go.Figure()
-            for manager_id in all_manager_ids:
-                manager_priced_picks = sorted(
-                    (pick for pick in draft["picks"] if team_info.get(pick["team_id"], {}).get("manager_id") == manager_id and pick.get("auction_amount") is not None),
-                    key=lambda pick: pick["overall_pick"],
-                )
-                # Starts at [0, AUCTION_BUDGET] (pick 0 doesn't exist -
-                # it's just the "before anything happened" starting
-                # point) so every manager's line begins at the same real
-                # $200 origin, not at wherever their own first pick
-                # happened to land in the draft order. Keepers don't
-                # step the line down at all - their auction_amount is
-                # null (no real bid ever happened, see load_draft's
-                # docstring), so they never touched the live budget.
-                pick_numbers = [0]
-                remaining_budget = [AUCTION_BUDGET]
-                running_total = AUCTION_BUDGET
-                for pick in manager_priced_picks:
-                    running_total -= pick["auction_amount"]
-                    pick_numbers.append(pick["overall_pick"])
-                    remaining_budget.append(running_total)
-
-                manager_name = resolve_manager_name(manager_id, name_resolver)
-                budget_figure.add_trace(
-                    go.Scatter(
-                        x=pick_numbers,
-                        y=remaining_budget,
-                        name=manager_name,
-                        mode="lines+markers",
-                        line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP), "width": CHART_LINE_OTHER_WIDTH},
-                        hovertemplate=f"<b>{manager_name}</b><br>Pick #%{{x}}<br>Remaining: $%{{y}}<extra></extra>",
-                    )
-                )
-
-            budget_figure.update_layout(
-                # range=[max_pick+1, -1] (not autorange="reversed") -
-                # left=max_pick+1, right=-1, so pick #1 (and the pre-draft
-                # 0 starting point) sit on the RIGHT, same "more valuable
-                # = right side" convention as the other pick charts on
-                # this page.
-                xaxis={"title": "Overall Pick", "range": [max_pick + 1, -1]},
-                yaxis={"title": "Remaining Budget ($)"},
-                legend=CHART_LEGEND_OUTSIDE_RIGHT,
-                margin={"t": 20, "l": 60, "r": 150, "b": 50},
-            )
-            st.plotly_chart(budget_figure, width="stretch")
-
 
 def _render_keepers_tab() -> None:
-    st.info("Keeper history are first round selections aggregated across every season in the archive.")
-
     # A "keeper" is only identifiable within an AUCTION season - its
     # picks carry a null auction_amount because no live bid ever
     # happened (see load_draft's docstring). A snake draft's picks are
@@ -793,7 +805,7 @@ def _render_keepers_tab() -> None:
                     name=position,
                     marker={"color": BENCH_POSITION_COLOR.get(position)},
                     customdata=position_years_text,
-                    hovertemplate=f"<b>%{{y}}</b><br>Frequency: %{{x}}<br>Years: %{{customdata}}<br>{position}<extra></extra>",
+                    hovertemplate="<b>%{y}</b><br>Frequency: %{x}<br>Years: %{customdata}<extra></extra>",
                 )
             )  # NOTE single bar and legend per position
         bar_figure.update_layout(
@@ -910,8 +922,8 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                 y=[pick["overall_pick"] for pick in selected_picks],
                 name=selected_player,
                 mode="lines+markers",
-                line={"color": COLOR_PERCENTILE_SELECTED_PLAYER, "width": CHART_LINE_AUCTION_WIDTH},
-                marker={"color": COLOR_PERCENTILE_SELECTED_PLAYER, "size": SCATTER_PLOT_MARKER_SIZE_LARGE},
+                line={"color": COLOR_PICK, "width": CHART_LINE_WIDTH_MEDIUM},
+                marker={"color": COLOR_PICK, "size": CHART_MARKER_SIZE_LARGE},
                 legendgroup="selected",
                 hovertemplate=f"<b>%{{x}}</b><br>{selected_player}<br>Pick: %{{y}}<extra></extra>",
             )
@@ -927,7 +939,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                 y=[pick["overall_pick"] for pick in player_picks],
                 name=f"Other {selected_position}",
                 mode="lines",
-                line={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "width": CHART_LINE_OTHER_WIDTH},
+                line={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "width": CHART_LINE_WIDTH_SMALL},
                 legendgroup="other",
                 showlegend=not other_legend_shown,
                 hovertemplate=f"<b>%{{x}}</b><br>{player}<br>Pick: %{{y}}<extra></extra>",
@@ -953,25 +965,35 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
         # rather than treated as $0.
         snake_years, snake_counts = [], []
         auction_years, auction_counts = [], []
+        keeper_years, keeper_counts = [], []
         for pick in selected_picks:
-            season_position_picks = [
-                other_pick
-                for other_picks in picks_by_player.values()
-                for other_pick in other_picks
-                if other_pick["season"] == pick["season"] and other_pick["position"] == selected_position
-            ]
-            if pick["draft_type"] == "snake":
+            season_position_picks = [other_pick for other_picks in picks_by_player.values() for other_pick in other_picks if other_pick["season"] == pick["season"] and other_pick["position"] == selected_position]
+            if pick["draft_type"] == DRAFT_SNAKE:
                 count = sum(1 for other_pick in season_position_picks if other_pick["overall_pick"] < pick["overall_pick"])
                 snake_years.append(str(pick["season"]))
                 snake_counts.append(count)
-            else:
-                if pick["auction_amount"] is None:
-                    continue
+            elif pick["auction_amount"] is not None:
                 count = sum(1 for other_pick in season_position_picks if other_pick["auction_amount"] is not None and other_pick["auction_amount"] > pick["auction_amount"])
                 auction_years.append(str(pick["season"]))
                 auction_counts.append(count)
+            else:
+                # Auction-era keeper with no real auction_amount to compare
+                # against - nothing to plot a bar at, but still a keeper
+                # year, so mark it at y=0 like the Undrafted sentinel.
+                count = 0
+            if check_keeper_pick_criteria(pick):
+                keeper_years.append(str(pick["season"]))
+                keeper_counts.append(count)
 
-        if snake_years or auction_years:
+        # Same "Undrafted" concept as the Draft History chart - real
+        # stats-era years with no matching draft record for this player,
+        # placed at y=0 since there's no pick/auction value to compare.
+        player_id = selected_picks[0].get("player_id")
+        stat_years = sorted({entry["season"] for entry in load_player_ownership()["player_ownership"].get(player_id, [])})
+        drafted_years = {pick["season"] for pick in selected_picks}
+        break_years = [year for year in range(stat_years[0], stat_years[-1] + 1) if year not in drafted_years] if stat_years else []
+
+        if snake_years or auction_years or break_years:
             ahead_figure = go.Figure()
             if snake_years:
                 ahead_figure.add_trace(
@@ -979,8 +1001,8 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         x=snake_years,
                         y=snake_counts,
                         name="Snake",
-                        marker={"color": COLOR_CHART_PICK},
-                        hovertemplate="<b>%{x}</b><br>Players Ahead: %{y}<extra></extra>",
+                        marker={"color": COLOR_PICK},
+                        hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s Picked Ahead: %{{y}}<extra></extra>",
                     )
                 )
             if auction_years:
@@ -989,14 +1011,54 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         x=auction_years,
                         y=auction_counts,
                         name="Auction",
-                        marker={"color": COLOR_CHART_AUCTION_MARKER},
-                        hovertemplate="<b>%{x}</b><br>Players Ahead: %{y}<extra></extra>",
+                        legendgroup="auction",
+                        marker={"color": COLOR_AUCTION},
+                        hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s with Higher Auction Value: %{{y}}<extra></extra>",
+                    )
+                )
+                # A 0-height bar (highest auction value at the position that
+                # year) is invisible on its own - overlay a marker so it
+                # still reads on the chart, sharing the same legend entry.
+                zero_auction_years = [year for year, count in zip(auction_years, auction_counts) if count == 0]
+                if zero_auction_years:
+                    ahead_figure.add_trace(
+                        go.Scatter(
+                            x=zero_auction_years,
+                            y=[0] * len(zero_auction_years),
+                            name="Auction",
+                            legendgroup="auction",
+                            showlegend=False,
+                            mode="markers",
+                            marker={"color": COLOR_AUCTION, "size": CHART_MARKER_SIZE_LARGE},
+                            hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s with Higher Auction Value: %{{y}}<extra></extra>",
+                        )
+                    )
+            if break_years:
+                ahead_figure.add_trace(
+                    go.Scatter(
+                        x=[str(year) for year in break_years],
+                        y=[0] * len(break_years),
+                        name="Undrafted",
+                        mode="markers",
+                        marker={"color": COLOR_UNDRAFTED, "size": CHART_MARKER_SIZE_LARGE},
+                        hovertemplate="<b>%{x}</b><br>Undrafted<extra></extra>",
+                    )
+                )
+            if keeper_years:
+                ahead_figure.add_trace(
+                    go.Scatter(
+                        x=keeper_years,
+                        y=keeper_counts,
+                        name="Keeper",
+                        mode="markers",
+                        marker={"color": COLOR_KEEPER, "size": CHART_MARKER_SIZE_LARGE},
+                        hovertemplate="<b>%{x}</b><br>Keeper<extra></extra>",
                     )
                 )
             ahead_figure.update_layout(
                 title=f"{selected_position}s Drafted Ahead of {selected_player}",
-                xaxis={"title": "Year", "type": "category"},
-                yaxis={"title": "Players Ahead", "tickformat": "d", "nticks": MAX_YAXIS_TICKS},
+                xaxis={"title": "Year", "type": "category", "categoryorder": "category ascending"},
+                yaxis={"title": "Players Drafted Ahead / Higher Auction Value", "tickformat": "d", "nticks": _integer_yaxis_nticks(snake_counts + auction_counts)},
                 legend={"orientation": "h", "y": 1.15, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
                 margin={"t": 70, "l": 60, "r": 20, "b": 50},
             )
@@ -1012,14 +1074,14 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
 
     years_drafted_count = len({pick["season"] for pick in player_picks})
     keeper_pick_count = sum(1 for pick in player_picks if check_keeper_pick_criteria(pick))
-    snake_draft_count = len({pick["season"] for pick in player_picks if pick["draft_type"] == "snake"})
-    auction_draft_count = len({pick["season"] for pick in player_picks if pick["draft_type"] == "auction"})
+    snake_draft_count = len({pick["season"] for pick in player_picks if pick["draft_type"] == DRAFT_SNAKE})
+    auction_draft_count = len({pick["season"] for pick in player_picks if pick["draft_type"] == DRAFT_AUCTION})
 
-    snake_picks_for_range = [pick["overall_pick"] for pick in player_picks if pick["draft_type"] == "snake"]
+    snake_picks_for_range = [pick["overall_pick"] for pick in player_picks if pick["draft_type"] == DRAFT_SNAKE]
     min_pick = min(snake_picks_for_range) if snake_picks_for_range else "-"
     max_pick = max(snake_picks_for_range) if snake_picks_for_range else "-"
 
-    auction_amounts_for_range = [pick["auction_amount"] for pick in player_picks if pick["draft_type"] == "auction" and pick["auction_amount"] is not None]
+    auction_amounts_for_range = [pick["auction_amount"] for pick in player_picks if pick["draft_type"] == DRAFT_AUCTION and pick["auction_amount"] is not None]
     min_auction_amount = f"${min(auction_amounts_for_range)}" if auction_amounts_for_range else "-"
     max_auction_amount = f"${max(auction_amounts_for_range)}" if auction_amounts_for_range else "-"
 
@@ -1061,8 +1123,8 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
             y=[pick["overall_pick"] for pick in player_picks],
             name="Pick",
             mode="lines+markers",
-            line={"color": COLOR_CHART_PICK, "width": CHART_LINE_AUCTION_WIDTH},
-            marker={"color": COLOR_CHART_PICK, "size": SCATTER_PLOT_MARKER_SIZE_LARGE},
+            line={"color": COLOR_PICK, "width": CHART_LINE_WIDTH_MEDIUM},
+            marker={"color": COLOR_PICK, "size": CHART_MARKER_SIZE_LARGE},
             yaxis="y",
             hovertemplate="<b>%{x}</b><br>Pick: %{y}<extra></extra>",
         )
@@ -1074,7 +1136,7 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
                 y=[pick["auction_amount"] for pick in auction_picks],
                 name="Auction Price",
                 mode="markers",
-                marker={"color": COLOR_CHART_AUCTION_MARKER, "size": SCATTER_PLOT_MARKER_SIZE_LARGE},
+                marker={"color": COLOR_AUCTION, "size": CHART_MARKER_SIZE_LARGE},
                 yaxis="y2",
                 hovertemplate="<b>%{x}</b><br>Auction Price: $%{y}<extra></extra>",
             )
@@ -1086,9 +1148,9 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
                 y=[pick["overall_pick"] for pick in keeper_picks],
                 name="Keeper",
                 mode="markers",
-                marker={"color": COLOR_POINTS_NEGATIVE, "size": SCATTER_PLOT_MARKER_SIZE_LARGE},
+                marker={"color": COLOR_KEEPER, "size": CHART_MARKER_SIZE_LARGE},
                 yaxis="y",
-                hovertemplate="<b>%{x}</b><br>Pick: %{y} (Keeper)<extra></extra>",
+                hovertemplate="<b>%{x}</b><br>Pick: %{y}<extra></extra>",
             )
         )
     if break_years:
@@ -1102,7 +1164,7 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
                 y=[165] * len(break_years),
                 name="Undrafted",
                 mode="markers",
-                marker={"color": COLOR_NFL_GAME_MISSED, "size": SCATTER_PLOT_MARKER_SIZE_LARGE},
+                marker={"color": COLOR_UNDRAFTED, "size": CHART_MARKER_SIZE_LARGE},
                 yaxis="y",
                 hovertemplate="<b>%{x}</b><br>Undrafted<extra></extra>",
             )
@@ -1219,13 +1281,13 @@ def _render_archive_analysis_tab() -> None:
                 y=[pick["season"] for pick in position_picks],
                 name=position,
                 mode="markers",
-                marker={"color": BENCH_POSITION_COLOR.get(position), "size": SCATTER_PLOT_MARKER_SIZE_MEDIUM},
+                marker={"color": BENCH_POSITION_COLOR.get(position), "size": CHART_MARKER_SIZE_MEDIUM},
                 customdata=[pick["player_name"] for pick in position_picks],
-                hovertemplate="<b>%{customdata}</b><br>Year: %{y}<br>Pick #%{x}<extra></extra>",
+                hovertemplate="<b>%{customdata}</b><br>Year: %{y}<br>Pick: %{x}<extra></extra>",
             )
         )
     figure.update_layout(
-        xaxis={"title": "Overall Pick", "range": [max_pick + 1, 0]},
+        xaxis={"title": "Pick", "range": [max_pick + 1, 0]},
         yaxis={"title": "Year", "dtick": 1},
         legend={"orientation": "h", "y": 1.15, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
         # Compact - tight margins and a shorter-than-default height, not
@@ -1236,23 +1298,30 @@ def _render_archive_analysis_tab() -> None:
     st.plotly_chart(figure, width="stretch")
 
 
-def render_drafts_page() -> None:
-    seasons = discover_seasons()
-    if not seasons:
-        st.info("No seasons aggregated yet.")
-        return
-
+def _render_recap_tab(seasons):
     # Single mandatory season (same pattern as pages_seasons.py) -
     # defaulting to the most recent one.
     selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="drafts_season")
 
-    draft_recap_tab, manager_recap_tab, keepers_tab, player_analysis_tab, archive_analysis_tab = st.tabs(["Draft Recap", "Manager Recap", "Keepers", "Player Analysis", "Archive Analysis"])
+    draft_recap_tab, manager_recap_tab = st.tabs(["Draft Recap", "Manager Recap"])
 
     with draft_recap_tab:
         _render_draft_recap_tab(selected_season)
 
     with manager_recap_tab:
         _render_manager_recap_tab(selected_season)
+
+
+def render_drafts_page() -> None:
+    seasons = discover_seasons()
+    if not seasons:
+        st.info("No seasons aggregated yet.")
+        return
+
+    recap_tab, keepers_tab, player_analysis_tab, archive_analysis_tab = st.tabs(["Recap", "Keepers", "Player Analysis", "Archive Analysis"])
+
+    with recap_tab:
+        _render_recap_tab(seasons)
 
     with keepers_tab:
         _render_keepers_tab()

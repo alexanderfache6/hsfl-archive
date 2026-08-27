@@ -43,13 +43,14 @@ CHART_LEGEND_OUTSIDE_RIGHT = {
 # ----------------------------------------
 
 # for consistent scatter plot marker size
-SCATTER_PLOT_MARKER_SIZE_SMALL = 4
-SCATTER_PLOT_MARKER_SIZE_MEDIUM = 8
-SCATTER_PLOT_MARKER_SIZE_LARGE = 12
+CHART_MARKER_SIZE_SMALL = 4
+CHART_MARKER_SIZE_MEDIUM = 8
+CHART_MARKER_SIZE_LARGE = 12
 
-
-CHART_LINE_OTHER_WIDTH = 2
-CHART_LINE_AUCTION_WIDTH = 8
+# for consistent line chart line width
+CHART_LINE_WIDTH_SMALL = 2
+CHART_LINE_WIDTH_MEDIUM = 4
+CHART_LINE_WIDTH_LARGE = 8
 
 # for consistent y-axis tick density (Plotly's own nticks parameter)
 MAX_YAXIS_TICKS = 20
@@ -127,6 +128,10 @@ BENCH_POSITION_COLOR = {
 # (or just under, when a keeper ate part of the budget) this per team,
 # confirming it's the actual league setting rather than a guess.
 AUCTION_BUDGET = 200  # TODO needs to come from season recap
+
+
+DRAFT_AUCTION = "auction"
+DRAFT_SNAKE = "snake"
 
 # ----------------------------------------
 # matchups

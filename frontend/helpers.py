@@ -1,14 +1,14 @@
 import plotly.graph_objects as go
 import streamlit as st
 from colors import (
-    COLOR_CHART_PICK,
     COLOR_CHART_SCATTER_MARKER_OUTLINE,
     COLOR_CHART_STAT,
     COLOR_MANAGER_BACKUP,
     COLOR_PERCENTILE_OTHER_PLAYERS,
     COLOR_PERCENTILE_SELECTED_PLAYER,
+    COLOR_PICK,
 )
-from constants import CHART_LINE_AUCTION_WIDTH, ORDINAL_WORDS, SCATTER_PLOT_MARKER_SIZE_MEDIUM
+from constants import CHART_LINE_WIDTH_LARGE, CHART_MARKER_SIZE_MEDIUM, ORDINAL_WORDS
 from data_loader import (
     contrasting_text_color,
     discover_seasons,
@@ -219,7 +219,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
                 y=other_y,
                 mode="markers",
                 name="Other Players",
-                marker={"size": SCATTER_PLOT_MARKER_SIZE_MEDIUM, "color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
+                marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
                 customdata=other_hover,
                 hovertemplate="%{customdata}<extra></extra>",
             )
@@ -230,7 +230,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
                 y=selected_y,
                 mode="markers",
                 name=selected_player,
-                marker={"size": SCATTER_PLOT_MARKER_SIZE_MEDIUM, "color": COLOR_PERCENTILE_SELECTED_PLAYER, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
+                marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_PERCENTILE_SELECTED_PLAYER, "line": {"width": 1, "color": COLOR_CHART_SCATTER_MARKER_OUTLINE}},
                 customdata=selected_hover,
                 hovertemplate="%{customdata}<extra></extra>",
             )
@@ -263,8 +263,8 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
             y=games_played_by_season,
             name="Games Played",
             mode="lines+markers",
-            line={"color": COLOR_CHART_PICK, "width": CHART_LINE_AUCTION_WIDTH},
-            marker={"color": COLOR_CHART_PICK, "size": SCATTER_PLOT_MARKER_SIZE_MEDIUM},
+            line={"color": COLOR_PICK, "width": CHART_LINE_WIDTH_LARGE},
+            marker={"color": COLOR_PICK, "size": CHART_MARKER_SIZE_MEDIUM},
             yaxis="y2",
             hovertemplate="<b>%{x}</b><br>Games Played: %{y}<extra></extra>",
         )
