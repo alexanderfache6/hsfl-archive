@@ -55,7 +55,6 @@ from data_loader import (
     player_nfl_team_by_season,
     resolve_manager_name,
 )
-from helpers import build_picks_by_player, render_fantasy_value_section
 from plotly.subplots import make_subplots
 from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowEdge, StreamlitFlowNode
@@ -1450,7 +1449,8 @@ def render_players_page() -> None:
     st.warning("Some players (typically retired) do not have espn data so metrics/charts may look funky.")
     st.subheader(f"{player_names_by_id[selected_player_id]} ({selected_position}) · {year_label}")
 
-    fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab, value_analysis_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles", "Value Analysis"])
+    # fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab, value_analysis_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles", "Value Analysis"])        fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab, value_analysis_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles", "Value Analysis"])
+    fantasy_stats_tab, nfl_stats_tab, managers_tab, percentiles_tab = st.tabs(["Fantasy Stats", "NFL Stats", "Manager Stats", "Percentiles"])
     with fantasy_stats_tab:
         stat_select_column, chart_view_mode_column = st.columns(2)
         with stat_select_column:
@@ -1487,18 +1487,19 @@ def render_players_page() -> None:
         seasons = sorted({entry["season"] for entry in timeline})
         _render_percentiles_tab(selected_player_id, seasons, players_data, ownership_data, player_names_by_id, timeline, nfl_season_lengths)
 
-    with value_analysis_tab:
-        # picks_by_player is keyed by player NAME (draft.json's own
-        # field), not player_id like the rest of this page - reuses the
-        # SAME selected_player_id/player_names_by_id already resolved
-        # above rather than adding a second, redundant player search.
-        # build_picks_by_player/render_fantasy_value_section live in
-        # helpers.py, shared with pages_drafts.py's Player Analysis tab
-        # (this chart used to live there - moved here, not duplicated).
-        picks_by_player = build_picks_by_player()
-        selected_player_name = player_names_by_id[selected_player_id]
-        player_picks = picks_by_player.get(selected_player_name)
-        if not player_picks:
-            st.info(f"No draft data recorded for {selected_player_name}.")
-        else:
-            render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="players_value_analysis")
+    # # TODO not ready yet
+    # with value_analysis_tab:
+    #     # picks_by_player is keyed by player NAME (draft.json's own
+    #     # field), not player_id like the rest of this page - reuses the
+    #     # SAME selected_player_id/player_names_by_id already resolved
+    #     # above rather than adding a second, redundant player search.
+    #     # build_picks_by_player/render_fantasy_value_section live in
+    #     # helpers.py, shared with pages_drafts.py's Player Analysis tab
+    #     # (this chart used to live there - moved here, not duplicated).
+    #     picks_by_player = build_picks_by_player()
+    #     selected_player_name = player_names_by_id[selected_player_id]
+    #     player_picks = picks_by_player.get(selected_player_name)
+    #     if not player_picks:
+    #         st.info(f"No draft data recorded for {selected_player_name}.")
+    #     else:
+    #         render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="players_value_analysis")
