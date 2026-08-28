@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 import streamlit as st
-from colors import COLOR_BLACK, COLOR_PALETTE_PAIRED, COLOR_WHITE
+from colors import COLOR_BLACK, COLOR_MANAGER_PALETTE, COLOR_WHITE
 
 # ========================================
 # CONSTANTS
@@ -517,7 +517,7 @@ def build_manager_color_map() -> dict[str, str]:
     is what makes the assignment stable across different views."""
     manager_stats = load_all_time_manager_stats()
     manager_ids = sorted(manager["manager_id"] for manager in manager_stats["managers"])
-    return {manager_id: COLOR_PALETTE_PAIRED[index % len(COLOR_PALETTE_PAIRED)] for index, manager_id in enumerate(manager_ids)}
+    return {manager_id: COLOR_MANAGER_PALETTE[index % len(COLOR_MANAGER_PALETTE)] for index, manager_id in enumerate(manager_ids)}
 
 
 @st.cache_resource

@@ -11,10 +11,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from colors import (
-    COLOR_CHAMPION,
     COLOR_MANAGER_BACKUP,
-    COLOR_RUNNER_UP,
-    COLOR_THIRD_PLACE,
+    COLOR_PODIUM_FIRST,
+    COLOR_PODIUM_SECOND,
+    COLOR_PODIUM_THIRD,
 )
 from constants import (
     EMOJI_FIRST_PLACE,
@@ -473,21 +473,21 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             name="3rd Place",
             x=names,
             y=[row["third_place_count"] for row in bar_rows],
-            marker_color=COLOR_THIRD_PLACE,
+            marker_color=COLOR_PODIUM_THIRD,
             hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Runner-Up",
             x=names,
             y=[row["runner_up_count"] for row in bar_rows],
-            marker_color=COLOR_RUNNER_UP,
+            marker_color=COLOR_PODIUM_SECOND,
             hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Champion",
             x=names,
             y=[row["champion_count"] for row in bar_rows],
-            marker_color=COLOR_CHAMPION,
+            marker_color=COLOR_PODIUM_FIRST,
             hoverinfo="skip",
         )
         # A fourth, fully transparent bar stacked on top of the real three -
