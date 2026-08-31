@@ -15,9 +15,9 @@ import streamlit as st
 from colors import (
     COLOR_BRACKET_HIGHLIGHT_WINNING_PATH,
     COLOR_BRACKET_OUTLINE,
+    COLOR_EXTREME_MAX,
+    COLOR_EXTREME_MIN,
     COLOR_MANAGER_BACKUP,
-    COLOR_MAX_EXTREME,
-    COLOR_MIN_EXTREME,
     COLOR_PODIUM_FIRST,
     COLOR_PODIUM_SECOND,
     COLOR_PODIUM_THIRD,
@@ -814,9 +814,9 @@ def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
             return ""
         wins, losses, ties = (int(part) for part in value.split("-"))
         if losses == 0 and ties == 0 and wins > 0:
-            return f"background-color: {COLOR_MAX_EXTREME}"
+            return f"background-color: {COLOR_EXTREME_MAX}"
         if wins == 0 and ties == 0 and losses > 0:
-            return f"background-color: {COLOR_MIN_EXTREME}"
+            return f"background-color: {COLOR_EXTREME_MIN}"
         return ""
 
     week_columns = [f"Wk {week_table['week']}" for week_table in weekly_tables]
@@ -937,7 +937,7 @@ def _render_coach_table(season: int, name_resolver: dict[str, str]) -> None:
     # there's no "perfect bad" analog to a 0-9-0 week. Same 85% opacity
     # green used there.
     def _highlight_perfect_coaching_week(value: float) -> str:
-        return f"background-color: {COLOR_MAX_EXTREME}" if value == 0 else ""
+        return f"background-color: {COLOR_EXTREME_MAX}" if value == 0 else ""
 
     styled_dataframe = dataframe.style.map(_highlight_perfect_coaching_week, subset=week_columns)
 
@@ -1111,9 +1111,9 @@ def _render_true_ranking_table(season: int, name_resolver: dict[str, str]) -> No
         colors = []
         for value in series:
             if value == max_value:
-                colors.append(f"background-color: {COLOR_MAX_EXTREME}")
+                colors.append(f"background-color: {COLOR_EXTREME_MAX}")
             elif value == min_value:
-                colors.append(f"background-color: {COLOR_MIN_EXTREME}")
+                colors.append(f"background-color: {COLOR_EXTREME_MIN}")
             else:
                 colors.append("")
         return colors
@@ -2208,7 +2208,7 @@ def render_seasons_page() -> None:
     # Single mandatory season (not an "Any" filter like Players/Games -
     # this whole tab is inherently scoped to one season at a time),
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")
+    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")  # NOTE key allows for session_state switch_page jumps
 
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()

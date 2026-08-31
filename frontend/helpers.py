@@ -28,6 +28,7 @@ def manager_pill(manager_id: str, name_resolver: dict[str, str], manager_color_m
     return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600; white-space:nowrap;'>{text}</span>"
 
 
+# return st, nd, rd for a number
 def ordinal_word(n: int) -> str:
     if 0 <= n < len(ORDINAL_WORDS):
         return ORDINAL_WORDS[n]
@@ -35,14 +36,17 @@ def ordinal_word(n: int) -> str:
     return f"{n}{suffix}"
 
 
+# return singular or plural version of a word
 def return_plural(check, singular, plural) -> str:
     return singular if check == 1 else plural
 
 
+# add s depending on item length
 def return_s(check):
     return "s" if check != 1 else ""
 
 
+# check if a pick is a keeper
 def check_keeper_pick_criteria(pick):
     is_snake_era_keeper = pick["draft_type"] == "snake" and pick["overall_pick"] <= pick["num_teams"]
     is_auction_era_keeper = pick["draft_type"] == "auction" and pick["auction_amount"] is None

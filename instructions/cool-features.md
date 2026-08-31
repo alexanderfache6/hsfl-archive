@@ -35,7 +35,6 @@
 - [ ] adp
 - [ ] adp/price compared to that season's stats
 - [ ] draft value over years, see chart of all positions (ie WR) who is best value
-- [ ] full order, final rosters, most expensive auction stuff. across all drafts average pick, average cost
 - [ ] live - remaining players, budget, best value
 - [ ] 
 

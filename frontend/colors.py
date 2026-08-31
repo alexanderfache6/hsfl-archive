@@ -43,8 +43,8 @@ COLOR_POINTS_POSITIVE = "#2E7D32"
 COLOR_POINTS_NEGATIVE = "#C62828"
 
 # used for best/worst stats
-COLOR_MAX_EXTREME = "rgba(46, 125, 50, 0.85)"
-COLOR_MIN_EXTREME = "rgba(198, 40, 40, 0.85)"
+COLOR_EXTREME_MAX = "rgba(46, 125, 50, 0.85)"
+COLOR_EXTREME_MIN = "rgba(198, 40, 40, 0.85)"
 
 # ----------------------------------------
 # transactions
@@ -113,11 +113,11 @@ COLOR_BRACKET_OUTLINE = "black"
 # for issues table
 COLOR_ISSUES_BUG = "#b60205"
 COLOR_ISSUES_ENHANCEMENT = "#0e8a16"
-COLOR_ISSUES_NEW_FEATURE = "#0052cc"
+COLOR_ISSUES_NEW_FEATURE = "#0052CC"
 
 # for issues chart
-COLOR_ISSUES_OPENED = "#2E7D32"
-COLOR_ISSUES_CLOSED = "#1E88E5"
+COLOR_ISSUES_OPENED = "#2E7733"
+COLOR_ISSUES_CLOSED = "#1E88EE"
 
 # ----------------------------------------
 # to sort

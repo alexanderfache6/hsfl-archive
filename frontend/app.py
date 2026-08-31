@@ -1,15 +1,7 @@
 """
-HSFL Archive - Streamlit entrypoint. Pure read-only view over the
-committed archive/*.json output - no database, no live fetching. See
-execution-plan.md Phase G.
+uses st.Page instead of st.tabs so that st.switch_page can be used
 
-Uses st.navigation/st.Page (not st.tabs) specifically so other pages can
-st.switch_page() here with pre-set filters - e.g. clicking a record on
-the History page to jump straight to the Matchups page already filtered
-to that season/week/manager. st.tabs has no equivalent programmatic
-switch, which is why this isn't a single-page st.tabs layout.
-
-Run locally: streamlit run app.py
+Usage: streamlit run app.py
 """
 
 # ========================================
@@ -25,15 +17,6 @@ from pages_players import render_players_page
 from pages_seasons import render_seasons_page
 
 # ========================================
-# FUNCTIONS
-# ========================================
-
-
-def render_managers_page() -> None:
-    st.info("coming soon")
-
-
-# ========================================
 # RENDER
 # ========================================
 
@@ -41,7 +24,6 @@ st.set_page_config(page_title="The Music League", page_icon="🏈", layout="wide
 
 history_page = st.Page(render_history_page, title="History", url_path="history", default=True)
 seasons_page = st.Page(render_seasons_page, title="Seasons", url_path="seasons")
-# managers_page = st.Page(render_managers_page, title="Managers", url_path="managers")
 players_page = st.Page(render_players_page, title="Players", url_path="players")
 matchups_page = st.Page(render_matchups_page, title="Matchups", url_path="matchups")
 drafts_page = st.Page(render_drafts_page, title="Drafts", url_path="drafts")
