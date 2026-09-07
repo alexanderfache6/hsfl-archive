@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 import streamlit as st
-from colors import COLOR_BLACK, COLOR_PALETTE_PAIRED, COLOR_WHITE
+from colors import COLOR_BLACK, COLOR_MANAGER_PALETTE, COLOR_WHITE
 
 # ========================================
 # CONSTANTS
@@ -346,7 +346,7 @@ def get_espn_week_stats(player_id: str, season: int, week: int, nfl_player_stats
 
 # (points, allows tiers below) for the "Points Allowed" ladder - checked
 # in order, first matching upper bound wins. stat_54 on a DEF entry only.
-POINTS_ALLOWED_TIERS = [
+FANTASY_DEF_POINTS_ALLOWED_TIERS = [
     (0, "Points Allowed 0"),
     (6, "Points Allowed 1-6"),
     (13, "Points Allowed 7-13"),
@@ -354,7 +354,7 @@ POINTS_ALLOWED_TIERS = [
     (27, "Points Allowed 21-27"),
     (34, "Points Allowed 28-34"),
 ]
-POINTS_ALLOWED_TOP_TIER = "Points Allowed 35+"
+FANTASY_DEF_POINTS_ALLOWED_TOP_TIER = "Points Allowed 35+"
 
 # roster_settings key -> the literal "slot" value matchup data uses for
 # it - most positions match their own settings key (QB/RB/WR/TE/K/DEF),
@@ -517,7 +517,7 @@ def build_manager_color_map() -> dict[str, str]:
     is what makes the assignment stable across different views."""
     manager_stats = load_all_time_manager_stats()
     manager_ids = sorted(manager["manager_id"] for manager in manager_stats["managers"])
-    return {manager_id: COLOR_PALETTE_PAIRED[index % len(COLOR_PALETTE_PAIRED)] for index, manager_id in enumerate(manager_ids)}
+    return {manager_id: COLOR_MANAGER_PALETTE[index % len(COLOR_MANAGER_PALETTE)] for index, manager_id in enumerate(manager_ids)}
 
 
 @st.cache_resource
@@ -598,12 +598,12 @@ def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, yea
     scoring_rules = load_metadata(year)["scoring_rules"]
 
     if stat_id == "stat_54" and position == "DEF":
-        for upper_bound, tier_key in POINTS_ALLOWED_TIERS:  # DEF points allowed
+        for upper_bound, tier_key in FANTASY_DEF_POINTS_ALLOWED_TIERS:  # DEF points allowed
             if value <= upper_bound:
                 rule_key = tier_key
                 break
         else:
-            rule_key = POINTS_ALLOWED_TOP_TIER
+            rule_key = FANTASY_DEF_POINTS_ALLOWED_TOP_TIER
         points, per = _parse_scoring_rule(scoring_rules.get(rule_key, "0 points"))
         return points  # tiered rules are flat, not per-unit
 

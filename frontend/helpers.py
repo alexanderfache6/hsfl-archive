@@ -18,6 +18,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
+from strings import SELECT_STAT_TO_VIEW
 
 
 def manager_pill(manager_id: str, name_resolver: dict[str, str], manager_color_map: dict[str, str], label: str | None = None) -> str:
@@ -28,6 +29,7 @@ def manager_pill(manager_id: str, name_resolver: dict[str, str], manager_color_m
     return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600; white-space:nowrap;'>{text}</span>"
 
 
+# return st, nd, rd for a number
 def ordinal_word(n: int) -> str:
     if 0 <= n < len(ORDINAL_WORDS):
         return ORDINAL_WORDS[n]
@@ -35,14 +37,17 @@ def ordinal_word(n: int) -> str:
     return f"{n}{suffix}"
 
 
+# return singular or plural version of a word
 def return_plural(check, singular, plural) -> str:
     return singular if check == 1 else plural
 
 
+# add s depending on item length
 def return_s(check):
     return "s" if check != 1 else ""
 
 
+# check if a pick is a keeper
 def check_keeper_pick_criteria(pick):
     is_snake_era_keeper = pick["draft_type"] == "snake" and pick["overall_pick"] <= pick["num_teams"]
     is_auction_era_keeper = pick["draft_type"] == "auction" and pick["auction_amount"] is None
@@ -120,7 +125,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
 
     stat_column, adjustment_column, view_column = st.columns(3)
     selected_stat = stat_column.selectbox(
-        "Select stat to view",
+        SELECT_STAT_TO_VIEW,
         ["Total Fantasy Points", "Per Game Fantasy Points", "Per Game Fantasy Points Box Plots"],
         key=f"{widget_key_prefix}_fantasy_stat",
     )

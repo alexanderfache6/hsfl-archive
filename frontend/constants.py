@@ -123,13 +123,7 @@ BENCH_POSITION_COLOR = {
 # drafts
 # ----------------------------------------
 
-# ESPN's default per-team auction budget - not itself stored anywhere in
-# the archived draft.json data, but every auction season's picks sum to
-# (or just under, when a keeper ate part of the budget) this per team,
-# confirming it's the actual league setting rather than a guess.
 AUCTION_BUDGET = 200  # TODO needs to come from season recap
-
-
 DRAFT_AUCTION = "auction"
 DRAFT_SNAKE = "snake"
 
@@ -149,21 +143,4 @@ MATCHUP_TYPE_LABELS = {
 # strings
 # ----------------------------------------
 
-ORDINAL_WORDS = [
-    "zeroth",
-    "first",
-    "second",
-    "third",
-    "fourth",
-    "fifth",
-    "sixth",
-    "seventh",
-    "eighth",
-    "ninth",
-    "tenth",
-    "eleventh",
-    "twelfth",
-    "thirteenth",
-    "fourteenth",
-    "fifteenth",
-]
+ORDINAL_WORDS = ["zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"]
