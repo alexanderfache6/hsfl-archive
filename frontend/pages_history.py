@@ -6,7 +6,6 @@ across every season in the archive. See execution-plan.md Phase G.
 # ========================================
 # IMPORTS
 # ========================================
-
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -40,6 +39,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from helpers import ordinal_word
+from strings import SELECT_STAT_TO_VIEW, THE_MUSIC_LEAGUE
 
 # ========================================
 # CONSTANTS
@@ -339,7 +339,7 @@ def _render_league_summary_paragraph(champions_data: dict, name_resolver: dict[s
     reigning_manager_name = resolve_manager_name(reigning_manager_id, name_resolver, reigning_champion_row.get("display_name", ""))
 
     st.markdown(
-        f"The Music League began in {first_year} and has run for {season_count} successive seasons, featuring {number_of_champions} champions. "
+        f"{THE_MUSIC_LEAGUE} began in {first_year} and has run for {season_count} successive seasons, featuring {number_of_champions} champions. "
         f"The most winning manager is {most_winning_manager_name} with {most_winning_manager_number_of_championships} championships. "
         f"The reigning champion is {reigning_manager_name} who won their {ordinal_word(reigning_ordinal)} championship."
     )
@@ -640,7 +640,7 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
     selectbox_column, normalization_column = st.columns([3, 1])
     with selectbox_column:
         selected_stat = st.selectbox(
-            "Select Stat to View",
+            SELECT_STAT_TO_VIEW,
             MANAGER_STAT_COLUMNS,
             format_func=lambda column: MANAGER_STAT_FULL_LABELS[column],
             index=0,

@@ -52,6 +52,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from helpers import ordinal_word, return_plural, return_s
+from strings import SELECT_STAT_TO_VIEW
 
 # ========================================
 # CONSTANTS
@@ -712,7 +713,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
     if not weekly_tables:
         return
 
-    selected_stat = st.selectbox("Select Stat to View", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
+    selected_stat = st.selectbox(SELECT_STAT_TO_VIEW, STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]

@@ -18,6 +18,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
+from strings import SELECT_STAT_TO_VIEW
 
 
 def manager_pill(manager_id: str, name_resolver: dict[str, str], manager_color_map: dict[str, str], label: str | None = None) -> str:
@@ -124,7 +125,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
 
     stat_column, adjustment_column, view_column = st.columns(3)
     selected_stat = stat_column.selectbox(
-        "Select stat to view",
+        SELECT_STAT_TO_VIEW,
         ["Total Fantasy Points", "Per Game Fantasy Points", "Per Game Fantasy Points Box Plots"],
         key=f"{widget_key_prefix}_fantasy_stat",
     )

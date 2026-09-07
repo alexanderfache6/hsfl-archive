@@ -28,6 +28,7 @@ from colors import (
     COLOR_ISSUES_OPENED,
 )
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
+from strings import PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS
 
 # ========================================
 # CONSTANTS
@@ -39,7 +40,7 @@ GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
 FEEDBACK_TYPES = ["Bug", "Enhancement", "New Feature"]
-REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
+REAL_PAGES = [PAGE_HISTORY, PAGE_SEASONS, PAGE_PLAYERS, PAGE_MATCHUPS, PAGE_FEEDBACK]
 KNOWN_PAGES = {*REAL_PAGES, "Other"}
 TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
