@@ -15,7 +15,26 @@ See execution-plan.md Phase G.
 
 import plotly.graph_objects as go
 import streamlit as st
-from constants import CHART_LEGEND_OUTSIDE_RIGHT
+from colors import (
+    COLOR_CHART_VERTICAL_DASHED_YEARS,
+    COLOR_MANAGER_BACKUP,
+    COLOR_NO_OPTIMAL_GAIN,
+    COLOR_PLAYER_BENCH,
+    COLOR_POINTS_NEGATIVE,
+    COLOR_POINTS_POSITIVE,
+    COLOR_TABLE_ROSTER,
+)
+from constants import (
+    BENCH_POSITION_ORDER,
+    CHART_LEGEND_OUTSIDE_RIGHT,
+    EMOJI_FIRST_PLACE,
+    EMOJI_LAST_PLACE,
+    EMOJI_SECOND_PLACE,
+    EMOJI_THIRD_PLACE,
+    MATCHUP_TYPE_LABELS,
+    MATCHUP_TYPE_OPTIONS,
+    NFL_TEAM_ABBREVIATIONS,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -26,29 +45,19 @@ from data_loader import (
     contrasting_text_color,
     load_all_time_manager_stats,
     load_matchups,
+    load_post_season_stats,
     load_starting_slot_counts,
     resolve_manager_name,
+    team_id_to_manager_map,
 )
+from helpers import manager_pill
 from player_modal import open_player_stats_modal
 
 # ========================================
 # CONSTANTS
 # ========================================
 
-MAX_WEEK = 17 # TODO this should be taken from /archive/nfl_season_lengths.json
-
-# Same neutral gray used for the "Bench" segment in the Players tab's
-# starts-vs-bench chart - reused here for a losing/negative-diff bar so
-# the loss color is consistent with the rest of the app.
-BENCH_COLOR = "#B0B0B0"
-
-MATCHUP_TYPE_OPTIONS = ["all", "regular", "championship", "consolation"]
-MATCHUP_TYPE_LABELS = {
-    "all": "All",
-    "regular": "Regular Season",
-    "championship": "Championship Bracket",
-    "consolation": "Consolation Bracket",
-}
+MAX_WEEK = 17  # TODO this should be taken from /archive/nfl_season_lengths.json
 
 FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matchups_week", "matchups_team2_manager_id", "matchups_matchup_type")
 
@@ -58,24 +67,7 @@ FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matc
 # of this, only the card loop itself is paginated.
 MATCHUPS_PAGE_SIZE = 10
 
-BENCH_POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"]
-
-# DEF entries carry an empty "nfl_team" in the archived data - it was
-# never captured during parsing (only individual players' teams were),
-# so this display-only lookup fills it back in from the DEF's own
-# player_name (e.g. "49ers") rather than requiring a full re-parse of
-# every season just for this one field.
-DEF_TEAM_ABBREVIATIONS = {
-    "49ers": "SF", "Bears": "CHI", "Bengals": "CIN", "Bills": "BUF",
-    "Broncos": "DEN", "Browns": "CLE", "Buccaneers": "TB", "Cardinals": "ARI",
-    "Chargers": "LAC", "Chiefs": "KC", "Colts": "IND", "Commanders": "WAS",
-    "Cowboys": "DAL", "Dolphins": "MIA", "Eagles": "PHI", "Falcons": "ATL",
-    "Giants": "NYG", "Jaguars": "JAX", "Jets": "NYJ", "Lions": "DET",
-    "Packers": "GB", "Panthers": "CAR", "Patriots": "NE", "Raiders": "LV",
-    "Rams": "LAR", "Ravens": "BAL", "Redskins": "WAS", "Saints": "NO",
-    "Seahawks": "SEA", "Steelers": "PIT", "Texans": "HOU", "Titans": "TEN",
-    "Vikings": "MIN",
-} # TODO move to /archive/nfl_team_abbreviations.json
+TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to bench players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
 
 
 TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
@@ -403,10 +395,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # list, so this reuses it rather than re-deriving the same logic.
     team2_options = []
     if team1_manager_id:
-        opponent_ids = {
-            matchup["home"]["manager_id"] if matchup["away"]["manager_id"] == team1_manager_id else matchup["away"]["manager_id"]
-            for matchup in load_matchups(season, week, team1_manager_id, None, matchup_type)
-        }
+        opponent_ids = {matchup["home"]["manager_id"] if matchup["away"]["manager_id"] == team1_manager_id else matchup["away"]["manager_id"] for matchup in load_matchups(season, week, team1_manager_id, None, matchup_type)}
         team2_options = sorted(opponent_ids, key=lambda mid: manager_labels.get(mid, ""))
     # Same stale-selection guard as Season above - narrowing
     # season/week/matchup_type after Manager 2 was already picked can
@@ -439,11 +428,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # selectboxes above already fill theirs) is what closes that gap.
     apply_col, clear_col, _ = st.columns([1, 1, 6])
     with apply_col:
-        applied = st.button("Apply Filters",
-            disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
-            use_container_width=True
-        )
+        applied = st.button("Apply Filters", disabled=team1_manager_id is None, help="Select Manager 1 first" if team1_manager_id is None else None, use_container_width=True)
     with clear_col:
         if st.button("Clear Filters", use_container_width=True):
             for base_key in FILTER_WIDGET_BASE_KEYS:
@@ -471,18 +456,6 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     return st.session_state.get("matchups_applied_filters")
 
 
-def _manager_pill(label: str, manager_id: str, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> str:
-    """A small colored pill around the WHOLE "{label} ({name})" text
-    (e.g. "Manager 1 (Alex F)") - same background-color/contrasting-
-    text-color/rounded-corners treatment as the manager name blocks on
-    each matchup card below, so this recap line visually ties back to
-    the same color key."""
-    name = resolve_manager_name(manager_id, name_resolver)
-    background_color = manager_color_map.get(manager_id, "#CCCCCC")
-    text_color = contrasting_text_color(background_color)
-    return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{label} ({name})</span>"
-
-
 def _render_filter_description(applied_filters: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """A plain-language recap of exactly which filters are in effect,
     e.g. "Season: 2013 · Week: 11 · Manager 1: Alex F vs Manager 2:
@@ -497,12 +470,11 @@ def _render_filter_description(applied_filters: dict, name_resolver: dict[str, s
     team1_manager_id = applied_filters["team1_manager_id"]
     team2_manager_id = applied_filters["team2_manager_id"]
     if team1_manager_id and team2_manager_id:
-        parts.append(
-            f"{_manager_pill('Manager 1', team1_manager_id, name_resolver, manager_color_map)} "
-            f"vs {_manager_pill('Manager 2', team2_manager_id, name_resolver, manager_color_map)}"
-        )
+        team1_pill = manager_pill(team1_manager_id, name_resolver, manager_color_map, "Manager 1")
+        team2_pill = manager_pill(team2_manager_id, name_resolver, manager_color_map, "Manager 2")
+        parts.append(f"{team1_pill} vs {team2_pill}")
     elif team1_manager_id:
-        parts.append(_manager_pill("Manager 1", team1_manager_id, name_resolver, manager_color_map))
+        parts.append(manager_pill(team1_manager_id, name_resolver, manager_color_map, "Manager 1"))
 
     if applied_filters["matchup_type"] and applied_filters["matchup_type"] != "all":
         parts.append(MATCHUP_TYPE_LABELS[applied_filters["matchup_type"]])
@@ -513,7 +485,15 @@ def _render_filter_description(applied_filters: dict, name_resolver: dict[str, s
     st.markdown(f"<h3 style='margin:0;'>{' · '.join(parts) if parts else 'All matchups'}</h3>", unsafe_allow_html=True)
 
 
-def _render_aggregate(matchups: list[dict], team1_manager_id: str | None) -> None:
+def _ordinal_rank(n: int) -> str:
+    """Numeral ordinal (1st, 2nd, 3rd, 4th, ...) - unlike helpers.ordinal_word,
+    which spells out 1-15 as words ("first", "second"), a rank metric
+    should always read as a numeral."""
+    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, matchup_type_filter: str | None, week_filter: int | None, team2_manager_id: str | None) -> None:
     if not team1_manager_id:
         st.metric("Matchups", len(matchups))
         return
@@ -543,6 +523,48 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None) -> Non
     points_for_column.metric("Points For", f"{points_for:.2f}")
     points_against_column.metric("Points Against", f"{points_against:.2f}")
 
+    # A week filter or a Manager 2 filter narrows matchups down to a
+    # handful of head-to-head games - season/bracket/rank summaries
+    # aren't meaningful at that granularity, so skip the whole row.
+    if week_filter or team2_manager_id:
+        return
+
+    # Only meaningful across the manager's whole history - a single
+    # season or a single matchup type filtered out makes "how many
+    # seasons qualified" a trivial 0-or-1 question, not worth a row.
+    if not season_filter and matchup_type_filter == "all":
+        seasons_competed = {matchup["season"] for matchup in matchups}
+        championship_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "championship"}
+        consolation_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "consolation"}
+
+        seasons_column, championship_column, consolation_column = st.columns(3)
+        seasons_column.metric("Seasons", len(seasons_competed))
+        championship_column.metric("Championship Qualifying Seasons", len(championship_seasons))
+        consolation_column.metric("Consolation Qualifying Seasons", len(consolation_seasons))
+    elif season_filter:
+        post_season_stats = load_post_season_stats(season_filter)
+        team_info = team_id_to_manager_map(season_filter)
+        team_id = next((team_id for team_id, info in team_info.items() if info.get("manager_id") == team1_manager_id), None)
+        final_placements = post_season_stats["final_placements"] if post_season_stats else {}
+        final_rank = final_placements.get(team_id) if team_id else None
+
+        matchup_types = {matchup["matchup_type"] for matchup in matchups}
+        if "championship" in matchup_types:
+            bracket = "Championship"
+        elif "consolation" in matchup_types:
+            bracket = "Consolation"
+        else:
+            bracket = "-"
+
+        bracket_column, final_rank_column = st.columns(2)
+        bracket_column.metric("Bracket", bracket)
+        if final_rank is not None:
+            placement_emoji = {1: EMOJI_FIRST_PLACE, 2: EMOJI_SECOND_PLACE, 3: EMOJI_THIRD_PLACE}.get(final_rank)
+            if placement_emoji is None and final_placements and final_rank == max(final_placements.values()):
+                placement_emoji = EMOJI_LAST_PLACE
+            rank_display = f"{_ordinal_rank(final_rank)} {placement_emoji}" if placement_emoji else _ordinal_rank(final_rank)
+            final_rank_column.metric("Final Rank", rank_display)
+
 
 def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """One bar per matchup: Manager 1's point differential (their score
@@ -554,7 +576,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         return
 
     manager1_name = resolve_manager_name(team1_manager_id, name_resolver)
-    manager1_color = manager_color_map.get(team1_manager_id, "#4C78A8")
+    manager1_color = manager_color_map.get(team1_manager_id, COLOR_MANAGER_BACKUP)
 
     x_labels, diffs, hover_text = [], [], []
     for matchup in matchups:
@@ -565,13 +587,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
 
         x_labels.append(f"{matchup['season']} Wk{matchup['week']}")
         diffs.append(diff)
-        hover_text.append(
-            f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b>"
-            f"<br>{manager1_name} vs {manager2_name}"
-            f"<br>{team1_side['team_name']} vs {team2_side['team_name']}"
-            f"<br>{team1_side['score']:g} vs {team2_side['score']:g}"
-            f"<br>Point Differential: {diff:+.2f}"
-        )
+        hover_text.append(f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b><br>{manager1_name} vs {manager2_name}<br>{team1_side['team_name']} vs {team2_side['team_name']}<br>{team1_side['score']:g} vs {team2_side['score']:g}<br>Point Differential: {diff:+.2f}")
 
     # Numeric x positions (0, 1, 2, ...) with the season/week strings
     # supplied as tick labels instead - a true category axis's mapping
@@ -608,16 +624,24 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     loss_diffs = [diff if diff <= 0 else None for diff in diffs]
     figure = go.Figure()
     figure.add_bar(
-        x=x_positions, y=win_diffs, marker_color=manager1_color, name="Win",
-        customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
+        x=x_positions,
+        y=win_diffs,
+        marker_color=manager1_color,
+        name="Win",
+        customdata=hover_text,
+        hovertemplate="%{customdata}<extra></extra>",
     )
     figure.add_bar(
-        x=x_positions, y=loss_diffs, marker_color=BENCH_COLOR, name="Loss/Tie",
-        customdata=hover_text, hovertemplate="%{customdata}<extra></extra>",
+        x=x_positions,
+        y=loss_diffs,
+        marker_color=COLOR_PLAYER_BENCH,
+        name="Loss/Tie",
+        customdata=hover_text,
+        hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
         title="Point Differential",
-        xaxis={"title": "Season / Week", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
+        xaxis={"title": "Season · Week" if season_filter else "Season", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend=CHART_LEGEND_OUTSIDE_RIGHT,
@@ -630,7 +654,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     if not season_filter:
         for index, matchup in enumerate(matchups):
             if index > 0 and matchup["season"] != matchups[index - 1]["season"]:
-                figure.add_vline(x=index - 0.5, line_dash="dash", line_color="#888888")
+                figure.add_vline(x=index - 0.5, line_dash="dash", line_color=COLOR_CHART_VERTICAL_DASHED_YEARS)
 
     st.plotly_chart(figure, width="stretch")
 
@@ -677,10 +701,7 @@ def _render_roster_table(
     ROSTER_ROW_HEIGHT = "2.4rem"
 
     def _cell(text: str, align: str = "left", color: str = "inherit", weight: str = "400") -> str:
-        return (
-            f"<div style='display:flex; align-items:center; justify-content:{'flex-end' if align == 'right' else 'flex-start'}; "
-            f"height:{ROSTER_ROW_HEIGHT}; padding:0 8px; font-weight:{weight}; color:{color}; font-size:0.85em;'>{text}</div>"
-        )
+        return f"<div style='display:flex; align-items:center; justify-content:{'flex-end' if align == 'right' else 'flex-start'}; height:{ROSTER_ROW_HEIGHT}; padding:0 8px; font-weight:{weight}; color:{color}; font-size:0.85em;'>{text}</div>"
 
     # st.container(key=...) tags its DOM node with a unique "st-key-*"
     # class, which lets this <style> block tighten row spacing ONLY
@@ -692,16 +713,13 @@ def _render_roster_table(
     # content, clipping it half-outside the visible container.
     container_key = f"roster_{row_key_prefix}"
     st.markdown(
-        f"<style>"
-        f".st-key-{container_key} div[data-testid='stHorizontalBlock'] {{ gap: 0.5rem; }}"
-        f".st-key-{container_key} div[data-testid='stHorizontalBlock']:not(:last-of-type) {{ margin-bottom: -0.6rem; }}"
-        f"</style>",
+        f"<style>.st-key-{container_key} div[data-testid='stHorizontalBlock'] {{ gap: 0.5rem; }}.st-key-{container_key} div[data-testid='stHorizontalBlock']:not(:last-of-type) {{ margin-bottom: -0.6rem; }}</style>",
         unsafe_allow_html=True,
     )
     with st.container(border=show_border, key=container_key):
         for index, player in enumerate(players):
             columns = st.columns(column_ratios)
-            columns[0].markdown(_cell(player["position"], color="#666666"), unsafe_allow_html=True)
+            columns[0].markdown(_cell(player["position"], color=COLOR_TABLE_ROSTER), unsafe_allow_html=True)
 
             if player.get("is_empty_slot"):
                 columns[1].markdown(_cell("—"), unsafe_allow_html=True)
@@ -710,7 +728,7 @@ def _render_roster_table(
                     columns[3].markdown(_cell("—", align="right"), unsafe_allow_html=True)
                 continue
 
-            nfl_team = player["nfl_team"] or DEF_TEAM_ABBREVIATIONS.get(player["player_name"], "")
+            nfl_team = player["nfl_team"] or NFL_TEAM_ABBREVIATIONS.get(player["player_name"], "")
             button_key = f"player_row_{row_key_prefix}_{player.get('player_id')}_{season}_{week}_{index}"
             if columns[1].button(f"{player['player_name']} ({nfl_team})", key=button_key, use_container_width=True):
                 open_player_stats_modal(player.get("player_id"), player["player_name"], player["position"], nfl_team, season, week)
@@ -720,15 +738,15 @@ def _render_roster_table(
             # red instead of the normal black, to flag them without
             # altering the number.
             is_displaced = optimal_losses is not None and player.get("player_id") in optimal_losses
-            points_color = "#C62828" if is_displaced else "inherit"
+            points_color = COLOR_POINTS_NEGATIVE if is_displaced else "inherit"
             columns[2].markdown(_cell(f"{player['points']:.2f}", align="right", color=points_color, weight="600"), unsafe_allow_html=True)
 
             if optimal_gains is not None:
                 gain = optimal_gains.get(player.get("player_id"))
                 if gain is None:
-                    columns[3].markdown(_cell("—", align="right", color="#999999"), unsafe_allow_html=True)
+                    columns[3].markdown(_cell("—", align="right", color=COLOR_NO_OPTIMAL_GAIN), unsafe_allow_html=True)
                 else:
-                    columns[3].markdown(_cell(f"+{gain:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+                    columns[3].markdown(_cell(f"+{gain:.2f}", align="right", color=COLOR_POINTS_POSITIVE, weight="600"), unsafe_allow_html=True)
 
         if optimal_total_points is None:
             # Streamlit's own default vertical gap sits ABOVE the first
@@ -750,16 +768,14 @@ def _render_roster_table(
             total_columns[2].markdown(_cell(f"{optimal_total_points:.2f}", align="right", weight="600"), unsafe_allow_html=True)
             if optimal_gains is not None and actual_total_points is not None:
                 total_diff = optimal_total_points - actual_total_points
-                total_columns[3].markdown(_cell(f"+{total_diff:.2f}", align="right", color="#2E7D32", weight="600"), unsafe_allow_html=True)
+                total_columns[3].markdown(_cell(f"+{total_diff:.2f}", align="right", color=COLOR_POINTS_POSITIVE, weight="600"), unsafe_allow_html=True)
             # The expander's own bottom padding is tightened (see the
             # scoped CSS in _render_matchup_card), so this row needs its
             # own explicit breathing room instead of relying on that.
             st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
 
 
-def _render_matchup_card(
-    matchup: dict, team1_manager_id: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str], show_optimal: bool
-) -> None:
+def _render_matchup_card(matchup: dict, team1_manager_id: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str], show_optimal: bool) -> None:
     home, away = matchup["home"], matchup["away"]
     # Team 1's side always renders on the left when Team 1 is filtered,
     # regardless of whether they were actually home or away in this
@@ -773,7 +789,7 @@ def _render_matchup_card(
         for column, side, is_left_side in ((left_column, left, True), (right_column, right, False)):
             with column:
                 display_name = resolve_manager_name(side["manager_id"], name_resolver, side.get("display_name", ""))
-                background_color = manager_color_map.get(side["manager_id"], "#CCCCCC")
+                background_color = manager_color_map.get(side["manager_id"], COLOR_MANAGER_BACKUP)
                 text_color = contrasting_text_color(background_color)
                 # Computed once per side and reused for both the header
                 # score and the bench table below, rather than solving
@@ -911,7 +927,8 @@ def render_matchups_page() -> None:
 
     applied_filters = _render_filters(name_resolver)
     if applied_filters is None:
-        st.info("Set your filters above and click Apply Filters.")
+        st.info("Select Manager 1 first, then apply other filters.")
+        st.warning("Back to back filters may be slow, refresh page if more than 2 seconds.")
         return
 
     matchups = load_matchups(
@@ -927,7 +944,14 @@ def render_matchups_page() -> None:
         return
 
     _render_filter_description(applied_filters, name_resolver, manager_color_map)
-    _render_aggregate(matchups, applied_filters["team1_manager_id"])
+    _render_aggregate(
+        matchups,
+        applied_filters["team1_manager_id"],
+        applied_filters["season"],
+        applied_filters["matchup_type"],
+        applied_filters["week"],
+        applied_filters["team2_manager_id"],
+    )
     _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
     st.divider()
 

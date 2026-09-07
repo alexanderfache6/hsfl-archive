@@ -6,11 +6,25 @@ across every season in the archive. See execution-plan.md Phase G.
 # ========================================
 # IMPORTS
 # ========================================
-
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from constants import RECORD_ROW_COLUMN_RATIOS
+from colors import (
+    COLOR_MANAGER_BACKUP,
+    COLOR_PODIUM_FIRST,
+    COLOR_PODIUM_SECOND,
+    COLOR_PODIUM_THIRD,
+)
+from constants import (
+    EMOJI_FIRST_PLACE,
+    EMOJI_LAST_PLACE,
+    EMOJI_NO_FIRST_PLACE,
+    EMOJI_NO_SECOND_PLACE,
+    EMOJI_NO_THIRD_PLACE,
+    EMOJI_SECOND_PLACE,
+    EMOJI_THIRD_PLACE,
+    RECORD_ROW_COLUMN_RATIOS,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -24,31 +38,24 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
+from helpers import ordinal_word
+from strings import SELECT_STAT_TO_VIEW, THE_MUSIC_LEAGUE
 
 # ========================================
 # CONSTANTS
 # ========================================
 
-# Standard real-world medal colors - not a generated categorical palette,
-# so not run through the dataviz skill's CVD validator (this exact
-# 3-color convention is a fixed, universally recognized domain standard,
-# and the three already differ sharply in lightness: bright yellow-gold,
-# light neutral silver, dark orange-brown bronze).
-CHAMPION_COLOR = "#d0b04e"
-RUNNER_UP_COLOR = "#a7a7a7"
-THIRD_PLACE_COLOR = "#9f724b"
-
 RECORD_LABELS = {
-    "highest_weekly_score": "Highest Weekly Team Score",
-    "lowest_weekly_score": "Lowest Weekly Team Score",
-    "highest_season_points_for": "Highest Season Points",
-    "lowest_season_points_for": "Lowest Season Points",
+    "highest_weekly_score": "Highest Single Matchup Score",
+    "lowest_weekly_score": "Lowest Single Matchup Score",
+    "highest_season_points_for": "Highest Points Season",
+    "lowest_season_points_for": "Lowest Points Season",
     "longest_win_streak": "Longest Win Streak",
     "longest_losing_streak": "Longest Losing Streak",
     "best_coaching_season": "Best Coaching Season",
     "worst_coaching_season": "Worst Coaching Season",
-    "most_players_started_season": "Most Players Started (Season)",
-    "fewest_players_started_season": "Fewest Players Started (Season)",
+    "most_players_started_season": "Most Players Started Season",
+    "fewest_players_started_season": "Fewest Players Started Season",
 }
 
 # Each row pairs a "high" stat (left) with its "low" counterpart (right).
@@ -69,10 +76,6 @@ STREAK_VARIANTS = {
     "combined_cross_season": "Spans Regular and Postseason",
 }
 
-ORDINAL_WORDS = [
-    "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
-    "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
-]
 
 MANAGER_STAT_COLUMN_FORMATS = {
     "Win %": "%.3f",
@@ -159,13 +162,6 @@ def _full_table_height(row_count: int) -> int:
     return 38 + 35 * row_count
 
 
-def _ordinal_word(n: int) -> str:
-    if n < len(ORDINAL_WORDS):
-        return ORDINAL_WORDS[n]
-    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
-    return f"{n}{suffix}"
-
-
 def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
     """{manager_id: {"champion_years": [...], "runner_up_years": [...],
     "third_place_years": [...]}} - only managers who were ever top-3 in
@@ -188,7 +184,7 @@ def _build_manager_placements(champions_data: dict) -> dict[str, dict]:
     return placements
 
 
-def _years_label(years: list[int], empty_placeholder: str = "😢") -> str:
+def _years_label(years: list[int], empty_placeholder: str = "") -> str:
     return ", ".join(str(year) for year in sorted(years)) if years else empty_placeholder
 
 
@@ -311,49 +307,47 @@ def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: 
 # ========================================
 
 
-def _render_season_summary_paragraph(champions_data: dict, name_resolver: dict[str, str]) -> None:
-    seasons_sorted = sorted(champions_data["champions"], key=lambda season_entry: season_entry["season"])
-    first_year = seasons_sorted[0]["season"]
-    season_count = len(seasons_sorted)
+def _render_league_summary_paragraph(champions_data: dict, name_resolver: dict[str, str]) -> None:
+    seasons_sorted_ascending = sorted(champions_data["champions"], key=lambda season_entry: season_entry["season"], reverse=False)  # ascneding
+    first_year = seasons_sorted_ascending[0]["season"]
+    season_count = len(seasons_sorted_ascending)
 
     # top_3 rows aren't guaranteed to be in rank order, so filter by
     # rank == 1 rather than indexing [0]. Walking seasons in chronological
     # order lets the same pass double as each manager's running
     # championship tally, used below for the reigning champion's ordinal.
     championship_count_by_manager: dict[str, int] = {}
-    reigning_champion_entry = None
-    for season_entry in seasons_sorted:
+    reigning_champion_entry = None  # NOTE last season's entry
+    for season_entry in seasons_sorted_ascending:
         champion_row = next((row for row in season_entry["top_3"] if row["rank"] == 1), None)
         if not champion_row:
             continue
-        manager_id = champion_row.get("manager_id", "")
-        championship_count_by_manager[manager_id] = championship_count_by_manager.get(manager_id, 0) + 1
-        reigning_champion_entry = (manager_id, champion_row, championship_count_by_manager[manager_id])
+        champion_manager_id = champion_row.get("champion_manager_id", "")
+        championship_count_by_manager[champion_manager_id] = championship_count_by_manager.get(champion_manager_id, 0) + 1
+        reigning_champion_entry = (champion_manager_id, champion_row, championship_count_by_manager[champion_manager_id])
 
-    champion_count = len(championship_count_by_manager)
+    number_of_champions = len(championship_count_by_manager)
 
     if not championship_count_by_manager:
         return
 
     most_winning_manager_id = max(championship_count_by_manager, key=lambda manager_id: championship_count_by_manager[manager_id])
-    most_wins = championship_count_by_manager[most_winning_manager_id]
+    most_winning_manager_number_of_championships = championship_count_by_manager[most_winning_manager_id]
     most_winning_manager_name = resolve_manager_name(most_winning_manager_id, name_resolver, "")
 
     reigning_manager_id, reigning_champion_row, reigning_ordinal = reigning_champion_entry
-    reigning_manager_name = resolve_manager_name(
-        reigning_manager_id, name_resolver, reigning_champion_row.get("display_name", "")
-    )
+    reigning_manager_name = resolve_manager_name(reigning_manager_id, name_resolver, reigning_champion_row.get("display_name", ""))
 
     st.markdown(
-        f"The Music League began in {first_year} and has run for {season_count} successive seasons, featuring {champion_count} champions. "
-        f"The most winning manager is {most_winning_manager_name} with {most_wins} championships. "
-        f"The reigning champion is {reigning_manager_name} who won their {_ordinal_word(reigning_ordinal)} championship."
+        f"{THE_MUSIC_LEAGUE} began in {first_year} and has run for {season_count} successive seasons, featuring {number_of_champions} champions. "
+        f"The most winning manager is {most_winning_manager_name} with {most_winning_manager_number_of_championships} championships. "
+        f"The reigning champion is {reigning_manager_name} who won their {ordinal_word(reigning_ordinal)} championship."
     )
 
 
-def _render_champions_table(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+def _render_wall_of_champions_table(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     st.subheader("Wall of Champions")
-    st.caption("Select row to go to season's page.")
+    st.caption("Select row checkbox to go to season's page.")
     rows = []
     champion_manager_ids = []
     for season_entry in sorted(champions_data["champions"], key=lambda c: c["season"], reverse=True):
@@ -366,10 +360,10 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
         rows.append(
             {
                 "Season": season_entry["season"],
-                "Champion 🏆": name_for(top_3.get(1, {})),
-                "Runner-Up 🥈": name_for(top_3.get(2, {})),
-                "3rd Place 🥉": name_for(top_3.get(3, {})),
-                "Last Place 🥞": name_for(season_entry["last_place"]),
+                f"Champion {EMOJI_FIRST_PLACE}": name_for(top_3.get(1, {})),
+                f"Runner-Up {EMOJI_SECOND_PLACE}": name_for(top_3.get(2, {})),
+                f"3rd Place {EMOJI_THIRD_PLACE}": name_for(top_3.get(3, {})),
+                f"Last Place {EMOJI_LAST_PLACE}": name_for(season_entry["last_place"]),
             }
         )
     dataframe = pd.DataFrame(rows)
@@ -379,15 +373,15 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
     # championship seasons are visually traceable to their color at a
     # glance. 75% opacity per user request, so the text stays legible.
     def _highlight_champion_column(column: pd.Series) -> list[str]:
-        if column.name != "Champion 🏆":
-            return [""] * len(column)
+        if column.name != f"Champion {EMOJI_FIRST_PLACE}":
+            return [""] * len(column)  # NOTE empty style for non champion columns' rows
         styles = []
         for manager_id in champion_manager_ids:
-            hex_color = manager_color_map.get(manager_id, "")
-            styles.append(f"background-color: {_hex_to_rgba(hex_color, 0.75)}" if hex_color else "")
+            hex_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
+            styles.append(f"background-color: {_hex_to_rgba(hex_color, 0.85)}" if hex_color else "")
         return styles
 
-    styled_dataframe = dataframe.style.apply(_highlight_champion_column, axis=0)
+    styled_dataframe = dataframe.style.apply(_highlight_champion_column, axis=0)  # NOTE stylize champion cell in table
     # st.dataframe can't put a real button inside a cell - row selection
     # is the native equivalent: clicking anywhere on a season's row
     # selects it (same visual table, no layout change), which we read
@@ -413,23 +407,19 @@ def _render_champions_table(champions_data: dict, name_resolver: dict[str, str],
         _go_to_season(selected_season)
 
 
-def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+def _render_championship_charts(champions_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     placements = _build_manager_placements(champions_data)
     pie_column, bar_column = st.columns(2)
 
     with pie_column:
-        champion_managers = [
-            (manager_id, len(data["champion_years"]), data["champion_years"])
-            for manager_id, data in placements.items()
-            if data["champion_years"]
-        ]
+        champion_managers = [(manager_id, len(data["champion_years"]), data["champion_years"]) for manager_id, data in placements.items() if data["champion_years"]]
         # Descending by count; ties broken by most-recent championship year first.
         champion_managers.sort(key=lambda item: (-item[1], -max(item[2])))
 
         labels = [resolve_manager_name(manager_id, name_resolver) for manager_id, _, _ in champion_managers]
         values = [count for _, count, _ in champion_managers]
         years_text = [_years_label(years) for _, _, years in champion_managers]
-        colors = [manager_color_map.get(manager_id, "#CCCCCC") for manager_id, _, _ in champion_managers]
+        colors = [manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP) for manager_id, _, _ in champion_managers]
 
         pie_figure = go.Figure(
             go.Pie(
@@ -459,7 +449,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
                 {
                     "manager_id": manager_id,
                     "name": resolve_manager_name(manager_id, name_resolver),
-                    "champion_count": len(data["champion_years"]),
+                    "number_of_champions": len(data["champion_years"]),
                     "runner_up_count": len(data["runner_up_years"]),
                     "third_place_count": len(data["third_place_years"]),
                     "champion_years": data["champion_years"],
@@ -467,7 +457,7 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
                     "third_place_years": data["third_place_years"],
                 }
             )
-        bar_rows.sort(key=lambda row: (-row["champion_count"], -row["runner_up_count"], -row["third_place_count"]))
+        bar_rows.sort(key=lambda row: (-row["number_of_champions"], -row["runner_up_count"], -row["third_place_count"]))
 
         names = [row["name"] for row in bar_rows]
         bar_figure = go.Figure()
@@ -483,21 +473,21 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             name="3rd Place",
             x=names,
             y=[row["third_place_count"] for row in bar_rows],
-            marker_color=THIRD_PLACE_COLOR,
+            marker_color=COLOR_PODIUM_THIRD,
             hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Runner-Up",
             x=names,
             y=[row["runner_up_count"] for row in bar_rows],
-            marker_color=RUNNER_UP_COLOR,
+            marker_color=COLOR_PODIUM_SECOND,
             hoverinfo="skip",
         )
         bar_figure.add_bar(
             name="Champion",
             x=names,
-            y=[row["champion_count"] for row in bar_rows],
-            marker_color=CHAMPION_COLOR,
+            y=[row["number_of_champions"] for row in bar_rows],
+            marker_color=COLOR_PODIUM_FIRST,
             hoverinfo="skip",
         )
         # A fourth, fully transparent bar stacked on top of the real three -
@@ -516,16 +506,10 @@ def _render_champion_charts(champions_data: dict, name_resolver: dict[str, str],
             # the top of the real stack, at height 2x total) - y is each
             # manager's own full stack height, so it overlays exactly
             # the visible colored bar for hover purposes.
-            y=[row["champion_count"] + row["runner_up_count"] + row["third_place_count"] for row in bar_rows],
+            y=[row["number_of_champions"] + row["runner_up_count"] + row["third_place_count"] for row in bar_rows],
             base=[0] * len(bar_rows),
             marker={"color": "rgba(0,0,0,0)"},
-            customdata=[
-                f"<b>{row['name']}</b><br>"
-                f"Champion: {_years_label(row['champion_years'], '😭')}<br>"
-                f"Runner-Up: {_years_label(row['runner_up_years'], '😢')}<br>"
-                f"3rd Place: {_years_label(row['third_place_years'], '☹️')}"
-                for row in bar_rows
-            ],
+            customdata=[f"<b>{row['name']}</b><br>Champion: {_years_label(row['champion_years'], f'{EMOJI_NO_FIRST_PLACE}')}<br>Runner-Up: {_years_label(row['runner_up_years'], f'{EMOJI_NO_SECOND_PLACE}')}<br>3rd Place: {_years_label(row['third_place_years'], f'{EMOJI_NO_THIRD_PLACE}')}" for row in bar_rows],
             hovertemplate="%{customdata}<extra></extra>",
             showlegend=False,
         )
@@ -554,14 +538,12 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
     score_column, info_column, button_column = st.columns(RECORD_ROW_COLUMN_RATIOS)
     with score_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
             unsafe_allow_html=True,
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
             unsafe_allow_html=True,
         )
     button_label = "View Matchup" if "week" in entry else "View Season"
@@ -618,7 +600,7 @@ def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> Non
             _render_record_cell(loss_key, records_data.get(loss_key) or [], name_resolver, label=RECORD_LABELS["longest_losing_streak"])
 
 
-def _render_records(records_data: dict, name_resolver: dict[str, str]) -> None:
+def _render_records_metrics(records_data: dict, name_resolver: dict[str, str]) -> None:
     st.subheader("All-Time Records")
 
     high_key, low_key = RECORD_ROW_PAIRS[0]
@@ -640,7 +622,7 @@ def _render_records(records_data: dict, name_resolver: dict[str, str]) -> None:
                 _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
 
 
-def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
+def _render_career_manager_standings_table(dataframe: pd.DataFrame) -> None:
     st.subheader("Career Manager Standings")
     st.dataframe(
         dataframe.drop(columns=["manager_id"]),
@@ -654,11 +636,11 @@ def _render_manager_standings_table(dataframe: pd.DataFrame) -> None:
     )
 
 
-def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[str, str]) -> None:
+def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[str, str]) -> None:
     selectbox_column, normalization_column = st.columns([3, 1])
     with selectbox_column:
         selected_stat = st.selectbox(
-            "Select Stat to View",
+            SELECT_STAT_TO_VIEW,
             MANAGER_STAT_COLUMNS,
             format_func=lambda column: MANAGER_STAT_FULL_LABELS[column],
             index=0,
@@ -697,7 +679,7 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
             format_func=lambda value: NORMALIZATION_LABELS[value],
             key="manager_stat_normalization",
             # label_visibility="collapsed",
-            help=NORMALIZATION_HELP
+            help=NORMALIZATION_HELP,
         )
 
     selected_stat_label = MANAGER_STAT_FULL_LABELS[selected_stat]
@@ -716,7 +698,7 @@ def _render_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map: dict[
     # better/more).
     ascending = selected_stat in ("Avg Reg. Finish", "Avg Post. Finish", "Best Finish", "Worst Finish")
     chart_data = chart_data.sort_values(selected_stat, ascending=ascending)
-    bar_colors = [manager_color_map.get(manager_id, "#4C78A8") for manager_id in chart_data["manager_id"]]
+    bar_colors = [manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP) for manager_id in chart_data["manager_id"]]
 
     stat_figure = go.Figure(
         go.Bar(
@@ -748,10 +730,11 @@ def render_history_page() -> None:
         st.info("No seasons aggregated yet.")
         return
 
-    _render_season_summary_paragraph(champions_data, name_resolver)
-    _render_champions_table(champions_data, name_resolver, manager_color_map)
-    _render_champion_charts(champions_data, name_resolver, manager_color_map)
-    _render_records(records_data, name_resolver)
     manager_standings_dataframe = _build_manager_standings_dataframe(manager_stats_data, name_resolver)
-    _render_manager_standings_table(manager_standings_dataframe)
-    _render_manager_stat_chart(manager_standings_dataframe, manager_color_map)
+
+    _render_league_summary_paragraph(champions_data, name_resolver)
+    _render_wall_of_champions_table(champions_data, name_resolver, manager_color_map)
+    _render_championship_charts(champions_data, name_resolver, manager_color_map)
+    _render_records_metrics(records_data, name_resolver)
+    _render_career_manager_standings_table(manager_standings_dataframe)
+    _render_career_manager_stat_chart(manager_standings_dataframe, manager_color_map)

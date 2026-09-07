@@ -12,7 +12,27 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from constants import RECORD_ROW_COLUMN_RATIOS
+from colors import (
+    COLOR_BRACKET_HIGHLIGHT_WINNING_PATH,
+    COLOR_BRACKET_OUTLINE,
+    COLOR_EXTREME_MAX,
+    COLOR_EXTREME_MIN,
+    COLOR_MANAGER_BACKUP,
+    COLOR_PODIUM_FIRST,
+    COLOR_PODIUM_SECOND,
+    COLOR_PODIUM_THIRD,
+    COLOR_POINTS_NEGATIVE,
+    COLOR_POINTS_POSITIVE,
+    COLOR_TRANSACTION_TYPES,
+)
+from constants import (
+    EMOJI_FIRST_PLACE,
+    EMOJI_LAST_PLACE,
+    EMOJI_SECOND_PLACE,
+    EMOJI_THIRD_PLACE,
+    MATCHUP_TYPE_LABELS,
+    RECORD_ROW_COLUMN_RATIOS,
+)
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
@@ -20,6 +40,7 @@ from data_loader import (
     build_manager_name_resolver,
     contrasting_text_color,
     discover_seasons,
+    load_all_time_champions,
     load_matchups,
     load_metadata,
     load_playoffs,
@@ -30,14 +51,13 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from pages_history import CHAMPION_COLOR, RUNNER_UP_COLOR, THIRD_PLACE_COLOR
-from pages_matchups import MATCHUP_TYPE_LABELS
+from helpers import ordinal_word, return_plural, return_s
+from strings import SELECT_STAT_TO_VIEW
 
 # ========================================
 # CONSTANTS
 # ========================================
 
-BRACKET_NEUTRAL_COLOR = "#888888"
 BRACKET_CARD_HEIGHT_PX = 190
 BRACKET_CARD_GAP_PX = 40
 BRACKET_ROW_UNIT_PX = BRACKET_CARD_HEIGHT_PX + BRACKET_CARD_GAP_PX
@@ -45,35 +65,19 @@ BRACKET_HEADER_HEIGHT_PX = 40
 
 # Every selectable stat for the Standings tab's chart - same "Stat to
 # chart" selectbox pattern as pages_history.py's MANAGER_STAT_COLUMNS.
-STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Streak", "Points For", "Points Against", "Point Difference"]
-
-# Shared red/green text-color scheme for any "positive is good" signed
-# stat (Point Difference, Rank Gained) across the Standings/Bracket
-# Standings/End of Postseason Standings tables.
-POINT_DIFFERENCE_COLOR_POSITIVE = "#2E7D32"
-POINT_DIFFERENCE_COLOR_NEGATIVE = "#C62828"
+STANDINGS_CHART_STATS = ["Rank", "Wins", "Losses", "Win %", "Active Streak", "Points For", "Points Against", "Point Difference"]
 
 TRANSACTIONS_PAGE_SIZE = 10
-# Explicit per-type colors requested by the user (not derived from the
-# shared manager-color map - these represent transaction TYPE, not manager).
-TRANSACTION_TYPE_COLORS = {
-    "Add": "#2E7D32",
-    "Drop": "#C62828",
-    "LM": "#F9A825",
-    "Lineup": "#1E88E5",
-    "Trade": "#6A1B9A",
-}
 
 PODIUM_BLOCK_HEIGHT_PX = {1: 250, 2: 190, 3: 140}
-PODIUM_COLOR = {1: CHAMPION_COLOR, 2: RUNNER_UP_COLOR, 3: THIRD_PLACE_COLOR}
+PODIUM_COLOR = {1: COLOR_PODIUM_FIRST, 2: COLOR_PODIUM_SECOND, 3: COLOR_PODIUM_THIRD}
+PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
+LAST_PLACE_EMOJI = "🥞"
 PODIUM_LABEL = {1: "1st", 2: "2nd", 3: "3rd"}
 PODIUM_DISPLAY_ORDER = [2, 1, 3]
 
 PODIUM_LOGO_SIZE_PX = {1: 120, 2: 100, 3: 90}
 PODIUM_LOGO_GAP_PX = 10
-
-PODIUM_EMOJI = {1: "🏆", 2: "🥈", 3: "🥉"}
-LAST_PLACE_EMOJI = "🥞"
 
 SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.8, 4]
 
@@ -91,7 +95,7 @@ def _full_table_height(row_count: int) -> int:
 
 
 def _parse_transaction_date(date_text: str, season: int) -> datetime:
-    """"Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
+    """ "Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
     can run into January of the FOLLOWING calendar year (confirmed for
     2012, 2021, 2022) - only "Jan" dates get season+1, everything else
     (Aug-Dec) uses the season's own year."""
@@ -132,7 +136,7 @@ def _bracket_highlight_style(team_id: str, winner_team_id: str, team_info: dict[
     if team_id != winner_team_id:
         return ""
     manager_id = team_info.get(team_id, {}).get("manager_id", "")
-    background_color = manager_color_map.get(manager_id, BRACKET_NEUTRAL_COLOR)
+    background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
     text_color = contrasting_text_color(background_color)
     return f"background-color:{background_color}; color:{text_color}; border-radius:4px;"
 
@@ -161,7 +165,7 @@ def _bracket_game_card_html(
     the bracket at a glance."""
     winner_team_id = _bracket_effective_winner(game)
     on_winning_path = bool(path_team_id) and path_team_id in (game["team_id_home"], game["team_id_away"])
-    card_background = "background:#F0F0F0; " if on_winning_path else ""
+    card_background = f"background:{COLOR_BRACKET_HIGHLIGHT_WINNING_PATH}; " if on_winning_path else ""
 
     # "Only one side present" (not the is_bye flag, which some brackets
     # leave False on a loser's "continues on" slot with an empty
@@ -196,10 +200,7 @@ def _bracket_game_card_html(
         # text now sits on the same colored highlight background as the
         # name above it and opacity:0.7 there could wash out against a
         # dark manager color.
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><div><strong>{lone_label}</strong></div>'
-            f'<div style="font-style:italic;">Bye</div></div>'
-        )
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {lone_highlight}"><div><strong>{lone_label}</strong></div><div style="font-style:italic;">Bye</div></div>')
     else:
         home_label = html.escape(_bracket_team_label(game["team_id_home"], game["seed_home"], team_info, name_resolver))
         away_label = html.escape(_bracket_team_label(game["team_id_away"], game["seed_away"], team_info, name_resolver))
@@ -217,19 +218,11 @@ def _bracket_game_card_html(
         # highlighted box spanning both lines), not two separately
         # highlighted divs - the inner name/score lines carry no
         # background of their own, just the outer wrapper.
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>'
-        )
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {home_highlight}"><div>{home_html}</div><div>{score_home_html}</div></div>')
         lines_html.append('<div style="text-align:center; padding:2px 0; opacity:0.6;">vs</div>')
-        lines_html.append(
-            f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>'
-        )
+        lines_html.append(f'<div style="text-align:center; padding:2px 0; {away_highlight}"><div>{score_away_html}</div><div>{away_html}</div></div>')
 
-    return (
-        f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; '
-        f'{card_background}border:2px solid black; border-radius:8px; padding:10px; '
-        f'height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
-    )
+    return f'<div style="position:absolute; top:{top_px}px; left:0; width:100%; box-sizing:border-box; {card_background}border:2px solid black; border-radius:8px; padding:10px; height:{BRACKET_CARD_HEIGHT_PX}px; overflow:hidden;">{"".join(lines_html)}</div>'
 
 
 def _layout_bracket_rounds(
@@ -522,15 +515,12 @@ def _render_player_start_row(key: str, ordinal: str, entry: dict, name_resolver:
     manager_name = resolve_manager_name(entry["manager_id"], name_resolver, entry["display_name"])
     with score_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
             unsafe_allow_html=True,
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{info_size}; color:gray;'>"
-            f"{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{entry['player_name']} ({entry['position']}) · {manager_name} · Wk {entry['week']}</span></div>",
             unsafe_allow_html=True,
         )
     if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
@@ -558,15 +548,12 @@ def _render_season_stat_row(key: str, ordinal: str, entry: dict, name_resolver: 
     loser_name = resolve_manager_name(entry["loser_manager_id"], name_resolver, entry["loser_display_name"])
     with score_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{score_size}; font-weight:700;'>{entry['value']:g}</span></div>",
             unsafe_allow_html=True,
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'>"
-            f"<span style='font-size:{info_size}; color:gray;'>"
-            f"{winner_name} defeated {loser_name} · Wk {entry['week']}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{winner_name} defeated {loser_name} · Wk {entry['week']}</span></div>",
             unsafe_allow_html=True,
         )
     if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
@@ -597,9 +584,9 @@ def _render_season_stats_tab(season: int, name_resolver: dict[str, str]) -> None
     with st.container(border=True):
         left_column, right_column = st.columns(2)
         with left_column:
-            _render_season_stat_cell("highest_scoring_game", "Highest Scoring Game", highest_scoring, name_resolver)
+            _render_season_stat_cell("highest_scoring_matchup", "Highest Scoring Matchup", highest_scoring, name_resolver)
         with right_column:
-            _render_season_stat_cell("lowest_scoring_game", "Lowest Scoring Game", lowest_scoring, name_resolver)
+            _render_season_stat_cell("lowest_scoring_matchup", "Lowest Scoring Matchup", lowest_scoring, name_resolver)
 
     best_starts, worst_starts = _season_player_start_records(season)
     with st.container(border=True):
@@ -637,14 +624,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
                 "Team": f"{team_name} ({manager_name})",
                 "W-L-T": f"{row['wins']}-{row['losses']}-{row['ties']}",
                 "Win %": row["win_pct"],
-                # Signed int (not the raw "W5"/"L3" text) so Streamlit's
-                # built-in click-to-sort on this column orders it
-                # correctly: W5...W1, L1...L5 (a continuous "how good is
-                # this streak" scale) - a text column would sort
-                # alphabetically instead (W5...W1, L5...L1), since there's
-                # no way to give st.dataframe's interactive sort a custom
-                # comparator. +d format keeps the sign visible either way.
-                "Streak": int(row["win_streak"][1:]) * (1 if row["win_streak"][0] == "W" else -1) if row["win_streak"] else 0,
+                "Active Streak": int(row["win_streak"][1:]) * (1 if row["win_streak"][0] == "W" else -1) if row["win_streak"] else 0,
                 "Points For": row["points_for"],
                 "Points Against": row["points_against"],
                 "Point Difference": row["points_for"] - row["points_against"],
@@ -669,12 +649,12 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
     # background tint above).
     def _color_point_difference(value: float) -> str:
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
-    styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Streak"]).map(_color_point_difference, subset=["Point Difference"])
+    styled_dataframe = dataframe.style.map(_highlight_streak, subset=["Active Streak"]).map(_color_point_difference, subset=["Point Difference"])
 
     st.dataframe(
         styled_dataframe,
@@ -683,7 +663,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
         height=_full_table_height(len(dataframe)),
         column_config={
             "Win %": st.column_config.NumberColumn(format="%.3f"),
-            "Streak": st.column_config.NumberColumn(format="%+d"),
+            "Active Streak": st.column_config.NumberColumn(format="%+d"),
             "Points For": st.column_config.NumberColumn(format="%.2f"),
             "Points Against": st.column_config.NumberColumn(format="%.2f"),
             "Point Difference": st.column_config.NumberColumn(format="%+.2f"),
@@ -700,7 +680,7 @@ def _standings_stat_value(row: dict, stat: str) -> float | int:
         return row["losses"]
     if stat == "Win %":
         return round(row["win_pct"] * 100, 1)
-    if stat == "Streak":
+    if stat == "Active Streak":
         streak = row["win_streak"]
         return int(streak[1:]) * (1 if streak[0] == "W" else -1) if streak else 0
     if stat == "Points For":
@@ -713,7 +693,7 @@ def _standings_stat_value(row: dict, stat: str) -> float | int:
 def _standings_stat_display(value: float, stat: str) -> str:
     if stat == "Win %":
         return f"{value:.1f}%"
-    if stat == "Streak":
+    if stat == "Active Streak":
         return f"{value:+d}"
     if stat == "Point Difference":
         return f"{value:+.2f}"
@@ -733,7 +713,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
     if not weekly_tables:
         return
 
-    selected_stat = st.selectbox("Select Stat to View", STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
+    selected_stat = st.selectbox(SELECT_STAT_TO_VIEW, STANDINGS_CHART_STATS, key="seasons_standings_chart_stat")
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]
@@ -767,15 +747,9 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 y=values,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "W-L-T: %{customdata[1]}<br>"
-                    "Week Result: %{customdata[2]}<br>"
-                    f"Cumulative {selected_stat}: " + "%{customdata[3]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=(f"<b>%{{customdata[0]}}<br></b>W-L-T: %{{customdata[1]}}<br>Week Result: %{{customdata[2]}}<br>Cumulative {selected_stat}: " + "%{customdata[3]}<extra></extra>"),
             )
         )
 
@@ -795,7 +769,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
 
 
 def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
-    """"All-play" record - each week, a team's record if it had played
+    """ "All-play" record - each week, a team's record if it had played
     every other team that week instead of just its scheduled opponent
     (see code/stats-aggregation/breakdown.py). Rank/Team/Overall come
     from the final week's CUMULATIVE all-play record; one column per
@@ -841,9 +815,9 @@ def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
             return ""
         wins, losses, ties = (int(part) for part in value.split("-"))
         if losses == 0 and ties == 0 and wins > 0:
-            return "background-color: rgba(46, 125, 50, 0.85)"
+            return f"background-color: {COLOR_EXTREME_MAX}"
         if wins == 0 and ties == 0 and losses > 0:
-            return "background-color: rgba(198, 40, 40, 0.85)"
+            return f"background-color: {COLOR_EXTREME_MIN}"
         return ""
 
     week_columns = [f"Wk {week_table['week']}" for week_table in weekly_tables]
@@ -905,22 +879,16 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 y=percentages,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "Cumulative Breakdown: %{customdata[1]}<br>"
-                    "Week Breakdown: %{customdata[2]}<br>"
-                    "Breakdown %: %{customdata[3]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=("<b>%{customdata[0]}<br></b>Cumulative Breakdown: %{customdata[1]}<br>Week Breakdown: %{customdata[2]}<br>Breakdown %: %{customdata[3]}<extra></extra>"),
             )
         )
 
     figure.update_layout(
         title="Cumulative Overall Breakdown %",
         xaxis_title="Week",
-        yaxis_title="Overall Breakdown %",
+        yaxis_title="Cumulative Overall Breakdown %",
         xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
@@ -970,7 +938,7 @@ def _render_coach_table(season: int, name_resolver: dict[str, str]) -> None:
     # there's no "perfect bad" analog to a 0-9-0 week. Same 85% opacity
     # green used there.
     def _highlight_perfect_coaching_week(value: float) -> str:
-        return "background-color: rgba(46, 125, 50, 0.85)" if value == 0 else ""
+        return f"background-color: {COLOR_EXTREME_MAX}" if value == 0 else ""
 
     styled_dataframe = dataframe.style.map(_highlight_perfect_coaching_week, subset=week_columns)
 
@@ -1021,14 +989,9 @@ def _render_coach_chart(season: int, name_resolver: dict[str, str], manager_colo
                 y=totals,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "Cumulative Coach: %{customdata[1]}<br>"
-                    "Week Coach: %{customdata[2]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=("<b>%{customdata[0]}<br></b>Cumulative Coach: %{customdata[1]}<br>Week Coach: %{customdata[2]}<extra></extra>"),
             )
         )
 
@@ -1087,25 +1050,16 @@ def _render_true_ranking_chart(season: int, name_resolver: dict[str, str], manag
                 y=scores,
                 mode="lines",
                 name=manager_name,
-                line={"color": manager_color_map.get(manager_id, "#CCCCCC")},
+                line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(
-                    "<b>%{customdata[0]}<br></b>"
-                    "True Rank: %{customdata[1]}<br>"
-                    "---"
-                    "Record Rank: %{customdata[2]}<br>"
-                    "Points For Rank: %{customdata[3]}<br>"
-                    "Breakdown Rank: %{customdata[4]}<br>"
-                    "Coach Rank: %{customdata[5]}"
-                    "<extra></extra>"
-                ),
+                hovertemplate=("<b>%{customdata[0]}<br></b>True Rank: %{customdata[1]}<br><br>Record Rank: %{customdata[2]}<br>Points For Rank: %{customdata[3]}<br>Breakdown Rank: %{customdata[4]}<br>Coach Rank: %{customdata[5]}<extra></extra>"),
             )
         )
 
     figure.update_layout(
         title="Cumulative True Ranking Score",
         xaxis_title="Week",
-        yaxis_title="True Ranking Score",
+        yaxis_title="Cumulative True Ranking Score",
         xaxis={"tickmode": "linear", "dtick": 1, "nticks": CHART_XAXIS_MAX_TICKS},
         yaxis={"range": [0, 40], "nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
@@ -1158,9 +1112,9 @@ def _render_true_ranking_table(season: int, name_resolver: dict[str, str]) -> No
         colors = []
         for value in series:
             if value == max_value:
-                colors.append("background-color: rgba(46, 125, 50, 0.85)")
+                colors.append(f"background-color: {COLOR_EXTREME_MAX}")
             elif value == min_value:
-                colors.append("background-color: rgba(198, 40, 40, 0.85)")
+                colors.append(f"background-color: {COLOR_EXTREME_MIN}")
             else:
                 colors.append("")
         return colors
@@ -1196,9 +1150,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # team ("to") instead, so each leg attributes to the team that
     # actually ended up with that player - the only way both sides of a
     # trade show up under their own manager.
-    manager_name_by_team_name = {
-        info["team_name"]: resolve_manager_name(info["manager_id"], name_resolver, info["display_name"]) for info in team_id_to_manager_map(season).values()
-    }
+    manager_name_by_team_name = {info["team_name"]: resolve_manager_name(info["manager_id"], name_resolver, info["display_name"]) for info in team_id_to_manager_map(season).values()}
     all_dates = [_parse_transaction_date(t["date"], season) for t in transactions]
     min_date, max_date = min(all_dates).date(), max(all_dates).date()
     transaction_types = sorted({t["type"] for t in transactions})
@@ -1250,7 +1202,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # st.date_input returns a single date while the user has only picked
     # one end of the range yet (before their second click) - skip
     # filtering by date in that transient state rather than erroring.
-    start_date, end_date = (selected_range if len(selected_range) == 2 else (min_date, max_date))
+    start_date, end_date = selected_range if len(selected_range) == 2 else (min_date, max_date)
 
     rows = []
     for transaction in transactions:
@@ -1356,7 +1308,7 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
     dates = sorted(counts["date"].unique())
 
     figure = go.Figure()
-    for transaction_type, color in TRANSACTION_TYPE_COLORS.items():
+    for transaction_type, color in COLOR_TRANSACTION_TYPES.items():
         type_counts = counts[counts["type"] == transaction_type]
         counts_by_date = dict(zip(type_counts["date"], type_counts["count"]))
         y_values = [counts_by_date.get(date, 0) for date in dates]
@@ -1445,7 +1397,6 @@ def _render_miscellaneous_table(season: int, name_resolver: dict[str, str]) -> N
 
 def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
     card_center = BRACKET_CARD_HEIGHT_PX / 2
-    color = "black"  # matches the cards' own black outline, per request
 
     segments = []
     for from_round, from_row, to_round, to_row, team_id in connectors:
@@ -1455,13 +1406,10 @@ def _render_bracket_connectors(connectors: list, canvas_height: int) -> None:
         # Left stub (out of the source card) + right stub (into the target
         # card) + a vertical bar joining them - the two 90-degree turns
         # that make this an elbow connector instead of a diagonal line.
-        segments.append(f'<div style="position:absolute; left:0; top:{from_y - 1}px; width:50%; height:2px; background:{color};"></div>')
-        segments.append(f'<div style="position:absolute; left:50%; top:{top}px; width:2px; height:{bottom - top}px; background:{color};"></div>')
-        segments.append(f'<div style="position:absolute; left:50%; top:{to_y - 1}px; width:50%; height:2px; background:{color};"></div>')
-        segments.append(
-            f'<div style="position:absolute; left:calc(100% - 8px); top:{to_y - 5}px; width:0; height:0; '
-            f'border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid {color};"></div>'
-        )
+        segments.append(f'<div style="position:absolute; left:0; top:{from_y - 1}px; width:50%; height:2px; background:{COLOR_BRACKET_OUTLINE};"></div>')
+        segments.append(f'<div style="position:absolute; left:50%; top:{top}px; width:2px; height:{bottom - top}px; background:{COLOR_BRACKET_OUTLINE};"></div>')
+        segments.append(f'<div style="position:absolute; left:50%; top:{to_y - 1}px; width:50%; height:2px; background:{COLOR_BRACKET_OUTLINE};"></div>')
+        segments.append(f'<div style="position:absolute; left:calc(100% - 8px); top:{to_y - 5}px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid {COLOR_BRACKET_OUTLINE};"></div>')
 
     st.markdown(f'<div style="position:relative; height:{canvas_height}px;">{"".join(segments)}</div>', unsafe_allow_html=True)
 
@@ -1598,12 +1546,22 @@ def _render_playoffs_tab(season: int, name_resolver: dict[str, str], manager_col
     championship_tab, consolation_tab = st.tabs(["Championship", "Consolation"])
     with championship_tab:
         _render_bracket(
-            season, championship_bracket, team_info, name_resolver, manager_color_map, is_consolation=False,
+            season,
+            championship_bracket,
+            team_info,
+            name_resolver,
+            manager_color_map,
+            is_consolation=False,
             path_team_id=championship_bracket.get("champion_team_id", ""),
         )
     with consolation_tab:
         _render_bracket(
-            season, consolation_bracket, team_info, name_resolver, manager_color_map, is_consolation=True,
+            season,
+            consolation_bracket,
+            team_info,
+            name_resolver,
+            manager_color_map,
+            is_consolation=True,
             path_team_id=consolation_bracket.get("consolation_winner_team_id", ""),
         )
 
@@ -1676,9 +1634,9 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
 
     def _color_rank_gained(value: int) -> str:
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
     def _format_point_difference(value: float) -> str:
@@ -1688,18 +1646,188 @@ def _render_final_standings_table(season: int, name_resolver: dict[str, str]) ->
         if pd.isna(value):
             return ""
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
-    styled_dataframe = (
-        dataframe.style.format({"Rank Gained": _format_rank_gained, "Point Difference": _format_point_difference})
-        .map(_color_rank_gained, subset=["Rank Gained"])
-        .map(_color_point_difference, subset=["Point Difference"])
-    )
+    styled_dataframe = dataframe.style.format({"Rank Gained": _format_rank_gained, "Point Difference": _format_point_difference}).map(_color_rank_gained, subset=["Rank Gained"]).map(_color_point_difference, subset=["Point Difference"])
 
     st.dataframe(styled_dataframe, hide_index=True, width="stretch", height=_full_table_height(len(dataframe)))
+
+
+def _highlight_manager_name(name: str, manager_id: str, manager_color_map: dict[str, str], style: str = "") -> str:
+    """Wraps just the name text in that manager's own color - same
+    background-color/contrasting-text-color/rounded-corners pill used for
+    manager pills elsewhere (see _manager_pill in pages_matchups.py), but
+    around a bare name/team name rather than a "Label (name)" phrase."""
+    background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
+    text_color = contrasting_text_color(background_color)
+    return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600; font-style:{style}; white-space:nowrap;'>{name}</span>"
+
+
+def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+    """One-paragraph season blurb above the Podium - champion (with their
+    combined record), who finished last, the biggest post-season riser/
+    faller by Rank Gained (see _render_final_standings_table), and the
+    most dominant scoring team by combined Point Difference (see
+    _render_season_summary_table). Rank Gained is only meaningful once an
+    actual post-season bracket exists - when it doesn't, ranked_team_ids
+    falls back to the regular-season standings themselves, so every
+    team's "gain" would trivially be 0 and is skipped instead."""
+    team_info = team_id_to_manager_map(season)
+    post_season_stats = load_post_season_stats(season)
+    weekly_tables = load_weekly_tables(season)["weeks"]
+    if not weekly_tables:
+        return
+
+    regular_season_standings = {row["team_id"]: row for row in weekly_tables[-1]["standings"]}
+
+    has_post_season = bool(post_season_stats and post_season_stats.get("final_placements"))
+    if has_post_season:
+        ranked_team_ids = sorted(post_season_stats["final_placements"].items(), key=lambda entry: entry[1])
+    else:
+        ranked_team_ids = [(row["team_id"], row["rank"]) for row in weekly_tables[-1]["standings"]]
+
+    rows = []
+    for team_id, rank in ranked_team_ids:
+        info = team_info.get(team_id, {})
+        manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
+        team_name = info.get("team_name", "")
+
+        regular_row = regular_season_standings.get(team_id, {})
+        wins, losses, ties = regular_row.get("wins", 0), regular_row.get("losses", 0), regular_row.get("ties", 0)
+        points_for, points_against = regular_row.get("points_for", 0.0), regular_row.get("points_against", 0.0)
+
+        if post_season_stats:
+            post_season_record = post_season_stats["championship"].get(team_id) or post_season_stats["consolation"].get(team_id)
+            if post_season_record:
+                wins += post_season_record["wins"]
+                losses += post_season_record["losses"]
+                ties += post_season_record["ties"]
+                points_for += post_season_record["points_for"]
+                points_against += post_season_record["points_against"]
+
+        manager_id = info.get("manager_id", "")
+        win_streak = regular_row.get("win_streak")
+        active_streak = int(win_streak[1:]) * (1 if win_streak[0] == "W" else -1) if win_streak else 0
+        rows.append(
+            {
+                "manager_id": manager_id,
+                "manager_name": _highlight_manager_name(manager_name, manager_id, manager_color_map),
+                "team_name": _highlight_manager_name(team_name, manager_id, manager_color_map, "italic"),
+                "rank": rank,
+                "regular_season_rank": regular_row.get("rank", rank),
+                "wins": wins,
+                "losses": losses,
+                "ties": ties,
+                "point_difference": points_for - points_against,
+                "active_streak": active_streak,
+            }
+        )
+
+    if not rows:
+        return
+
+    last_place_rank = max(row["rank"] for row in rows)
+    champion_row = next((row for row in rows if row["rank"] == 1), None)
+    runner_up_row = next((row for row in rows if row["rank"] == 2), None)
+    third_place_row = next((row for row in rows if row["rank"] == 3), None)
+    last_place_row = next((row for row in rows if row["rank"] == last_place_rank), None)
+    most_dominant_row = max(rows, key=lambda row: row["point_difference"])
+    least_dominant_row = min(rows, key=lambda row: row["point_difference"])
+
+    placement_counts_by_manager_id: dict[str, dict[int, int]] = {}
+    for season_entry in load_all_time_champions()["champions"]:
+        if season_entry["season"] > season:  # NOTE for each season only run stats through the current season, no future all time stats
+            continue
+        for placement_row in season_entry["top_3"]:
+            manager_id = placement_row.get("manager_id", "")
+            if not manager_id:
+                continue
+            manager_counts = placement_counts_by_manager_id.setdefault(manager_id, {1: 0, 2: 0, 3: 0})
+            if placement_row["rank"] in manager_counts:
+                manager_counts[placement_row["rank"]] += 1
+
+    sentences = []
+
+    if champion_row:
+        record = f"{champion_row['wins']}-{champion_row['losses']}-{champion_row['ties']}" if champion_row["ties"] else f"{champion_row['wins']}-{champion_row['losses']}"
+        sentences.append(f"{champion_row['team_name']}, run by team manager {champion_row['manager_name']}, won the {season} championship with a final record of {record}.")
+        championship_count = placement_counts_by_manager_id.get(champion_row["manager_id"], {}).get(1, 0)
+        sentences.append(f"This is {champion_row['manager_name']}'s {ordinal_word(championship_count)} championship ({EMOJI_FIRST_PLACE * championship_count})." if championship_count > 1 else f"This is {champion_row['manager_name']}'s first championship{'!' * championship_count}")
+
+    if runner_up_row:
+        runner_up_count = placement_counts_by_manager_id.get(runner_up_row["manager_id"], {}).get(2, 0)
+        sentences.append(f"{runner_up_row['manager_name']} has been runner up {runner_up_count} time{'s' if runner_up_count != 1 else ''} ({EMOJI_SECOND_PLACE * runner_up_count}).")
+
+    if third_place_row:
+        third_place_count = placement_counts_by_manager_id.get(third_place_row["manager_id"], {}).get(3, 0)
+        sentences.append(f"{third_place_row['manager_name']} has finished in third place {third_place_count} time{'s' if third_place_count != 1 else ''} ({EMOJI_THIRD_PLACE * third_place_count}).")
+
+    if last_place_row and last_place_row is not champion_row:
+        sentences.append(f"{last_place_row['team_name']} finished in {ordinal_word(last_place_rank)} place and faces the {EMOJI_LAST_PLACE} punishment.")
+
+    if champion_row and runner_up_row and third_place_row:
+        current_podium_makeup = frozenset({champion_row["manager_id"], runner_up_row["manager_id"], third_place_row["manager_id"]})
+        current_top2_pairing = frozenset({champion_row["manager_id"], runner_up_row["manager_id"]})
+
+        podium_makeup_by_season: dict[int, frozenset[str]] = {}
+        top2_pairing_by_season: dict[int, tuple[frozenset[str], str]] = {}
+        for season_entry in load_all_time_champions()["champions"]:
+            entry_season = season_entry["season"]
+            if entry_season > season:
+                continue
+            top3_by_rank = {row["rank"]: row.get("manager_id", "") for row in season_entry["top_3"]}
+            if all(top3_by_rank.get(rank) for rank in (1, 2, 3)):
+                podium_makeup_by_season[entry_season] = frozenset({top3_by_rank[1], top3_by_rank[2], top3_by_rank[3]})
+            if top3_by_rank.get(1) and top3_by_rank.get(2):
+                top2_pairing_by_season[entry_season] = (frozenset({top3_by_rank[1], top3_by_rank[2]}), top3_by_rank[1])
+
+        rematch_seasons = sorted(past_season for past_season, (pairing, _) in top2_pairing_by_season.items() if past_season != season and pairing == current_top2_pairing)
+        if rematch_seasons:
+            rematch_details = []
+            for past_season in rematch_seasons:
+                past_winner_manager_id = top2_pairing_by_season[past_season][1]
+                past_winner_manager_name = resolve_manager_name(past_winner_manager_id, name_resolver)
+                rematch_details.append(f"{past_season} ({_highlight_manager_name(past_winner_manager_name, past_winner_manager_id, manager_color_map)})")
+            sentences.append(f"The top 2 is a rematch of the {', '.join(rematch_details)} Fantasy Super Bowl{return_s(len(rematch_details))}.")
+
+        unique_podium_count = len(set(podium_makeup_by_season.values()))
+        sentences.append(f"There {return_plural(unique_podium_count, 'has', 'have')} been {unique_podium_count} unique podium combination{return_s(unique_podium_count)}.")
+
+        repeat_seasons = sorted(past_season for past_season, makeup in podium_makeup_by_season.items() if past_season != season and makeup == current_podium_makeup)
+        if repeat_seasons:
+            sentences.append(f"This podium combination also occurred in {', '.join(str(s) for s in repeat_seasons)}.")  # NOTE has never occurred yet
+
+    # NOTE above are final ranks
+    sentences.append("<br><br>")
+    # NOTE below are stats
+
+    if has_post_season:
+        biggest_riser = max(rows, key=lambda row: row["regular_season_rank"] - row["rank"])
+        biggest_faller = min(rows, key=lambda row: row["regular_season_rank"] - row["rank"])
+        riser_gain = biggest_riser["regular_season_rank"] - biggest_riser["rank"]
+        faller_drop = biggest_faller["regular_season_rank"] - biggest_faller["rank"]
+        if riser_gain > 0:
+            sentences.append(f"{biggest_riser['team_name']} climbed the most in the post season, moving from {ordinal_word(biggest_riser['regular_season_rank'])} to {ordinal_word(biggest_riser['rank'])} (<span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{riser_gain:+.0f}</span>).")
+        if faller_drop < 0:
+            sentences.append(f"{biggest_faller['team_name']} fell the furthest, dropping from {ordinal_word(biggest_faller['regular_season_rank'])} to {ordinal_word(biggest_faller['rank'])}  (<span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{faller_drop:+.0f}</span>).")
+
+        hottest_row = max(rows, key=lambda row: row["active_streak"])
+        coldest_row = min(rows, key=lambda row: row["active_streak"])
+        if hottest_row["active_streak"] > 0:
+            streak_label = "hottest" if hottest_row["active_streak"] >= 3 else "greatest"
+            sentences.append(f"{hottest_row['team_name']} entered the postseason on the {streak_label} winning streak with <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{hottest_row['active_streak']}</span> straight wins.")
+        if coldest_row["active_streak"] < 0:
+            skid_length = abs(coldest_row["active_streak"])
+            streak_label = "free fall" if skid_length > 3 else "losing streak"
+            sentences.append(f"{coldest_row['team_name']} entered the postseason in {streak_label}, having lost <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{skid_length}</span> straight.")
+
+    sentences.append(f"{most_dominant_row['team_name']} was the most dominant scoring team, outscoring opponents by <span style='color:{COLOR_POINTS_POSITIVE}; font-weight:600;'>{most_dominant_row['point_difference']:+.2f}</span> points.")
+    sentences.append(f"{least_dominant_row['team_name']} preferred starting their bench, being outscored by <span style='color:{COLOR_POINTS_NEGATIVE}; font-weight:600;'>{least_dominant_row['point_difference']:+.2f}</span> points.")
+
+    st.markdown(" ".join(sentences), unsafe_allow_html=True)
 
 
 def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
@@ -1716,12 +1844,7 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
         team_id, team_name, manager_name, combined_record = top_three[rank]
         logo_data_uri = load_team_logo_data_uri(season, team_id)
         logo_size = PODIUM_LOGO_SIZE_PX[rank]
-        logo_html = (
-            f'<img src="{logo_data_uri}" style="width:{logo_size}px; height:{logo_size}px; object-fit:cover; '
-            f'border-radius:12px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;">'
-            if logo_data_uri
-            else f'<div style="width:{logo_size}px; height:{logo_size}px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;"></div>'
-        )
+        logo_html = f'<img src="{logo_data_uri}" style="width:{logo_size}px; height:{logo_size}px; object-fit:cover; border-radius:12px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;">' if logo_data_uri else f'<div style="width:{logo_size}px; height:{logo_size}px; margin-bottom:{PODIUM_LOGO_GAP_PX}px;"></div>'
         with column:
             # Outer box is a fixed max height with the [logo + colored
             # block] stack bottom-aligned inside it (align-items:flex-end)
@@ -1733,7 +1856,7 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
                 f'<div style="width:100%; display:flex; flex-direction:column; align-items:center;">'
                 f"{logo_html}"
                 f'<div style="width:100%; height:{PODIUM_BLOCK_HEIGHT_PX[rank]}px; background:{PODIUM_COLOR[rank]}; '
-                f'border-radius:8px 8px 0 0; box-sizing:border-box; padding:12px; color:white; text-align:center; '
+                f"border-radius:8px 8px 0 0; box-sizing:border-box; padding:12px; color:white; text-align:center; "
                 f'display:flex; flex-direction:column; justify-content:flex-end;">'
                 f'<div style="font-size:1.5rem; font-weight:bold;">{PODIUM_LABEL[rank]}</div>'
                 f'<div style="font-weight:bold;">{html.escape(team_name)}</div>'
@@ -1813,9 +1936,9 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
     # tabs' Point Difference (and Bracket Standings' Rank Gained).
     def _color_point_difference(value: float) -> str:
         if value > 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_POSITIVE}"
+            return f"color: {COLOR_POINTS_POSITIVE}"
         if value < 0:
-            return f"color: {POINT_DIFFERENCE_COLOR_NEGATIVE}"
+            return f"color: {COLOR_POINTS_NEGATIVE}"
         return ""
 
     styled_dataframe = dataframe.style.map(_color_point_difference, subset=["Point Difference"])
@@ -1840,7 +1963,7 @@ def _render_schedule_highlight(team: dict, name_resolver: dict[str, str], manage
     text = contrasting_text_color against it) - so a team reads the same
     way in both places."""
     manager_name = resolve_manager_name(team.get("manager_id", ""), name_resolver, team.get("display_name", ""))
-    background_color = manager_color_map.get(team.get("manager_id", ""), "#CCCCCC")
+    background_color = manager_color_map.get(team.get("manager_id", ""), COLOR_MANAGER_BACKUP)
     text_color = contrasting_text_color(background_color)
     flex_direction = "row" if align == "left" else "row-reverse"
 
@@ -2044,9 +2167,7 @@ def _render_season_settings_tab(season: int, name_resolver: dict[str, str]) -> N
         # Value is stringified - these settings mix ints (num_teams) with
         # plain text (trade_deadline, etc), and a mixed-type column
         # doesn't serialize to Arrow cleanly otherwise.
-        flat_settings = [
-            {"Setting": key.replace("_", " ").title(), "Value": str(value)} for key, value in settings.items() if key != "roster_settings"
-        ]
+        flat_settings = [{"Setting": key.replace("_", " ").title(), "Value": str(value)} for key, value in settings.items() if key != "roster_settings"]
         st.dataframe(pd.DataFrame(flat_settings), hide_index=True, width="stretch", height=_full_table_height(len(flat_settings)))
 
     draft_column, _ = st.columns(2)
@@ -2088,16 +2209,16 @@ def render_seasons_page() -> None:
     # Single mandatory season (not an "Any" filter like Players/Games -
     # this whole tab is inherently scoped to one season at a time),
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")
+    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")  # NOTE key allows for session_state switch_page jumps
 
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()
 
-    season_summary_tab, season_stats_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(
-        ["Season Summary", "Season Stats", "Schedule", "Regular Season", "Post Season", "Season Settings"]
-    )
+    season_summary_tab, season_stats_tab, schedule_tab, regular_season_tab, post_season_tab, season_settings_tab = st.tabs(["Season Summary", "Season Stats", "Schedule", "Regular Season", "Post Season", "Season Settings"])
 
     with season_summary_tab:
+        _render_season_summary_paragraph(selected_season, name_resolver, manager_color_map)
+        st.markdown("<div style='height:1rem;'></div>", unsafe_allow_html=True)
         _render_season_podium(selected_season, name_resolver)
         st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
         _render_season_summary_table(selected_season, name_resolver)
@@ -2119,9 +2240,7 @@ def render_seasons_page() -> None:
                     _render_schedule_week(selected_season, week, name_resolver, manager_color_map)
 
     with regular_season_tab:
-        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab, miscellaneous_tab = st.tabs(
-            ["Standings", "Breakdown", "Coach", "True Ranking", "Transactions", "Miscellaneous"]
-        )
+        standings_tab, breakdown_tab, coach_tab, true_ranking_tab, transactions_tab, miscellaneous_tab = st.tabs(["Standings", "Breakdown", "Coach", "True Ranking", "Transactions", "Miscellaneous"])
         with standings_tab:
             _render_standings_table(selected_season, name_resolver)
             _render_standings_chart(selected_season, name_resolver, manager_color_map)

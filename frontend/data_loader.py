@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 import streamlit as st
+from colors import COLOR_BLACK, COLOR_MANAGER_PALETTE, COLOR_WHITE
 
 # ========================================
 # CONSTANTS
@@ -34,16 +35,6 @@ STATS_AGGREGATION_DIRECTORY = PROJECT_ROOT_DIRECTORY / "code" / "stats-aggregati
 if str(STATS_AGGREGATION_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(STATS_AGGREGATION_DIRECTORY))
 from optimal_lineup import FLEX_ELIGIBLE_POSITIONS, solve_optimal_lineup
-
-# Standard 12-color ColorBrewer "Paired" qualitative palette - not
-# available under plotly.express.colors.qualitative by this name (that
-# module has Set1/Set2/Set3 etc, but no "Paired"), so hardcoded here
-# rather than adding a matplotlib dependency just for these 12 hex codes.
-PAIRED_PALETTE = [
-    "#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C",
-    "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00",
-    "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928",
-]
 
 # stat_N -> the scoring_rules key (in archive/parsed/{year}/metadata.json)
 # it's scored under. Most map to their own obviously-named rule; a few
@@ -149,7 +140,7 @@ STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD = {
 
 
 def _espn_made_attempted_count(raw_value: str | None) -> int | None:
-    """"3-3" -> 3 (the MADE count, left of the dash) - None if the field
+    """ "3-3" -> 3 (the MADE count, left of the dash) - None if the field
     is missing or not in the expected "{made}-{attempted}" shape."""
     if not raw_value or "-" not in raw_value:
         return None
@@ -192,9 +183,7 @@ def espn_stat_value(stat_id: str, espn_week_stats: dict) -> int | None:
 # - most of NFL_STAT_FIELDS_BY_POSITION's fields (completions, targets,
 # per-attempt averages, "FG Made (Total)", "Total Kicking Points") have
 # NO stat_N equivalent, so they're simply absent from this map.
-ESPN_FIELD_TO_STAT_ID = {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_FIELD.items() if field} | {
-    field: stat_id for stat_id, field in STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD.items()
-}
+ESPN_FIELD_TO_STAT_ID = {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_FIELD.items() if field} | {field: stat_id for stat_id, field in STAT_ID_TO_ESPN_MADE_ATTEMPTED_FIELD.items()}
 
 
 def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
@@ -227,23 +216,43 @@ def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
 # rusher stat shape, not a flex-roster-eligibility claim - TE itself is
 # NOT flex-eligible in this league's own scoring rules).
 _SKILL_POSITION_NFL_STAT_FIELDS = [
-    "rushingAttempts", "rushingYards", "yardsPerRushAttempt", "rushingTouchdowns", "receptions",
-    "receivingTargets", "receivingYards", "yardsPerReception", "receivingTouchdowns", "fumbles",
+    "rushingAttempts",
+    "rushingYards",
+    "yardsPerRushAttempt",
+    "rushingTouchdowns",
+    "receptions",
+    "receivingTargets",
+    "receivingYards",
+    "yardsPerReception",
+    "receivingTouchdowns",
+    "fumbles",
     "fumblesLost",
 ]
 
 NFL_STAT_FIELDS_BY_POSITION = {
     "QB": [
-        "completions", "passingAttempts", "passingYards", "completionPct", "yardsPerPassAttempt",
-        "passingTouchdowns", "interceptions", "rushingAttempts", "rushingYards", "yardsPerRushAttempt",
+        "completions",
+        "passingAttempts",
+        "passingYards",
+        "completionPct",
+        "yardsPerPassAttempt",
+        "passingTouchdowns",
+        "interceptions",
+        "rushingAttempts",
+        "rushingYards",
+        "yardsPerRushAttempt",
         "rushingTouchdowns",
     ],
     **{position: _SKILL_POSITION_NFL_STAT_FIELDS for position in FLEX_ELIGIBLE_POSITIONS | {"TE"}},
     "K": [
-        "fieldGoalsMade1_19-fieldGoalAttempts1_19", "fieldGoalsMade20_29-fieldGoalAttempts20_29",
-        "fieldGoalsMade30_39-fieldGoalAttempts30_39", "fieldGoalsMade40_49-fieldGoalAttempts40_49",
-        "fieldGoalsMade50-fieldGoalAttempts50", "fieldGoalsMade-fieldGoalAttempts",
-        "extraPointsMade-extraPointAttempts", "totalKickingPoints",
+        "fieldGoalsMade1_19-fieldGoalAttempts1_19",
+        "fieldGoalsMade20_29-fieldGoalAttempts20_29",
+        "fieldGoalsMade30_39-fieldGoalAttempts30_39",
+        "fieldGoalsMade40_49-fieldGoalAttempts40_49",
+        "fieldGoalsMade50-fieldGoalAttempts50",
+        "fieldGoalsMade-fieldGoalAttempts",
+        "extraPointsMade-extraPointAttempts",
+        "totalKickingPoints",
     ],
 }
 
@@ -337,7 +346,7 @@ def get_espn_week_stats(player_id: str, season: int, week: int, nfl_player_stats
 
 # (points, allows tiers below) for the "Points Allowed" ladder - checked
 # in order, first matching upper bound wins. stat_54 on a DEF entry only.
-POINTS_ALLOWED_TIERS = [
+FANTASY_DEF_POINTS_ALLOWED_TIERS = [
     (0, "Points Allowed 0"),
     (6, "Points Allowed 1-6"),
     (13, "Points Allowed 7-13"),
@@ -345,7 +354,7 @@ POINTS_ALLOWED_TIERS = [
     (27, "Points Allowed 21-27"),
     (34, "Points Allowed 28-34"),
 ]
-POINTS_ALLOWED_TOP_TIER = "Points Allowed 35+"
+FANTASY_DEF_POINTS_ALLOWED_TOP_TIER = "Points Allowed 35+"
 
 # roster_settings key -> the literal "slot" value matchup data uses for
 # it - most positions match their own settings key (QB/RB/WR/TE/K/DEF),
@@ -376,6 +385,7 @@ NFL_TEAM_TO_ESPN_ABBR = {"WAS": "wsh"}
 # ========================================
 # FUNCTIONS
 # ========================================
+
 
 def _read_json(path: Path):
     return json.loads(path.read_text())
@@ -416,6 +426,19 @@ def load_players_started(year: int) -> dict:
 @st.cache_resource
 def load_transactions(year: int) -> dict:
     return _read_json(PARSED_DIRECTORY / str(year) / "transactions.json")
+
+
+@st.cache_resource
+def load_draft(year: int) -> dict | None:
+    """{"season", "draft_type" ("snake"/"auction"), "picks": [{"overall_pick",
+    "player_id", "player_name", "position", "nfl_team", "team_id",
+    "auction_amount"}], "notes"} - auction_amount is null for every pick
+    in a snake draft, and for keeper picks in an auction draft (no live
+    bid took place - see the file's own "notes" field)."""
+    path = PARSED_DIRECTORY / str(year) / "draft.json"
+    if not path.exists():
+        return None
+    return _read_json(path)
 
 
 @st.cache_resource
@@ -494,7 +517,7 @@ def build_manager_color_map() -> dict[str, str]:
     is what makes the assignment stable across different views."""
     manager_stats = load_all_time_manager_stats()
     manager_ids = sorted(manager["manager_id"] for manager in manager_stats["managers"])
-    return {manager_id: PAIRED_PALETTE[index % len(PAIRED_PALETTE)] for index, manager_id in enumerate(manager_ids)}
+    return {manager_id: COLOR_MANAGER_PALETTE[index % len(COLOR_MANAGER_PALETTE)] for index, manager_id in enumerate(manager_ids)}
 
 
 @st.cache_resource
@@ -505,6 +528,23 @@ def load_players() -> dict:
 @st.cache_resource
 def load_player_ownership() -> dict:
     return _read_json(ARCHIVE_DIRECTORY / "player_ownership.json")
+
+
+@st.cache_resource
+def load_player_fantasy_value_metrics() -> dict:
+    """{"player_fantasy_value_metrics": {"<season>": [{"player_id",
+    "player_name", "position", "games_played", "is_keeper", "draft_type",
+    "overall_pick", "auction_amount", "cost", "total_fantasy_points",
+    "fantasy_points_per_game", "fantasy_value_per_season",
+    "fantasy_value_per_game"}, ...]}} - built by
+    code/stats-aggregation/generate_player_fantasy_value_metrics.py
+    (run weekly, not on request) for every player who was both drafted
+    that season and has real weekly fantasy output. Empty dict if the
+    generator hasn't been run yet."""
+    path = ARCHIVE_DIRECTORY / "player_fantasy_value_metrics.json"
+    if not path.exists():
+        return {"player_fantasy_value_metrics": {}}
+    return _read_json(path)
 
 
 @st.cache_resource
@@ -532,7 +572,7 @@ def load_stat_id_labels() -> dict[str, str]:
 
 
 def _parse_scoring_rule(rule_text: str) -> tuple[float, float]:
-    """"4 points" -> (4.0, 1.0); "1 point per 25 yards" -> (1.0, 25.0);
+    """ "4 points" -> (4.0, 1.0); "1 point per 25 yards" -> (1.0, 25.0);
     "-2 points" -> (-2.0, 1.0). fantasy_points = value * points / per."""
     match = re.match(r"(-?[\d.]+)\s*points?(?:\s*per\s*([\d.]+)\s*yards?)?", rule_text.strip(), re.IGNORECASE)
     if not match:
@@ -558,12 +598,12 @@ def compute_stat_fantasy_points(stat_id: str, raw_value: str, position: str, yea
     scoring_rules = load_metadata(year)["scoring_rules"]
 
     if stat_id == "stat_54" and position == "DEF":
-        for upper_bound, tier_key in POINTS_ALLOWED_TIERS: # DEF points allowed
+        for upper_bound, tier_key in FANTASY_DEF_POINTS_ALLOWED_TIERS:  # DEF points allowed
             if value <= upper_bound:
                 rule_key = tier_key
                 break
         else:
-            rule_key = POINTS_ALLOWED_TOP_TIER
+            rule_key = FANTASY_DEF_POINTS_ALLOWED_TOP_TIER
         points, per = _parse_scoring_rule(scoring_rules.get(rule_key, "0 points"))
         return points  # tiered rules are flat, not per-unit
 
@@ -662,11 +702,7 @@ def load_starting_slot_counts(year: int) -> dict[str, int]:
     starters in a slot than the season's settings call for), as opposed
     to a bye/injury which still shows an actual (if low-scoring) player."""
     roster_settings = load_metadata(year)["settings"]["roster_settings"]
-    return {
-        ROSTER_SETTINGS_KEY_TO_SLOT.get(key, key): count
-        for key, count in roster_settings.items()
-        if key not in NON_STARTING_ROSTER_SETTINGS_KEYS
-    }
+    return {ROSTER_SETTINGS_KEY_TO_SLOT.get(key, key): count for key, count in roster_settings.items() if key not in NON_STARTING_ROSTER_SETTINGS_KEYS}
 
 
 def compute_optimal_lineup(players: list[dict], year: int) -> dict:
@@ -752,15 +788,9 @@ def _load_all_matchups_enriched() -> list[dict]:
             home_info = manager_by_team_id.get(matchup["home"]["team_id"], {})
             away_info = manager_by_team_id.get(matchup["away"]["team_id"], {})
 
-            matchup["home"].update(
-                manager_id=home_info.get("manager_id", ""), display_name=home_info.get("display_name", ""), team_name=home_info.get("team_name", "")
-            )
-            matchup["away"].update(
-                manager_id=away_info.get("manager_id", ""), display_name=away_info.get("display_name", ""), team_name=away_info.get("team_name", "")
-            )
-            matchup["matchup_type"] = type_by_week_and_teams.get(
-                (matchup["week"], frozenset({matchup["home"]["team_id"], matchup["away"]["team_id"]})), "regular"
-            )
+            matchup["home"].update(manager_id=home_info.get("manager_id", ""), display_name=home_info.get("display_name", ""), team_name=home_info.get("team_name", ""))
+            matchup["away"].update(manager_id=away_info.get("manager_id", ""), display_name=away_info.get("display_name", ""), team_name=away_info.get("team_name", ""))
+            matchup["matchup_type"] = type_by_week_and_teams.get((matchup["week"], frozenset({matchup["home"]["team_id"], matchup["away"]["team_id"]})), "regular")
             matchups.append(matchup)
 
     matchups.sort(key=lambda matchup: (matchup["season"], matchup["week"]))
@@ -804,4 +834,4 @@ def contrasting_text_color(hex_color: str) -> str:
     hex_color = hex_color.lstrip("#")
     red, green, blue = (int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
     luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-    return "#000000" if luminance > 150 else "#FFFFFF"
+    return COLOR_BLACK if luminance > 150 else COLOR_WHITE

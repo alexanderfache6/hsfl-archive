@@ -20,7 +20,15 @@ import pandas as pd
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+from colors import (
+    COLOR_ISSUES_BUG,
+    COLOR_ISSUES_CLOSED,
+    COLOR_ISSUES_ENHANCEMENT,
+    COLOR_ISSUES_NEW_FEATURE,
+    COLOR_ISSUES_OPENED,
+)
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
+from strings import PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS
 
 # ========================================
 # CONSTANTS
@@ -32,7 +40,7 @@ GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
 FEEDBACK_TYPES = ["Bug", "Enhancement", "New Feature"]
-REAL_PAGES = ["History", "Seasons", "Players", "Matchups", "Feedback"]
+REAL_PAGES = [PAGE_HISTORY, PAGE_SEASONS, PAGE_PLAYERS, PAGE_MATCHUPS, PAGE_FEEDBACK]
 KNOWN_PAGES = {*REAL_PAGES, "Other"}
 TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
@@ -47,7 +55,7 @@ ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Fea
 # using that commit's public raw-content URL.
 FEEDBACK_ATTACHMENTS_DIRECTORY = "feedback-attachments"
 MAX_SCREENSHOT_COUNT = 3
-MAX_SCREENSHOT_MB = 1 # real screenshots run well under this
+MAX_SCREENSHOT_MB = 1  # real screenshots run well under this
 
 # Issues filed before this type was renamed from "Improvement" to
 # "Enhancement" still have "**Type:** Improvement" in their body -
@@ -56,7 +64,7 @@ ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
 
 # Same colors as this repo's actual GitHub labels, for the Issues
 # table's Type pill.
-ISSUE_TYPE_COLORS = {"Bug": "#b60205", "Enhancement": "#0e8a16", "New Feature": "#0052cc"}
+ISSUE_TYPE_COLORS = {"Bug": COLOR_ISSUES_BUG, "Enhancement": COLOR_ISSUES_ENHANCEMENT, "New Feature": COLOR_ISSUES_NEW_FEATURE}
 # TODO don't hardcode this
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
@@ -85,8 +93,6 @@ ISSUE_DESCRIPTION_PATTERN = re.compile(r"\*\*Description:\*\*\s*(.+)")
 
 ISSUES_PAGE_SIZE = 10
 
-ISSUES_OPENED_COLOR = "#2E7D32"
-ISSUES_CLOSED_COLOR = "#1E88E5"
 
 # ========================================
 # FUNCTIONS
@@ -196,7 +202,15 @@ def _all_issues() -> list[dict]:
     which is what's used to tell them apart), pre-parsed into this form's
     own Type/Page/Description fields. Cached for 60s so a page rerun
     doesn't refetch every time - issues don't change that fast outside of
-    right after a fresh submission (see the cache-clear above)."""
+    right after a fresh submission (see the cache-clear above).
+
+    Any issue whose RAW GitHub title contains "[Internal]" is dropped
+    right here, before _parse_issue even runs - internal tracking issues
+    should never reach the table, the chart, or anything else downstream,
+    not just be hidden by a filter toggle. Checked against the raw title
+    (not the parsed one _parse_issue produces, which strips the leading
+    "[...]" bracket entirely) since "the title of the issue" as filed on
+    GitHub is what actually carries the "[Internal]" marker."""
     token = _github_issues_token()
     headers = {"Accept": "application/vnd.github+json"}
     if token:
@@ -208,7 +222,7 @@ def _all_issues() -> list[dict]:
         timeout=10,
     )
     response.raise_for_status()
-    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue]
+    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue and "[Internal]" not in issue["title"]]
 
 
 @st.cache_data(ttl=300)
@@ -228,11 +242,7 @@ def _all_releases() -> list[dict]:
         timeout=10,
     )
     response.raise_for_status()
-    releases = [
-        {"tag": release["tag_name"], "published_at": release["published_at"], "url": release["html_url"]}
-        for release in response.json()
-        if release.get("published_at")
-    ]
+    releases = [{"tag": release["tag_name"], "published_at": release["published_at"], "url": release["html_url"]} for release in response.json() if release.get("published_at")]
     releases.sort(key=lambda release: release["published_at"])
     return releases
 
@@ -282,6 +292,7 @@ def _issues_with_pending_merged() -> list[dict] | None:
 def _mb_to_bytes(mb):
     return mb * 1024 * 1024
 
+
 # ========================================
 # RENDER
 # ========================================
@@ -289,6 +300,7 @@ def _mb_to_bytes(mb):
 
 def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
+    st.info("Provide feedback/new ideas. The more details the better. Logged with Github Issues.")
 
     # Same versioned-widget-key pattern as the Matchups/Players tabs'
     # Clear Filters - Clear Feedback (and a successful Submit) bumps this
@@ -306,13 +318,13 @@ def _render_feedback_form() -> None:
         if widget_key not in st.session_state and base_key in st.session_state:
             st.session_state[widget_key] = st.session_state[base_key]
 
-    feedback_type = st.radio("Type", FEEDBACK_TYPES, key=versioned_key("feedback_type"), horizontal=True)
+    feedback_type = st.radio("Issue Type", FEEDBACK_TYPES, key=versioned_key("feedback_type"), horizontal=True)
 
     page_options = [*REAL_PAGES, "Other"] if feedback_type == "New Feature" else REAL_PAGES
     page_widget_key = versioned_key("feedback_page")
     if st.session_state.get(page_widget_key) not in page_options:
         st.session_state[page_widget_key] = page_options[0]
-    selected_page = st.radio("Page", page_options, key=page_widget_key, horizontal=True)
+    selected_page = st.radio("App Page", page_options, key=page_widget_key, horizontal=True)
 
     title = st.text_input("Title", max_chars=TITLE_MAX_CHARS, key=versioned_key("feedback_title"))
     description = st.text_area("Description", max_chars=DESCRIPTION_MAX_CHARS, key=versioned_key("feedback_description"))
@@ -328,7 +340,7 @@ def _render_feedback_form() -> None:
         type=["png"],
         accept_multiple_files=True,
         key=versioned_key("feedback_screenshot"),
-        max_upload_size=MAX_SCREENSHOT_MB # per file
+        max_upload_size=MAX_SCREENSHOT_MB,  # NOTE per file
     )
 
     # st.file_uploader has no built-in cap on file COUNT (only the
@@ -340,7 +352,7 @@ def _render_feedback_form() -> None:
         if len(uploaded_screenshots) > MAX_SCREENSHOT_COUNT:
             screenshot_error = f"Attach at most {MAX_SCREENSHOT_COUNT} screenshots ({len(uploaded_screenshots)} selected)."
         else:
-            oversized = [f.name for f in uploaded_screenshots if f.size > _mb_to_bytes(MAX_SCREENSHOT_MB)] # NOTE f.size is checking bytes
+            oversized = [f.name for f in uploaded_screenshots if f.size > _mb_to_bytes(MAX_SCREENSHOT_MB)]  # NOTE f.size is checking bytes
             if oversized:
                 screenshot_error = f"Screenshot(s) over {MAX_SCREENSHOT_MB}MB: {', '.join(oversized)}."
     if screenshot_error:
@@ -365,9 +377,7 @@ def _render_feedback_form() -> None:
     # selectboxes above already fill theirs) is what closes that gap.
     submit_column, clear_column, _ = st.columns([1, 1, 6])
     with submit_column:
-        submit_clicked = st.button(
-            "Submit", disabled=not (title.strip() and description.strip()) or screenshot_error is not None, use_container_width=True
-        )
+        submit_clicked = st.button("Submit", disabled=not (title.strip() and description.strip()) or screenshot_error is not None, use_container_width=True)
     with clear_column:
         if st.button("Clear Feedback", use_container_width=True):
             _reset_form_fields()
@@ -474,9 +484,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     with type_column:
         selected_type = st.selectbox("Issue Type", FEEDBACK_TYPES, index=None, placeholder="Any", key=versioned_key("feedback_filter_type"))
     with state_column:
-        selected_state = st.selectbox(
-            "Issue State", ["Open", "Closed"], index=None, placeholder="Any", key=versioned_key("feedback_filter_state")
-        )
+        selected_state = st.selectbox("Issue State", ["Open", "Closed"], index=None, placeholder="Any", key=versioned_key("feedback_filter_state"))
     with release_column:
         # "-" (open/ongoing issues - see the rows loop below) is
         # deliberately not one of the filterable options here, only a
@@ -493,9 +501,7 @@ def _render_issues_table(issues: list[dict]) -> None:
             key=versioned_key("feedback_filter_release"),
         )
     with page_column:
-        selected_page = st.selectbox(
-            "App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page")
-        )
+        selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
 
     # Same searchable-selectbox pattern as the Players tab's player
     # search - a plain text_input with substring matching below, not a
@@ -505,9 +511,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     # Transactions table.
     search_column, page_counter_column = st.columns([3, 1])
     with search_column:
-        searched_title = st.text_input(
-            "Search Issue Title(s)", placeholder="Type to search titles...", key=versioned_key("feedback_search_title")
-        )
+        searched_title = st.text_input("Search Issue Title(s)", placeholder="Type to search titles...", key=versioned_key("feedback_search_title"))
 
     st.session_state["feedback_filter_type"] = selected_type
     st.session_state["feedback_filter_state"] = selected_state
@@ -647,7 +651,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Opened",
         x=all_dates,
         y=opened_values,
-        marker_color=ISSUES_OPENED_COLOR,
+        marker_color=COLOR_ISSUES_OPENED,
         customdata=closed_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
@@ -655,7 +659,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Closed",
         x=all_dates,
         y=closed_values,
-        marker_color=ISSUES_CLOSED_COLOR,
+        marker_color=COLOR_ISSUES_CLOSED,
         customdata=opened_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
