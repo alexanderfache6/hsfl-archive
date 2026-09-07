@@ -69,6 +69,9 @@ MATCHUPS_PAGE_SIZE = 10
 
 TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to bench players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
 
+
+TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
+
 # ========================================
 # FUNCTIONS
 # ========================================

@@ -1,5 +1,6 @@
 # history
 - [x] add spreadsheet table stats views
+- [ ] Auto-generated season "story" blurb per year (already have _render_season_summary_paragraph-style logic) extended into a short recap paragraph per season, not just all-time.
 
 # seasons
 - [x] schedule tab, kinda similar games view but restricted
