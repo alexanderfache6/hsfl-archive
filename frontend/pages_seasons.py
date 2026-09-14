@@ -52,7 +52,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from helpers import ordinal_word, return_plural, return_s
-from strings import SELECT_STAT_TO_VIEW
+from strings import CLEAR_FILTERS, SELECT_STAT_TO_VIEW
 
 # ========================================
 # CONSTANTS
@@ -1194,7 +1194,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
 
     clear_col, _ = st.columns([1, 7])
     with clear_col:
-        if st.button("Clear Filters", key="seasons_transactions_clear", use_container_width=True):
+        if st.button(CLEAR_FILTERS, key="seasons_transactions_clear", use_container_width=True):
             st.session_state["seasons_transactions_filters_generation"] = generation + 1
             st.session_state["seasons_transactions_page"] = 1
             st.rerun()

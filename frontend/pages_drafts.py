@@ -32,6 +32,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, manager_pill
+from strings import CLEAR_FILTERS
 
 # ========================================
 # RENDER
@@ -371,7 +372,7 @@ def _render_draft_recap_tab(season: int) -> None:
         # nothing to gate behind an Apply click anymore.
         clear_column, _ = st.columns([1, 7])
         with clear_column:
-            if st.button("Clear Filters", use_container_width=True, key="drafts_recap_clear_filters"):
+            if st.button(CLEAR_FILTERS, use_container_width=True, key="drafts_recap_clear_filters"):
                 for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
                     st.session_state.pop(base_key, None)
                 st.session_state["drafts_filters_generation"] = generation + 1
