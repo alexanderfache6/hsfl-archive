@@ -28,7 +28,7 @@ from colors import (
     COLOR_ISSUES_OPENED,
 )
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
-from strings import PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS
+from strings import CLEAR_FILTERS, GITHUB_ISSUE_BUG, GITHUB_ISSUE_ENHANCEMENT, GITHUB_ISSUE_NEW_FEATURE, ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE, PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS
 
 # ========================================
 # CONSTANTS
@@ -39,13 +39,14 @@ PACIFIC_TIMEZONE = ZoneInfo("America/Los_Angeles")
 GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
-FEEDBACK_TYPES = ["Bug", "Enhancement", "New Feature"]
-REAL_PAGES = [PAGE_HISTORY, PAGE_SEASONS, PAGE_PLAYERS, PAGE_MATCHUPS, PAGE_FEEDBACK]
-KNOWN_PAGES = {*REAL_PAGES, "Other"}
+FEEDBACK_TYPES = [ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE]
+REAL_PAGE_ORDER = [PAGE_HISTORY, PAGE_SEASONS, PAGE_PLAYERS, PAGE_MATCHUPS, PAGE_DRAFTS, PAGE_FEEDBACK]
+
+FEEDBACK_PAGE_OPTIONS = {*REAL_PAGE_ORDER, "Other"}
 TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
 
-ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Feature": ["new feature"]}
+ISSUE_LABELS_BY_TYPE = {ISSUE_BUG: [GITHUB_ISSUE_BUG], ISSUE_ENHANCEMENT: [GITHUB_ISSUE_ENHANCEMENT], ISSUE_NEW_FEATURE: [GITHUB_ISSUE_NEW_FEATURE]}
 
 # GitHub's create-issue REST endpoint has no attachment field (the
 # drag-and-drop upload used at github.com itself goes through a
@@ -64,7 +65,7 @@ ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
 
 # Same colors as this repo's actual GitHub labels, for the Issues
 # table's Type pill.
-ISSUE_TYPE_COLORS = {"Bug": COLOR_ISSUES_BUG, "Enhancement": COLOR_ISSUES_ENHANCEMENT, "New Feature": COLOR_ISSUES_NEW_FEATURE}
+ISSUE_TYPE_COLORS = {ISSUE_BUG: COLOR_ISSUES_BUG, ISSUE_ENHANCEMENT: COLOR_ISSUES_ENHANCEMENT, ISSUE_NEW_FEATURE: COLOR_ISSUES_NEW_FEATURE}
 # TODO don't hardcode this
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
@@ -85,7 +86,7 @@ ISSUES_FILTER_WIDGET_BASE_KEYS = (
 # bracket (the current naming format is "[Page] Title") but falls back
 # to the body's "**Page:**" line when the bracket isn't a recognized
 # page - older issues filed before this naming format held the TYPE in
-# that bracket instead (see _parse_issue's KNOWN_PAGES check).
+# that bracket instead (see _parse_issue's FEEDBACK_PAGE_OPTIONS check).
 ISSUE_TITLE_PATTERN = re.compile(r"^\[(.*?)\]\s*(.*)$")
 ISSUE_TYPE_PATTERN = re.compile(r"\*\*Type:\*\*\s*(.+)")
 ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
@@ -169,7 +170,7 @@ def _parse_issue(issue: dict) -> dict:
     type_match = ISSUE_TYPE_PATTERN.search(body)
     issue_type = type_match.group(1).strip() if type_match else ""
     issue_type = ISSUE_TYPE_ALIASES.get(issue_type, issue_type)
-    if bracket in KNOWN_PAGES:
+    if bracket in FEEDBACK_PAGE_OPTIONS:
         page = bracket
     else:
         # Older issue, filed before the "[Page] Title" naming format -
@@ -320,7 +321,7 @@ def _render_feedback_form() -> None:
 
     feedback_type = st.radio("Issue Type", FEEDBACK_TYPES, key=versioned_key("feedback_type"), horizontal=True)
 
-    page_options = [*REAL_PAGES, "Other"] if feedback_type == "New Feature" else REAL_PAGES
+    page_options = [*REAL_PAGE_ORDER, "Other"] if feedback_type == "New Feature" else REAL_PAGE_ORDER
     page_widget_key = versioned_key("feedback_page")
     if st.session_state.get(page_widget_key) not in page_options:
         st.session_state[page_widget_key] = page_options[0]
@@ -365,7 +366,7 @@ def _render_feedback_form() -> None:
 
     def _reset_form_fields() -> None:
         st.session_state["feedback_type"] = FEEDBACK_TYPES[0]
-        st.session_state["feedback_page"] = REAL_PAGES[0]
+        st.session_state["feedback_page"] = REAL_PAGE_ORDER[0]
         st.session_state["feedback_title"] = ""
         st.session_state["feedback_description"] = ""
         st.session_state["feedback_form_generation"] = generation + 1
@@ -501,7 +502,7 @@ def _render_issues_table(issues: list[dict]) -> None:
             key=versioned_key("feedback_filter_release"),
         )
     with page_column:
-        selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
+        selected_page = st.selectbox("App Page", [*REAL_PAGE_ORDER, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
 
     # Same searchable-selectbox pattern as the Players tab's player
     # search - a plain text_input with substring matching below, not a
@@ -519,7 +520,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     st.session_state["feedback_filter_page"] = selected_page
     st.session_state["feedback_search_title"] = searched_title
 
-    if st.button("Clear Filters"):
+    if st.button(CLEAR_FILTERS):
         for base_key in ISSUES_FILTER_WIDGET_BASE_KEYS:
             st.session_state.pop(base_key, None)
         st.session_state["feedback_issues_filters_generation"] = generation + 1

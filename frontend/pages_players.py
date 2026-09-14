@@ -60,7 +60,7 @@ from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowEdge, StreamlitFlowNode
 from streamlit_flow.layouts import ManualLayout
 from streamlit_flow.state import StreamlitFlowState
-from strings import SELECT_FANTASY_STAT_TO_VIEW
+from strings import CLEAR_FILTERS, SELECT_FANTASY_STAT_TO_VIEW
 
 # ========================================
 # CONSTANTS
@@ -1414,7 +1414,7 @@ def render_players_page() -> None:
             use_container_width=True,
         )
     with clear_column:
-        if st.button("Clear Filters", use_container_width=True):
+        if st.button(CLEAR_FILTERS, use_container_width=True):
             for base_key in PLAYER_FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("player_applied_filters", None)

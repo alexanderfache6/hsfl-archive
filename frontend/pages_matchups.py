@@ -427,7 +427,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     with apply_col:
         applied = st.button("Apply Filters", disabled=team1_manager_id is None, help="Select Manager 1 first" if team1_manager_id is None else None, use_container_width=True)
     with clear_col:
-        if st.button("Clear Filters", use_container_width=True):
+        if st.button(CLEAR_FILTERS, use_container_width=True):
             for base_key in FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("matchups_applied_filters", None)
