@@ -52,6 +52,7 @@ from data_loader import (
 )
 from helpers import manager_pill
 from player_modal import open_player_stats_modal
+from strings import CLEAR_FILTERS
 
 # ========================================
 # CONSTANTS
