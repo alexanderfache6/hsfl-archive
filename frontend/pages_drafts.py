@@ -106,7 +106,7 @@ def _render_draft_pick_card(
             )
 
 
-DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount"]
+DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount", "drafts_recap_sort_by_amount"]
 
 
 def _integer_yaxis_nticks(values: list[int]) -> int:
@@ -320,7 +320,8 @@ def _render_draft_recap_tab(season: int) -> None:
         # Auction $ only means anything for an auction draft - a snake
         # draft's picks all carry a null auction_amount, so the filter
         # would just always empty the results.
-        search_column, manager_column, position_column, min_amount_column, max_amount_column = st.columns([3, 2, 1, 1, 1])
+        search_column, manager_column, position_column = st.columns([2, 1, 1])
+        min_amount_column, max_amount_column, sort_picks_column = st.columns([1, 1, 2])
         # Same "Search for a player" selectbox pattern as pages_players.py
         # - pre-filtered to only players actually picked in THIS draft,
         # rather than every player in the archive.
@@ -361,11 +362,18 @@ def _render_draft_recap_tab(season: int) -> None:
                 key=versioned_key("drafts_recap_max_amount"),
             )
 
+        # Sorting by auction amount only means anything for an auction
+        # draft - a snake draft has nothing but pick order to sort by.
+        sort_picks_by_amount = False
+        if draft_type == DRAFT_AUCTION:
+            sort_picks_by_amount = sort_picks_column.toggle("Sort by Auction Price", value=False, key=versioned_key("drafts_recap_sort_by_amount"), help="Sort by Pick Order or Auction Price (keepers are shown first).")
+
         st.session_state["drafts_recap_search"] = selected_player_name
         st.session_state["drafts_recap_manager"] = selected_manager_id
         st.session_state["drafts_recap_position"] = selected_position
         st.session_state["drafts_recap_min_amount"] = min_amount
         st.session_state["drafts_recap_max_amount"] = max_amount
+        st.session_state["drafts_recap_sort_by_amount"] = sort_picks_by_amount
 
         # Clear-only, left-aligned in the same [1, 1, 6] column pattern
         # used everywhere else - no Apply column here since there's
@@ -378,7 +386,14 @@ def _render_draft_recap_tab(season: int) -> None:
                 st.session_state["drafts_filters_generation"] = generation + 1
                 st.rerun()
 
-        picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"])
+        if sort_picks_by_amount:
+            # NOTE show keepers first
+            picks = sorted(draft["picks"], key=lambda pick: (pick["auction_amount"] is not None, -(pick["auction_amount"] or 0)), reverse=False)
+            # NOTE double tuple sort
+            # first - false before true (keepers before picks)
+            # second - keepers set to 0 price, - for sorting descending price on second tuple only
+        else:
+            picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"], reverse=False)
         if selected_player_name:
             picks = [pick for pick in picks if pick["player_name"] == selected_player_name]
         if selected_manager_id != "All":
