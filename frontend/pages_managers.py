@@ -6,9 +6,10 @@
 
 import plotly.graph_objects as go
 import streamlit as st
-from colors import COLOR_NFL_BYE_WEEK, COLOR_NFL_GAME_MISSED, COLOR_OPTIMAL_OUTLINE, COLOR_MANAGER_BACKUP, COLOR_PLAYER_STARTER, COLOR_POINTS_NEGATIVE, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
-from constants import CHART_LINE_WIDTH_MEDIUM, CHART_MARKER_SIZE_MEDIUM, EMOJI_FIRST_PLACE, EMOJI_LAST_PLACE, EMOJI_SECOND_PLACE, EMOJI_THIRD_PLACE
+from colors import COLOR_MANAGER_BACKUP, COLOR_NFL_BYE_WEEK, COLOR_NFL_GAME_MISSED, COLOR_OPTIMAL_OUTLINE, COLOR_PLAYER_BENCH, COLOR_PLAYER_STARTER, COLOR_POINTS_NEGATIVE, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
+from constants import CHART_LINE_WIDTH_MEDIUM, CHART_MARKER_SIZE_MEDIUM, EMOJI_FIRST_PLACE, EMOJI_LAST_PLACE, EMOJI_SECOND_PLACE, EMOJI_THIRD_PLACE, MATCHUP_TYPE_LABELS, MATCHUP_TYPE_OPTIONS
 from data_loader import (
+    CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
     load_all_time_manager_stats,
@@ -38,8 +39,8 @@ PLAYER_STATUS_CODES = {
 
 # stat option -> (True when a lower value is better, i.e. ranks, so the axis flips)
 HISTORICAL_STAT_OPTIONS = {
-    "Final Regular Season Rank": True,
     "Final Post Season Rank": True,
+    "Final Regular Season Rank": True,
     "Points Scored": False,
     "Point Differential": False,
     "Wins": False,
@@ -246,8 +247,8 @@ def _season_history_rows(manager_id: str, seasons: list[int]) -> list[dict]:
             {
                 "season": season,
                 "teams": len(weeks[-1]["standings"]),
-                "Final Regular Season Rank": standing["rank"],
                 "Final Post Season Rank": post_season_stats["final_placements"].get(team_id) if post_season_stats else None,
+                "Final Regular Season Rank": standing["rank"],
                 "Points Scored": standing["points_for"],
                 "Point Differential": standing["points_for"] - standing["points_against"],
                 "Wins": standing["wins"],
@@ -259,7 +260,7 @@ def _season_history_rows(manager_id: str, seasons: list[int]) -> list[dict]:
 
 def _render_historical_stats_tab(manager: dict) -> None:
     manager_id = manager["manager_id"]
-    seasons = manager["seasons_played"]
+    rows = _season_history_rows(manager_id, manager["seasons_played"])
 
     first_column, second_column, third_column, last_column = st.columns(4)
     first_column.metric(f"{EMOJI_FIRST_PLACE} 1st Place", manager["championships"])
@@ -271,7 +272,6 @@ def _render_historical_stats_tab(manager: dict) -> None:
     render_record_metrics(all_matchups, manager_id)
     render_season_qualification_metrics(all_matchups)
 
-    rows = _season_history_rows(manager_id, seasons)
     if not rows:
         st.info("No season history available for this manager yet.")
         return
@@ -323,6 +323,126 @@ def _render_historical_stats_tab(manager: dict) -> None:
     st.plotly_chart(figure, width="stretch")
 
 
+def _head_to_head_records(matchups: list[dict], manager_id: str) -> dict[str, dict[str, float]]:
+    """{opponent_manager_id: {"wins", "losses", "ties", "points_for",
+    "points_against"}} from the given manager's point of view."""
+    records: dict[str, dict[str, float]] = {}
+    for matchup in matchups:
+        home, away = matchup["home"], matchup["away"]
+        manager_side, other_side = (home, away) if home["manager_id"] == manager_id else (away, home)
+        record = records.setdefault(other_side["manager_id"], {"wins": 0, "losses": 0, "ties": 0, "points_for": 0.0, "points_against": 0.0})
+        record["points_for"] += manager_side["score"]
+        record["points_against"] += other_side["score"]
+        if manager_side["score"] > other_side["score"]:
+            record["wins"] += 1
+        elif manager_side["score"] < other_side["score"]:
+            record["losses"] += 1
+        else:
+            record["ties"] += 1
+    return records
+
+
+def _render_radar_chart(title: str, opponent_names: list[str], values: list[float], color: str, muted_names: set[str], is_percent: bool = False, is_whole_number: bool = True) -> None:
+    """One radar: every opponent is a spoke around the edge. Opponents in
+    muted_names (no matchups under the current filter) keep their spoke
+    but get a faded label."""
+    # Repeating the first point closes the polygon.
+    theta = opponent_names + opponent_names[:1]
+    radius = values + values[:1]
+    hover_value = "%{r:.1%}" if is_percent else "%{r}" if is_whole_number else "%{r:.2f}"
+    figure = go.Figure()
+    figure.add_trace(
+        go.Scatterpolar(
+            r=radius,
+            theta=theta,
+            mode="lines+markers",
+            fill="toself",
+            line={"color": color, "width": CHART_LINE_WIDTH_MEDIUM},
+            marker={"color": color, "size": CHART_MARKER_SIZE_MEDIUM},
+            hovertemplate="<b>%{theta}</b><br>" + title + ": " + hover_value + "<extra></extra>",
+        )
+    )
+    # Radial gridlines capped at CHART_YAXIS_MAX_TICKS, same as the other charts' axes.
+    if is_percent:
+        radial_axis = {"range": [0, 1], "tickformat": ".0%", "nticks": CHART_YAXIS_MAX_TICKS}
+    else:
+        # Point differential can be negative, so the axis starts at the lowest value when it dips below zero.
+        radial_axis = {"range": [min(0, min(values, default=0)), max(values, default=0) or 1], "nticks": CHART_YAXIS_MAX_TICKS}
+        if is_whole_number:
+            # No more ticks than distinct whole values, so labels never repeat.
+            radial_axis.update({"tickformat": "d", "nticks": min(int(max(values, default=0)) + 1, CHART_YAXIS_MAX_TICKS)})
+    tick_text = [f"<span style='color:{COLOR_PLAYER_BENCH};'>{name}</span>" if name in muted_names else name for name in opponent_names]
+    figure.update_layout(
+        title=title,
+        polar={"radialaxis": radial_axis, "angularaxis": {"rotation": 90, "direction": "clockwise", "type": "category", "tickmode": "array", "tickvals": opponent_names, "ticktext": tick_text}},
+        showlegend=False,
+        margin={"t": 60, "l": 60, "r": 60, "b": 40},
+    )
+    st.plotly_chart(figure, width="stretch")
+
+
+def _render_head_to_head_tab(manager_id: str, all_manager_ids: list[str], name_resolver: dict[str, str]) -> None:
+    matchup_type = st.selectbox(
+        "Select Matchup Type",
+        MATCHUP_TYPE_OPTIONS,
+        format_func=lambda value: "All Time" if value == "all" else MATCHUP_TYPE_LABELS[value],
+        key="managers_head_to_head_type",
+    )
+    records = _head_to_head_records(load_matchups(None, None, manager_id, None, matchup_type), manager_id)
+    if not records:
+        st.info("No matchups found for this selection.")
+        return
+
+    # Every other manager gets a spoke; the ones with no matchups under
+    # this filter are zero-valued and have their name muted.
+    opponent_ids = sorted((opponent_id for opponent_id in all_manager_ids if opponent_id != manager_id), key=lambda opponent_id: resolve_manager_name(opponent_id, name_resolver))
+    opponent_names = [resolve_manager_name(opponent_id, name_resolver) for opponent_id in opponent_ids]
+    muted_names = {name for opponent_id, name in zip(opponent_ids, opponent_names) if opponent_id not in records}
+    no_matchups = {"wins": 0, "losses": 0, "ties": 0, "points_for": 0.0, "points_against": 0.0}
+    manager_color = build_manager_color_map().get(manager_id, COLOR_MANAGER_BACKUP)
+
+    def _values(field: str) -> list[float]:
+        return [records.get(opponent_id, no_matchups)[field] for opponent_id in opponent_ids]
+
+    games = [record["wins"] + record["losses"] + record["ties"] for record in (records.get(opponent_id, no_matchups) for opponent_id in opponent_ids)]
+    win_percentages = [wins / game_count if game_count else 0 for wins, game_count in zip(_values("wins"), games)]
+    point_differentials = [points_for - points_against for points_for, points_against in zip(_values("points_for"), _values("points_against"))]
+
+    first_row = st.columns(3)
+    with first_row[0]:
+        _render_radar_chart("Wins", opponent_names, _values("wins"), manager_color, muted_names)
+    with first_row[1]:
+        _render_radar_chart("Losses", opponent_names, _values("losses"), manager_color, muted_names)
+    with first_row[2]:
+        _render_radar_chart("Win %", opponent_names, win_percentages, manager_color, muted_names, is_percent=True)
+
+    second_row = st.columns(3)
+    with second_row[0]:
+        _render_radar_chart("Points For", opponent_names, _values("points_for"), manager_color, muted_names, is_whole_number=False)
+    with second_row[1]:
+        _render_radar_chart("Points Against", opponent_names, _values("points_against"), manager_color, muted_names, is_whole_number=False)
+    with second_row[2]:
+        _render_radar_chart("Point Differential", opponent_names, point_differentials, manager_color, muted_names, is_whole_number=False)
+
+
+def _select_season_and_weeks(manager_id: str, seasons_played: list[int], key: str) -> tuple[int, list[int]] | None:
+    """Season filter (most recent first) plus every week the manager has a
+    matchup that season - regular season and championship/consolation
+    post-season weeks alike. None (after an info message) if there's
+    nothing to show."""
+    seasons = sorted(seasons_played, reverse=True)
+    if not seasons:
+        st.info("This manager has not played any seasons yet.")
+        return None
+
+    selected_season = st.selectbox("Select Season", seasons, key=key)
+    weeks = sorted({matchup["week"] for matchup in load_matchups(selected_season, None, manager_id, None, "all")})
+    if not weeks:
+        st.info("No weeks available for this season yet.")
+        return None
+    return selected_season, weeks
+
+
 # ========================================
 # RENDER
 # ========================================
@@ -347,37 +467,26 @@ def render_managers_page() -> None:
         key="managers_manager",
     )
 
-    historical_stats_tab, per_season_tab, head_to_head_tab = st.tabs(["Historical Stats", "Per Season", "Head to Head"])
+    historical_stats_tab, season_stats_tab, season_depth_charts_tab, head_to_head_tab = st.tabs(["Historical Stats", "Season Stats", "Season Depth Charts", "Head to Head"])
 
     with historical_stats_tab:
         _render_historical_stats_tab(next(manager for manager in managers if manager["manager_id"] == selected_manager_id))
 
-    with head_to_head_tab:
-        st.info("Head to Head coming soon.")
-
-    with per_season_tab:
-        seasons = sorted(seasons_played_by_manager[selected_manager_id], reverse=True)
-        if not seasons:
-            st.info("This manager has not played any seasons yet.")
-            return
-
-        selected_season = st.selectbox("Select Season", seasons, key="managers_season")
-        show_optimal = st.toggle("Show Optimal Lineup", key="managers_show_optimal", help=TOGGLE_OPTIMAL_LINEUP)
-
-        # Every week this manager has a matchup - regular season plus
-        # championship/consolation post-season weeks ("all" matchup type).
-        weeks = sorted({matchup["week"] for matchup in load_matchups(selected_season, None, selected_manager_id, None, "all")})
-        if not weeks:
-            st.info("No weeks available for this season yet.")
-            return
-
-        season_stats_tab, weekly_stats_tab = st.tabs(["Season Stats", "Weekly Depth Charts"])
-
-        with season_stats_tab:
+    with season_stats_tab:
+        selection = _select_season_and_weeks(selected_manager_id, seasons_played_by_manager[selected_manager_id], "managers_season_stats_season")
+        if selection:
+            selected_season, weeks = selection
             _render_season_stats_chart(selected_season, weeks, selected_manager_id)
 
-        with weekly_stats_tab:
+    with season_depth_charts_tab:
+        selection = _select_season_and_weeks(selected_manager_id, seasons_played_by_manager[selected_manager_id], "managers_depth_charts_season")
+        if selection:
+            selected_season, weeks = selection
+            show_optimal = st.toggle("Show Optimal Lineup", key="managers_show_optimal", help=TOGGLE_OPTIMAL_LINEUP)
             week_tabs = st.tabs([f"Week {week}" for week in weeks])
             for week_tab, week in zip(week_tabs, weeks):
                 with week_tab:
                     _render_depth_chart(selected_season, week, selected_manager_id, show_optimal)
+
+    with head_to_head_tab:
+        _render_head_to_head_tab(selected_manager_id, manager_ids, name_resolver)
