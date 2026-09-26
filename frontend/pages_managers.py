@@ -259,7 +259,7 @@ def render_managers_page() -> None:
             st.info("No weeks available for this season yet.")
             return
 
-        season_stats_tab, weekly_stats_tab = st.tabs(["Season Stats", "Weekly Stats"])
+        season_stats_tab, weekly_stats_tab = st.tabs(["Season Stats", "Weekly Depth Charts"])
 
         with season_stats_tab:
             _render_season_stats_chart(selected_season, weeks, selected_manager_id)
