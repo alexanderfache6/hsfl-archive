@@ -7,14 +7,18 @@ from colors import (
     COLOR_PERCENTILE_OTHER_PLAYERS,
     COLOR_PERCENTILE_SELECTED_PLAYER,
     COLOR_PICK,
+    COLOR_TABLE_ROSTER,
 )
-from constants import CHART_LINE_WIDTH_LARGE, CHART_MARKER_SIZE_MEDIUM, ORDINAL_WORDS
+from constants import BENCH_POSITION_COLOR, CHART_LINE_WIDTH_LARGE, CHART_MARKER_SIZE_MEDIUM, MAX_YAXIS_TICKS, ORDINAL_WORDS
 from data_loader import (
+    FLEX_ELIGIBLE_POSITIONS,
+    compute_optimal_lineup,
     contrasting_text_color,
     discover_seasons,
     load_draft,
     load_player_fantasy_value_metrics,
     load_player_ownership,
+    load_starting_slot_counts,
     resolve_manager_name,
     team_id_to_manager_map,
 )
@@ -27,6 +31,27 @@ def manager_pill(manager_id: str, name_resolver: dict[str, str], manager_color_m
     background_color = manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)
     text_color = contrasting_text_color(background_color)
     return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600; white-space:nowrap;'>{text}</span>"
+
+
+def position_pill(position: str, margin_right: bool = False) -> str:
+    background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
+    text_color = contrasting_text_color(background_color)
+    margin = " margin-right:8px;" if margin_right else ""
+    return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600;{margin}'>{position}</span>"
+
+
+def player_line(player_name: str, nfl_team: str, position: str | None = None, points: float | None = None, points_color: str | None = None, status_code: str | None = None, status_color: str | None = None) -> str:
+    """[position pill] **name** (NFL team), with fantasy points (when
+    given) right-aligned on the same line - the shared player line used
+    on the Drafts selection cards and the Managers depth chart cards."""
+    pill = position_pill(position, margin_right=True) if position else ""
+    status_html = f" <span style='font-size:0.75em; font-weight:700; color:{status_color};'>{status_code}</span>" if status_code else ""
+    left_html = f"{pill}<span style='font-weight:600;'>{player_name}</span> <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>{status_html}"
+    if points is None:
+        return left_html
+    color_style = f" color:{points_color};" if points_color else ""
+    # <span>s (not <div>s) so Streamlit still wraps the line in its normal <p>, keeping the card's usual padding.
+    return f"<span style='display:flex; justify-content:space-between; align-items:center; gap:8px;'><span>{left_html}</span><span style='font-weight:600;{color_style}'>{points:.2f}</span></span>"
 
 
 # return st, nd, rd for a number
@@ -286,3 +311,194 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
         margin={"t": 70, "l": 60, "r": 60, "b": 50},
     )
     st.plotly_chart(fantasy_figure, width="stretch")
+
+
+def pad_missing_starters(starters: list[dict], year: int) -> list[dict]:
+    """Rebuilds the starters list in roster_settings' own slot order
+    (QB, RB, RB, WR, WR, TE, FLEX, K, DEF, ...), inserting a blank
+    placeholder row wherever that season's settings call for a slot this
+    week's actual starters list is short on - e.g. settings call for 2 RB
+    but only 1 RB actually started, so the second RB slot renders empty
+    in its normal position rather than being silently omitted or tacked
+    on at the end out of order. This is a real gap the manager likely
+    just forgot to fill (as opposed to a bye/injury, which still shows an
+    actual, if low-scoring, player)."""
+    expected_slot_counts = load_starting_slot_counts(year)
+    remaining_by_slot: dict[str, list[dict]] = {}
+    for player in starters:
+        slot = player.get("slot", player["position"])
+        remaining_by_slot.setdefault(slot, []).append(player)
+
+    ordered: list[dict] = []
+    for slot, expected_count in expected_slot_counts.items():
+        available = remaining_by_slot.get(slot, [])
+        for _ in range(expected_count):
+            ordered.append(available.pop(0) if available else {"position": slot, "is_empty_slot": True})
+    return ordered
+
+
+def optimal_lineup_details(side: dict, year: int) -> dict:
+    """{"gains": {player_id: +points}, "losses": {player_id: +points},
+    "optimal_points": float, "optimal_player_ids": set} - gains covers bench players who belong in
+    the optimal lineup (compute_optimal_lineup - the same formula behind
+    best_coaching_season/worst_coaching_season); losses is the mirror
+    image, one displaced actual starter per gain, same magnitude, opposite
+    sign when rendered.
+
+    Two-pass attribution over "added" (optimal starters who weren't
+    actually started) and "removed" (actual starters who aren't in the
+    optimal lineup):
+
+    Pass 1 matches each added player against a removed player at the SAME
+    (or FLEX-eligible) position first, biggest added points vs weakest
+    same-position removed - this is what correctly handles the common
+    case of two or more INDEPENDENT simple swaps in the same week (e.g. a
+    better bench DEF for the starting DEF, AND separately a better bench
+    TE for the starting TE - each attributed to its own real position
+    swap, not cross-matched by point value alone).
+
+    Pass 2 pairs whatever's left over (added points descending vs removed
+    points ascending) regardless of position - this covers the case a
+    same-position match alone can't explain: the true optimal lineup
+    reshuffled an EXISTING starter into a different slot (e.g. a starting
+    RB moved into FLEX to make room for a stronger bench RB) rather than
+    benching them outright, so pass 1 finds no same-position starter that
+    "dropped out" to pair against. See bugs.md for the real examples that
+    surfaced both failure modes this two-pass approach fixes (2022 Wk4/
+    Wk13/Wk15, Jeremy vs Alex F). Neither pass claims to reconstruct the
+    TRUE swap chain in multi-swap weeks - this is a display attribution
+    convention, same as before - but pass 1 keeps genuinely independent
+    swaps correctly attributed, and pass 2 guarantees no real gain is
+    dropped to zero the way the original single-pass version could.
+
+    A team's actual archived lineup can be genuinely short a starter
+    (fewer real starter entries that week than that season's roster
+    settings call for - the manager just never filled the slot). That
+    slot is treated as a real, legitimate starter scoring 0 - the same
+    "empty slot" placeholder pad_missing_starters() already synthesizes
+    for display - so the optimizer can still consider the next-best
+    available bench player for it exactly like any other slot, and (if
+    no eligible bench player exists either) it correctly stays a 0-point
+    swap with no gain/loss recorded at all, rather than the "added" list
+    silently ending up longer than "removed" (see bugs.md bug 8).
+    optimal_points is the true optimal lineup's total, for the bench
+    table's summary row.
+
+    DB (Defensive Back / IDP) position players are excluded from the
+    optimizer entirely, on both sides of the comparison - 2012 is the
+    only season with this roster slot, it's vestigial (no player ever
+    legitimately fills it - see bugs.md bug 5's footnote), and trying to
+    "optimize" a slot with no real candidate pool just produced a
+    mismatched added/removed count. A DB starter is left untouched: never
+    a swap candidate, never highlighted red/green, with their real points
+    folded back into optimal_points unchanged so the displayed total
+    still matches the team's actual score."""
+    padded_starters = pad_missing_starters(side["starters"], year)
+    for placeholder in padded_starters:
+        if placeholder.get("is_empty_slot"):
+            placeholder["points"] = 0.0
+            placeholder["player_id"] = f"_empty_slot_{id(placeholder)}"
+            # FLEX's slot label ("W/R") isn't a real position - flagged
+            # separately rather than forcing "position" to a concrete
+            # RB/WR guess, since it's genuinely either and the roster
+            # table still needs to display the literal "W/R" label for
+            # this row (see _render_roster_table/_cell).
+            if placeholder["position"] == "W/R":
+                placeholder["_flex_empty"] = True
+
+    # optimizable_starters (padded, includes 0-point empty-slot
+    # placeholders) is only used below for the "what changed" comparison
+    # - the solver itself only ever sees REAL players. Feeding a
+    # placeholder into the solver's own candidate pool would let it treat
+    # a fake 0-point "player" as a real FLEX/position candidate, which
+    # (combined with FLEX's position label not being a real position -
+    # see _flex_empty above) risks the solver silently mishandling it.
+    # Keeping the solver's input untouched also keeps its result
+    # identical to what code/stats-aggregation/coaching.py already
+    # computes from the same real-player pool.
+    optimizable_starters = [p for p in padded_starters if p.get("position") != "DB"]
+    real_starters = [p for p in side["starters"] if p.get("position") != "DB"]
+    optimizable_bench = [p for p in side["bench"] if p.get("position") != "DB"]
+    db_points = sum(p["points"] for p in side["starters"] if p.get("position") == "DB")
+
+    all_players = real_starters + optimizable_bench
+    optimal = compute_optimal_lineup(all_players, year)
+    optimal_ids = {p["player_id"] for p in optimal["optimal_starters"] if p.get("player_id")}
+    actual_starter_ids = {p["player_id"] for p in optimizable_starters if p.get("player_id")}
+
+    added = [p for p in optimal["optimal_starters"] if p.get("player_id") and p["player_id"] not in actual_starter_ids]
+    removed = [p for p in optimizable_starters if p.get("player_id") and p["player_id"] not in optimal_ids]
+    added.sort(key=lambda p: p["points"], reverse=True)
+
+    pairs: list[tuple[dict, dict]] = []
+
+    # Pass 1: direct same-position/FLEX-eligible swaps. A gained player's
+    # own EXACT position is tried first, before falling back to the
+    # broader FLEX-eligible union (RB/WR) - a FLEX-slot bench player (say
+    # a WR) greedily matching against the weakest candidate across BOTH
+    # positions can steal the wrong position's removed starter (e.g. an
+    # RB who happens to have fewer points than the actual same-position
+    # WR it should have paired against), starving a later same-position
+    # bench player of its own natural, same-position partner and forcing
+    # a mismatched pass-2 pairing - which can even go NEGATIVE if the
+    # only leftover "removed" starter outscores it. See bugs.md.
+    unmatched_added: list[dict] = []
+    remaining_removed = list(removed)
+    for gained_player in added:
+        eligible_positions = FLEX_ELIGIBLE_POSITIONS if gained_player["optimal_slot"] == "FLEX" else {gained_player["optimal_slot"]}
+        same_position_candidates = [
+            r
+            for r in remaining_removed
+            if r.get("position") == gained_player.get("position")
+            # An empty FLEX slot's own "position" is the literal "W/R"
+            # label, not a real position (see _flex_empty above) - any
+            # FLEX-eligible gained player (RB or WR) can count it as a
+            # same-slot match, since the empty slot was equally eligible
+            # for either.
+            or (r.get("_flex_empty") and gained_player.get("position") in FLEX_ELIGIBLE_POSITIONS)
+        ]
+        candidates = same_position_candidates or [r for r in remaining_removed if r.get("position") in eligible_positions]
+        if not candidates:
+            unmatched_added.append(gained_player)
+            continue
+        weakest_displaced = min(candidates, key=lambda r: r["points"])
+        pairs.append((gained_player, weakest_displaced))
+        remaining_removed.remove(weakest_displaced)
+
+    # Pass 2: whatever's left (chain-reassignment case), paired by rank.
+    remaining_removed.sort(key=lambda p: p["points"])
+    for gained_player, lost_player in zip(unmatched_added, remaining_removed):
+        pairs.append((gained_player, lost_player))
+
+    gains: dict[str, float] = {}
+    losses: dict[str, float] = {}
+    for gained_player, lost_player in pairs:
+        gain = gained_player["points"] - lost_player["points"]
+        # A real starter already scoring 0.0, tied with an equally
+        # 0.0-point bench "replacement," isn't a meaningful swap worth
+        # flagging - skip it entirely (leave both un-highlighted) rather
+        # than show a same-value green/red pair for what's functionally
+        # no change at all. An EMPTY slot (is_empty_slot placeholder - no
+        # real player rostered there at all) filled by a 0.0-point bench
+        # player is NOT this case: going from no player to an actual
+        # rostered player is a real, worth-showing change even when the
+        # score happens to be 0 (conceptually NaN -> 0.0, not 0.0 -> 0.0)
+        # - so only a real, already-rostered 0.0 starter is excluded here.
+        if gain == 0.0 and lost_player["points"] == 0.0 and not lost_player.get("is_empty_slot"):
+            continue
+        gains[gained_player["player_id"]] = gain
+        losses[lost_player["player_id"]] = gain
+
+    return {"gains": gains, "losses": losses, "optimal_points": optimal["optimal_points"] + db_points, "optimal_player_ids": optimal_ids}
+
+
+def integer_yaxis_nticks(values: list[int]) -> int:
+    """MAX_YAXIS_TICKS is a CEILING, not a target - passing it straight
+    through as Plotly's nticks forces that many ticks even over a tiny
+    integer range (e.g. 0-5), which makes Plotly fall back to a
+    fractional dtick and repeat rounded integer labels. Capping nticks
+    at the data's own distinct-integer-value count (max_value + 1, for a
+    0-based count axis) keeps every tick unique."""
+    if not values:
+        return MAX_YAXIS_TICKS
+    return min(max(values) + 1, MAX_YAXIS_TICKS)

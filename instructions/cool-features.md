@@ -11,12 +11,9 @@
 - [x] create schedule tab for each week
 
 # managers
-- [ ] weekly depth chart, highlight upcoming byes
-- [ ] show weekly roster details, starter/bench, nfl/fantasy stats
-- [ ] weekly team summary - starters/bench/injured/optimal/bye/got injured
+- [ ] highlight upcoming byes
 - [ ] personal history stats
 - [ ] button to manager page where manager name/team is used, link to that year section. or make into modal with option to go to manager page
-- [ ] show points missed out on
 - [ ] everywhere team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc
 - [ ] manager stats, web chart vs other managers, custom stats, etc
 - [ ] All-time head-to-head matrix: every manager pair's career W-L-T in a heatmap/grid, clickable into that rivalry's game log.
