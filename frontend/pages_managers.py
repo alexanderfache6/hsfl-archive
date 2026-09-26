@@ -6,15 +6,19 @@
 
 import plotly.graph_objects as go
 import streamlit as st
-from colors import COLOR_NFL_BYE_WEEK, COLOR_NFL_GAME_MISSED, COLOR_OPTIMAL_OUTLINE, COLOR_PLAYER_STARTER, COLOR_POINTS_NEGATIVE, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
-from constants import CHART_LINE_WIDTH_MEDIUM, CHART_MARKER_SIZE_MEDIUM
+from colors import COLOR_NFL_BYE_WEEK, COLOR_NFL_GAME_MISSED, COLOR_OPTIMAL_OUTLINE, COLOR_MANAGER_BACKUP, COLOR_PLAYER_STARTER, COLOR_POINTS_NEGATIVE, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
+from constants import CHART_LINE_WIDTH_MEDIUM, CHART_MARKER_SIZE_MEDIUM, EMOJI_FIRST_PLACE, EMOJI_LAST_PLACE, EMOJI_SECOND_PLACE, EMOJI_THIRD_PLACE
 from data_loader import (
+    build_manager_color_map,
     build_manager_name_resolver,
     load_all_time_manager_stats,
     load_matchups,
+    load_post_season_stats,
+    load_weekly_tables,
     resolve_manager_name,
+    team_id_to_manager_map,
 )
-from helpers import integer_yaxis_nticks, optimal_lineup_details, pad_missing_starters, player_line, position_pill
+from helpers import integer_yaxis_nticks, optimal_lineup_details, pad_missing_starters, player_line, position_pill, render_record_metrics, render_season_qualification_metrics
 from strings import TOGGLE_OPTIMAL_LINEUP
 
 # ========================================
@@ -30,6 +34,16 @@ DEPTH_CHART_LABEL_COLUMN_WIDTH = 0.5
 PLAYER_STATUS_CODES = {
     "BYE": (COLOR_NFL_BYE_WEEK, "NFL bye week"),
     "IR": (COLOR_NFL_GAME_MISSED, "Reserve (IR) slot"),
+}
+
+# stat option -> (True when a lower value is better, i.e. ranks, so the axis flips)
+HISTORICAL_STAT_OPTIONS = {
+    "Final Regular Season Rank": True,
+    "Final Post Season Rank": True,
+    "Points Scored": False,
+    "Point Differential": False,
+    "Wins": False,
+    "Losses": False,
 }
 
 # ========================================
@@ -214,6 +228,101 @@ def _render_season_stats_chart(season: int, weeks: list[int], manager_id: str) -
     st.plotly_chart(figure, width="stretch")
 
 
+def _season_history_rows(manager_id: str, seasons: list[int]) -> list[dict]:
+    """One row per season the manager played: final regular-season
+    standings (the last week's cumulative standings row - same source as
+    the Seasons page's standings table) plus their post-season placement."""
+    rows = []
+    for season in sorted(seasons):
+        team_id = next((team_id for team_id, info in team_id_to_manager_map(season).items() if info.get("manager_id") == manager_id), None)
+        weeks = load_weekly_tables(season)["weeks"]
+        if not team_id or not weeks:
+            continue
+        standing = next((row for row in weeks[-1]["standings"] if row["team_id"] == team_id), None)
+        if not standing:
+            continue
+        post_season_stats = load_post_season_stats(season)
+        rows.append(
+            {
+                "season": season,
+                "teams": len(weeks[-1]["standings"]),
+                "Final Regular Season Rank": standing["rank"],
+                "Final Post Season Rank": post_season_stats["final_placements"].get(team_id) if post_season_stats else None,
+                "Points Scored": standing["points_for"],
+                "Point Differential": standing["points_for"] - standing["points_against"],
+                "Wins": standing["wins"],
+                "Losses": standing["losses"],
+            }
+        )
+    return rows
+
+
+def _render_historical_stats_tab(manager: dict) -> None:
+    manager_id = manager["manager_id"]
+    seasons = manager["seasons_played"]
+
+    first_column, second_column, third_column, last_column = st.columns(4)
+    first_column.metric(f"{EMOJI_FIRST_PLACE} 1st Place", manager["championships"])
+    second_column.metric(f"{EMOJI_SECOND_PLACE} 2nd Place", manager["runner_ups"])
+    third_column.metric(f"{EMOJI_THIRD_PLACE} 3rd Place", manager["third_place_finishes"])
+    last_column.metric(f"{EMOJI_LAST_PLACE} Last Place", manager["last_place_finishes"])
+
+    all_matchups = load_matchups(None, None, manager_id, None, "all")
+    render_record_metrics(all_matchups, manager_id)
+    render_season_qualification_metrics(all_matchups)
+
+    rows = _season_history_rows(manager_id, seasons)
+    if not rows:
+        st.info("No season history available for this manager yet.")
+        return
+
+    selected_stat = st.selectbox("Select Stat", list(HISTORICAL_STAT_OPTIONS), key="managers_historical_stat")
+    chart_rows = [row for row in rows if row[selected_stat] is not None]
+    if not chart_rows:
+        st.info(f"No {selected_stat} data for this manager yet.")
+        return
+
+    years = [str(row["season"]) for row in chart_rows]
+    values = [row[selected_stat] for row in chart_rows]
+    team_counts = [row["teams"] for row in chart_rows]
+    is_rank = HISTORICAL_STAT_OPTIONS[selected_stat]
+    is_whole_number = selected_stat not in ("Points Scored", "Point Differential")
+    manager_color = build_manager_color_map().get(manager_id, COLOR_MANAGER_BACKUP)
+
+    hovertemplate = "<b>%{x}</b><br>" + selected_stat + ": %{y} of %{customdata} teams<extra></extra>" if is_rank else "<b>%{x}</b><br>" + selected_stat + ": %{y}<extra></extra>"
+    figure = go.Figure()
+    if is_rank:
+        figure.add_trace(
+            go.Scatter(
+                x=years,
+                y=values,
+                name=selected_stat,
+                mode="lines+markers",
+                line={"color": manager_color, "width": CHART_LINE_WIDTH_MEDIUM},
+                marker={"color": manager_color, "size": CHART_MARKER_SIZE_MEDIUM},
+                customdata=team_counts,
+                hovertemplate=hovertemplate,
+            )
+        )
+    else:
+        figure.add_trace(go.Bar(x=years, y=values, name=selected_stat, marker={"color": manager_color}, hovertemplate=hovertemplate))
+    yaxis = {"title": selected_stat}
+    if is_rank:
+        # Full axis: every rank from 1 to the league size (largest league
+        # shown), rank 1 at the top.
+        league_size = max(team_counts)
+        yaxis.update({"range": [league_size + 0.5, 0.5], "tickvals": list(range(1, league_size + 1)), "tickformat": "d"})
+    elif is_whole_number:
+        yaxis.update({"tickformat": "d", "nticks": integer_yaxis_nticks(values)})
+    figure.update_layout(
+        xaxis={"title": "Season", "type": "category"},
+        yaxis=yaxis,
+        showlegend=False,
+        margin={"t": 20, "l": 60, "r": 20, "b": 50},
+    )
+    st.plotly_chart(figure, width="stretch")
+
+
 # ========================================
 # RENDER
 # ========================================
@@ -238,10 +347,13 @@ def render_managers_page() -> None:
         key="managers_manager",
     )
 
-    overall_tab, per_season_tab = st.tabs(["Overall", "Per Season"])
+    historical_stats_tab, per_season_tab, head_to_head_tab = st.tabs(["Historical Stats", "Per Season", "Head to Head"])
 
-    with overall_tab:
-        st.info("Overall coming soon.")
+    with historical_stats_tab:
+        _render_historical_stats_tab(next(manager for manager in managers if manager["manager_id"] == selected_manager_id))
+
+    with head_to_head_tab:
+        st.info("Head to Head coming soon.")
 
     with per_season_tab:
         seasons = sorted(seasons_played_by_manager[selected_manager_id], reverse=True)

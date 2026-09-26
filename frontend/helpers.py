@@ -502,3 +502,48 @@ def integer_yaxis_nticks(values: list[int]) -> int:
     if not values:
         return MAX_YAXIS_TICKS
     return min(max(values) + 1, MAX_YAXIS_TICKS)
+
+
+def render_record_metrics(matchups: list[dict], manager_id: str) -> None:
+    """Matchups / Wins / Losses / Ties / Win % / Points For / Points
+    Against for one manager across the given matchups - shared by the
+    Matchups page and the Managers page's Historical Stats tab."""
+    wins = losses = ties = 0
+    points_for = points_against = 0.0
+    for matchup in matchups:
+        home, away = matchup["home"], matchup["away"]
+        manager_side, other_side = (home, away) if home["manager_id"] == manager_id else (away, home)
+        points_for += manager_side["score"]
+        points_against += other_side["score"]
+        if manager_side["score"] > other_side["score"]:
+            wins += 1
+        elif manager_side["score"] < other_side["score"]:
+            losses += 1
+        else:
+            ties += 1
+
+    win_pct = wins / len(matchups) if matchups else 0.0
+
+    total_column, win_column, loss_column, tie_column, win_pct_column, points_for_column, points_against_column = st.columns(7)
+    total_column.metric("Matchups", len(matchups))
+    win_column.metric("Wins", wins)
+    loss_column.metric("Losses", losses)
+    tie_column.metric("Ties", ties)
+    win_pct_column.metric("Win %", f"{win_pct:.1%}")
+    points_for_column.metric("Points For", f"{points_for:.2f}")
+    points_against_column.metric("Points Against", f"{points_against:.2f}")
+
+
+def render_season_qualification_metrics(matchups: list[dict]) -> None:
+    """Seasons competed in, and seasons that reached the championship /
+    consolation bracket, across the given matchups - shared by the
+    Matchups page and the Managers page's Historical Stats tab."""
+    seasons_competed = {matchup["season"] for matchup in matchups}
+    championship_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "championship"}
+    consolation_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "consolation"}
+
+    seasons_column, championship_column, consolation_column = st.columns(3)
+    seasons_column.metric("Seasons", len(seasons_competed))
+    championship_column.metric("Championship Qualifying Seasons", len(championship_seasons))
+    consolation_column.metric("Consolation Qualifying Seasons", len(consolation_seasons))
+
