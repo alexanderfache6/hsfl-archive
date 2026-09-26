@@ -5,6 +5,7 @@ CLEAR_FILTERS = "Clear Filters"
 
 PAGE_HISTORY = "History"
 PAGE_SEASONS = "Seasons"
+PAGE_MANAGERS = "Managers"
 PAGE_PLAYERS = "Players"
 PAGE_MATCHUPS = "Matchups"
 PAGE_DRAFTS = "Drafts"
