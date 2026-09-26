@@ -1,3 +1,6 @@
+DOT_STR = "·"
+
+
 SELECT_STAT_TO_VIEW = "Select Stat to View"
 SELECT_FANTASY_STAT_TO_VIEW = "Select Fantasy Stat to View"
 CLEAR_FILTERS = "Clear Filters"

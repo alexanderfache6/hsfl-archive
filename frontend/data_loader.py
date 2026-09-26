@@ -542,19 +542,37 @@ def load_week_player_info(season: int, week: int) -> dict[str, dict]:
 
 
 @st.cache_resource
+def _load_season_roster_entries(season: int) -> list[dict]:
+    """Every player entry (starters + bench, every team, every week) of one
+    season's rosters as {"week", "player_name", "points", "is_bye"}."""
+    entries: list[dict] = []
+    rosters_directory = PARSED_DIRECTORY / str(season) / "rosters"
+    if not rosters_directory.exists():
+        return entries
+    for roster_path in rosters_directory.glob("team_*_week_*.json"):
+        roster = _read_json(roster_path)
+        for player in roster["starters"] + roster["bench"]:
+            entries.append({"week": roster["week"], "player_name": player["player_name"], "points": player["points"], "is_bye": str(player.get("opp", "")).lower() == "bye"})
+    return entries
+
+
 def load_season_player_weekly_points(season: int) -> dict[str, dict[int, float]]:
     """{player_name: {week: fantasy points}} across every team's roster
     that season (starters + bench) - a player's points count no matter
     whose roster they were on that week."""
     points_by_player: dict[str, dict[int, float]] = {}
-    rosters_directory = PARSED_DIRECTORY / str(season) / "rosters"
-    if not rosters_directory.exists():
-        return points_by_player
-    for roster_path in rosters_directory.glob("team_*_week_*.json"):
-        roster = _read_json(roster_path)
-        for player in roster["starters"] + roster["bench"]:
-            points_by_player.setdefault(player["player_name"], {})[roster["week"]] = player["points"]
+    for entry in _load_season_roster_entries(season):
+        points_by_player.setdefault(entry["player_name"], {})[entry["week"]] = entry["points"]
     return points_by_player
+
+
+def load_season_player_bye_weeks(season: int) -> dict[str, set[int]]:
+    """{player_name: {weeks that player's NFL team was on a bye}}."""
+    bye_weeks: dict[str, set[int]] = {}
+    for entry in _load_season_roster_entries(season):
+        if entry["is_bye"]:
+            bye_weeks.setdefault(entry["player_name"], set()).add(entry["week"])
+    return bye_weeks
 
 
 @st.cache_resource
