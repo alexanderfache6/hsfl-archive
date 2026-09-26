@@ -12,11 +12,8 @@
 
 # managers
 - [ ] highlight upcoming byes
-- [ ] personal history stats
 - [ ] button to manager page where manager name/team is used, link to that year section. or make into modal with option to go to manager page
 - [ ] everywhere team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc
-- [ ] manager stats, web chart vs other managers, custom stats, etc
-- [ ] All-time head-to-head matrix: every manager pair's career W-L-T in a heatmap/grid, clickable into that rivalry's game log.
 - [ ] "Revenge game" indicator — flag a matchup as a rematch following a previous loss between the same two managers.
 - [ ] 
 
