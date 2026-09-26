@@ -24,3 +24,5 @@ ISSUE_NEW_FEATURE = "New Feature"
 GITHUB_ISSUE_BUG = ISSUE_BUG.lower()
 GITHUB_ISSUE_ENHANCEMENT = ISSUE_ENHANCEMENT.lower()
 GITHUB_ISSUE_NEW_FEATURE = ISSUE_NEW_FEATURE.lower()
+
+TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to bench players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."

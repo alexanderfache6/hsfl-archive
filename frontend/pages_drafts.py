@@ -17,21 +17,19 @@ from colors import (
     COLOR_PERCENTILE_OTHER_PLAYERS,
     COLOR_PICK,
     COLOR_POINTS_POSITIVE,
-    COLOR_TABLE_ROSTER,
     COLOR_UNDRAFTED,
 )
-from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, MAX_YAXIS_TICKS, NFL_TEAM_ABBREVIATIONS
+from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, NFL_TEAM_ABBREVIATIONS
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
-    contrasting_text_color,
     discover_seasons,
     load_draft,
     load_player_ownership,
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, manager_pill
+from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, integer_yaxis_nticks, manager_pill, player_line, position_pill
 from strings import CLEAR_FILTERS
 
 # ========================================
@@ -69,12 +67,7 @@ def _render_draft_pick_card(
 
         with player_column:
             nfl_team = pick.get("nfl_team") or NFL_TEAM_ABBREVIATIONS.get(pick["player_name"].split(" ")[-1], "")
-            position_background_color = BENCH_POSITION_COLOR.get(pick["position"], COLOR_TABLE_ROSTER)
-            position_text_color = contrasting_text_color(position_background_color)
-            st.markdown(
-                f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600; margin-right:8px;'>{pick['position']}</span><span style='font-weight:600;'>{pick['player_name']}</span> <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(player_line(pick["player_name"], nfl_team, pick["position"]), unsafe_allow_html=True)
 
         with manager_column:
             # auction_amount is null both for a snake draft (the concept
@@ -107,18 +100,6 @@ def _render_draft_pick_card(
 
 
 DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount", "drafts_recap_sort_by_amount"]
-
-
-def _integer_yaxis_nticks(values: list[int]) -> int:
-    """MAX_YAXIS_TICKS is a CEILING, not a target - passing it straight
-    through as Plotly's nticks forces that many ticks even over a tiny
-    integer range (e.g. 0-5), which makes Plotly fall back to a
-    fractional dtick and repeat rounded integer labels. Capping nticks
-    at the data's own distinct-integer-value count (max_value + 1, for a
-    0-based count axis) keeps every tick unique."""
-    if not values:
-        return MAX_YAXIS_TICKS
-    return min(max(values) + 1, MAX_YAXIS_TICKS)
 
 
 def _render_pick_distribution_chart(
@@ -203,7 +184,7 @@ def _render_pick_distribution_chart(
     figure.update_layout(
         barmode="overlay",
         xaxis={"title": xaxis_title, "type": "category"},
-        yaxis={"title": "Player Count", "tickformat": "d", "nticks": _integer_yaxis_nticks(_bucket_counts(all_values) + _bucket_counts(values))},
+        yaxis={"title": "Player Count", "tickformat": "d", "nticks": integer_yaxis_nticks(_bucket_counts(all_values) + _bucket_counts(values))},
         showlegend=True,
         margin={"t": 20, "l": 60, "r": 20, "b": 50},
     )
@@ -430,13 +411,8 @@ def _render_draft_recap_tab(season: int) -> None:
         # identifies which position each number belongs to.
         position_metric_columns = st.columns(len(BENCH_POSITION_ORDER))
         for position_metric_column, position in zip(position_metric_columns, BENCH_POSITION_ORDER):
-            position_background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
-            position_text_color = contrasting_text_color(position_background_color)
             with position_metric_column:
-                st.markdown(
-                    f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{position}</span>",
-                    unsafe_allow_html=True,
-                )
+                st.markdown(position_pill(position), unsafe_allow_html=True)
                 st.metric("Drafted", position_counts[position], help=f"The number of {position}s in this year's draft.")
 
         if draft_type == DRAFT_AUCTION:
@@ -673,12 +649,7 @@ def _render_manager_recap_tab(season: int) -> None:
                         if not position_picks:
                             continue
 
-                        position_background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
-                        position_text_color = contrasting_text_color(position_background_color)
-                        st.markdown(
-                            f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{position}</span>",
-                            unsafe_allow_html=True,
-                        )
+                        st.markdown(position_pill(position), unsafe_allow_html=True)
                         rows = [
                             {
                                 "Player": pick["player_name"],
@@ -1074,7 +1045,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
             ahead_figure.update_layout(
                 title=f"{selected_position}s Drafted Ahead of {selected_player}",
                 xaxis={"title": "Year", "type": "category", "categoryorder": "category ascending"},
-                yaxis={"title": "Players Drafted Ahead / Higher Auction Value", "tickformat": "d", "nticks": _integer_yaxis_nticks(snake_counts + auction_counts)},
+                yaxis={"title": "Players Drafted Ahead / Higher Auction Value", "tickformat": "d", "nticks": integer_yaxis_nticks(snake_counts + auction_counts)},
                 legend={"orientation": "h", "y": 1.15, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
                 margin={"t": 70, "l": 60, "r": 20, "b": 50},
             )
