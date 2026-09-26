@@ -526,6 +526,38 @@ def load_players() -> dict:
 
 
 @st.cache_resource
+def load_week_player_info(season: int, week: int) -> dict[str, dict]:
+    """{player_name: {"position", "nfl_team"}} for every player on any
+    team's roster that week (starters + bench) - the position/NFL team
+    lookup for transaction rows, which only carry a player's name."""
+    info: dict[str, dict] = {}
+    rosters_directory = PARSED_DIRECTORY / str(season) / "rosters"
+    if not rosters_directory.exists():
+        return info
+    for roster_path in rosters_directory.glob(f"team_*_week_{week}.json"):
+        roster = _read_json(roster_path)
+        for player in roster["starters"] + roster["bench"]:
+            info[player["player_name"]] = {"position": player["position"], "nfl_team": player["nfl_team"]}
+    return info
+
+
+@st.cache_resource
+def load_season_player_weekly_points(season: int) -> dict[str, dict[int, float]]:
+    """{player_name: {week: fantasy points}} across every team's roster
+    that season (starters + bench) - a player's points count no matter
+    whose roster they were on that week."""
+    points_by_player: dict[str, dict[int, float]] = {}
+    rosters_directory = PARSED_DIRECTORY / str(season) / "rosters"
+    if not rosters_directory.exists():
+        return points_by_player
+    for roster_path in rosters_directory.glob("team_*_week_*.json"):
+        roster = _read_json(roster_path)
+        for player in roster["starters"] + roster["bench"]:
+            points_by_player.setdefault(player["player_name"], {})[roster["week"]] = player["points"]
+    return points_by_player
+
+
+@st.cache_resource
 def load_player_ownership() -> dict:
     return _read_json(ARCHIVE_DIRECTORY / "player_ownership.json")
 

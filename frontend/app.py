@@ -16,7 +16,8 @@ from pages_managers import render_managers_page
 from pages_matchups import render_matchups_page
 from pages_players import render_players_page
 from pages_seasons import render_seasons_page
-from strings import PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS, THE_MUSIC_LEAGUE
+from pages_trades import render_trades_page
+from strings import PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS, PAGE_TRADE_ANALYSIS, THE_MUSIC_LEAGUE
 
 # ========================================
 # RENDER
@@ -29,6 +30,7 @@ seasons_page = st.Page(render_seasons_page, title=PAGE_SEASONS, url_path="season
 managers_page = st.Page(render_managers_page, title=PAGE_MANAGERS, url_path="managers")
 matchups_page = st.Page(render_matchups_page, title=PAGE_MATCHUPS, url_path="matchups")
 drafts_page = st.Page(render_drafts_page, title=PAGE_DRAFTS, url_path="drafts")
+trades_page = st.Page(render_trades_page, title=PAGE_TRADE_ANALYSIS, url_path="trades")
 players_page = st.Page(render_players_page, title=PAGE_PLAYERS, url_path="players")
 feedback_page = st.Page(render_feedback_page, title=PAGE_FEEDBACK, url_path="feedback")
 
@@ -40,5 +42,5 @@ st.session_state["_seasons_page"] = seasons_page
 
 st.title(THE_MUSIC_LEAGUE)
 
-navigation = st.navigation([history_page, seasons_page, managers_page, matchups_page, drafts_page, players_page, feedback_page])
+navigation = st.navigation([history_page, seasons_page, managers_page, matchups_page, drafts_page, trades_page, players_page, feedback_page])
 navigation.run()
