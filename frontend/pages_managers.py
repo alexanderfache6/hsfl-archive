@@ -262,10 +262,11 @@ def _render_historical_stats_tab(manager: dict) -> None:
     manager_id = manager["manager_id"]
     rows = _season_history_rows(manager_id, manager["seasons_played"])
 
-    first_column, second_column, third_column, last_column = st.columns(4)
+    first_column, second_column, third_column, podiums_column, last_column = st.columns(5)
     first_column.metric(f"{EMOJI_FIRST_PLACE} 1st Place", manager["championships"])
     second_column.metric(f"{EMOJI_SECOND_PLACE} 2nd Place", manager["runner_ups"])
     third_column.metric(f"{EMOJI_THIRD_PLACE} 3rd Place", manager["third_place_finishes"])
+    podiums_column.metric("Podiums", manager["championships"] + manager["runner_ups"] + manager["third_place_finishes"], help="Number of top 3 finishes.")
     last_column.metric(f"{EMOJI_LAST_PLACE} Last Place", manager["last_place_finishes"])
 
     all_matchups = load_matchups(None, None, manager_id, None, "all")
