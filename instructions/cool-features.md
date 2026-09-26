@@ -9,11 +9,13 @@
 - [x] true tab
 - [x] transactions tab
 - [x] create schedule tab for each week
-- [ ] Weekly "Power Rankings" chart blending win%, points for, and all-play record into one index, tracked week over week.
-- [ ] countdown till next games
-- [ ] show last update time
 
 # managers
+- [ ] weekly depth chart, highlight upcoming byes
+- [ ] show weekly roster details, starter/bench, nfl/fantasy stats
+- [ ] weekly team summary - starters/bench/injured/optimal/bye/got injured
+- [ ] personal history stats
+- [ ] button to manager page where manager name/team is used, link to that year section. or make into modal with option to go to manager page
 - [ ] show points missed out on
 - [ ] everywhere team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc
 - [ ] manager stats, web chart vs other managers, custom stats, etc
@@ -33,7 +35,6 @@
 
 # drafts
 - [ ] adp
-- [ ] adp/price compared to that season's stats
 - [ ] draft value over years, see chart of all positions (ie WR) who is best value
 - [ ] live - remaining players, budget, best value
 - [ ] 
@@ -43,7 +44,6 @@
 
 # trade
 - [ ] trade grader: compare a trade's two players' rest-of-season point totals to grade who "won" the trade.
-- [ ] trade proposer
 - [ ] 
 
 # fun zone
