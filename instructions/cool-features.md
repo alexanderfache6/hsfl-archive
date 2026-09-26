@@ -36,10 +36,6 @@
 # feedback
 - [x] feedback for new features/bugs/improvements, see github issues in table and chart
 
-# trade
-- [ ] trade grader: compare a trade's two players' rest-of-season point totals to grade who "won" the trade.
-- [ ] 
-
 # fun zone
 - [ ] be prompted a players transfer history, try to guess the player
 - [ ] guess league stats
