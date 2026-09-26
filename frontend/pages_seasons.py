@@ -7,7 +7,6 @@ single selected season. See execution-plan.md Phase G.
 # ========================================
 
 import html
-from datetime import datetime
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -51,7 +50,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import ordinal_word, return_plural, return_s
+from helpers import ordinal_word, parse_transaction_date, return_plural, return_s
 from strings import CLEAR_FILTERS, SELECT_STAT_TO_VIEW
 
 # ========================================
@@ -92,16 +91,6 @@ def _full_table_height(row_count: int) -> int:
     has more rows than fit; passing an explicit height instead shows
     every row with no fold/scroll."""
     return 38 + 35 * row_count
-
-
-def _parse_transaction_date(date_text: str, season: int) -> datetime:
-    """ "Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
-    can run into January of the FOLLOWING calendar year (confirmed for
-    2012, 2021, 2022) - only "Jan" dates get season+1, everything else
-    (Aug-Dec) uses the season's own year."""
-    month_text = date_text.split(" ", 1)[0]
-    year = season + 1 if month_text == "Jan" else season
-    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")  # noqa: DTZ007
 
 
 def _bracket_effective_winner(game: dict) -> str:
@@ -1151,7 +1140,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # actually ended up with that player - the only way both sides of a
     # trade show up under their own manager.
     manager_name_by_team_name = {info["team_name"]: resolve_manager_name(info["manager_id"], name_resolver, info["display_name"]) for info in team_id_to_manager_map(season).values()}
-    all_dates = [_parse_transaction_date(t["date"], season) for t in transactions]
+    all_dates = [parse_transaction_date(t["date"], season) for t in transactions]
     min_date, max_date = min(all_dates).date(), max(all_dates).date()
     transaction_types = sorted({t["type"] for t in transactions})
 
@@ -1208,7 +1197,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     for transaction in transactions:
         if selected_type and transaction["type"] != selected_type:
             continue
-        transaction_datetime = _parse_transaction_date(transaction["date"], season)
+        transaction_datetime = parse_transaction_date(transaction["date"], season)
         if not (start_date <= transaction_datetime.date() <= end_date):
             continue
         if transaction["type"] == "Trade":

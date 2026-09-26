@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import plotly.graph_objects as go
 import streamlit as st
 from colors import (
@@ -40,13 +42,14 @@ def position_pill(position: str, margin_right: bool = False) -> str:
     return f"<span style='background-color:{background_color}; color:{text_color}; padding:2px 8px; border-radius:6px; font-weight:600;{margin}'>{position}</span>"
 
 
-def player_line(player_name: str, nfl_team: str, position: str | None = None, points: float | None = None, points_color: str | None = None, status_code: str | None = None, status_color: str | None = None) -> str:
+def player_line(player_name: str, nfl_team: str | None, position: str | None = None, points: float | None = None, points_color: str | None = None, status_code: str | None = None, status_color: str | None = None) -> str:
     """[position pill] **name** (NFL team), with fantasy points (when
     given) right-aligned on the same line - the shared player line used
     on the Drafts selection cards and the Managers depth chart cards."""
     pill = position_pill(position, margin_right=True) if position else ""
+    team_html = f" <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>" if nfl_team else ""
     status_html = f" <span style='font-size:0.75em; font-weight:700; color:{status_color};'>{status_code}</span>" if status_code else ""
-    left_html = f"{pill}<span style='font-weight:600;'>{player_name}</span> <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>{status_html}"
+    left_html = f"{pill}<span style='font-weight:600;'>{player_name}</span>{team_html}{status_html}"
     if points is None:
         return left_html
     color_style = f" color:{points_color};" if points_color else ""
@@ -547,3 +550,12 @@ def render_season_qualification_metrics(matchups: list[dict]) -> None:
     championship_column.metric("Championship Qualifying Seasons", len(championship_seasons))
     consolation_column.metric("Consolation Qualifying Seasons", len(consolation_seasons))
 
+
+def parse_transaction_date(date_text: str, season: int) -> datetime:
+    """ "Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
+    can run into January of the FOLLOWING calendar year (confirmed for
+    2012, 2021, 2022) - only "Jan" dates get season+1, everything else
+    (Aug-Dec) uses the season's own year."""
+    month_text = date_text.split(" ", 1)[0]
+    year = season + 1 if month_text == "Jan" else season
+    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")  # noqa: DTZ007

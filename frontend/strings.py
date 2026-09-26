@@ -9,6 +9,7 @@ PAGE_MANAGERS = "Managers"
 PAGE_PLAYERS = "Players"
 PAGE_MATCHUPS = "Matchups"
 PAGE_DRAFTS = "Drafts"
+PAGE_TRADE_ANALYSIS = "Trade Analysis"
 PAGE_FEEDBACK = "Feedback"
 
 THE_MUSIC_LEAGUE = "The Music League"
