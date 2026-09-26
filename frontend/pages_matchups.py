@@ -47,7 +47,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import manager_pill, optimal_lineup_details, pad_missing_starters
+from helpers import manager_pill, optimal_lineup_details, pad_missing_starters, render_record_metrics, render_season_qualification_metrics
 from player_modal import open_player_stats_modal
 from strings import CLEAR_FILTERS, TOGGLE_OPTIMAL_LINEUP
 
@@ -313,30 +313,7 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season
         st.metric("Matchups", len(matchups))
         return
 
-    wins = losses = ties = 0
-    points_for = points_against = 0.0
-    for matchup in matchups:
-        home, away = matchup["home"], matchup["away"]
-        team1_side, other_side = (home, away) if home["manager_id"] == team1_manager_id else (away, home)
-        points_for += team1_side["score"]
-        points_against += other_side["score"]
-        if team1_side["score"] > other_side["score"]:
-            wins += 1
-        elif team1_side["score"] < other_side["score"]:
-            losses += 1
-        else:
-            ties += 1
-
-    win_pct = wins / len(matchups) if matchups else 0.0
-
-    total_column, win_column, loss_column, tie_column, win_pct_column, points_for_column, points_against_column = st.columns(7)
-    total_column.metric("Matchups", len(matchups))
-    win_column.metric("Wins", wins)
-    loss_column.metric("Losses", losses)
-    tie_column.metric("Ties", ties)
-    win_pct_column.metric("Win %", f"{win_pct:.1%}")
-    points_for_column.metric("Points For", f"{points_for:.2f}")
-    points_against_column.metric("Points Against", f"{points_against:.2f}")
+    render_record_metrics(matchups, team1_manager_id)
 
     # A week filter or a Manager 2 filter narrows matchups down to a
     # handful of head-to-head games - season/bracket/rank summaries
@@ -348,14 +325,7 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season
     # season or a single matchup type filtered out makes "how many
     # seasons qualified" a trivial 0-or-1 question, not worth a row.
     if not season_filter and matchup_type_filter == "all":
-        seasons_competed = {matchup["season"] for matchup in matchups}
-        championship_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "championship"}
-        consolation_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "consolation"}
-
-        seasons_column, championship_column, consolation_column = st.columns(3)
-        seasons_column.metric("Seasons", len(seasons_competed))
-        championship_column.metric("Championship Qualifying Seasons", len(championship_seasons))
-        consolation_column.metric("Consolation Qualifying Seasons", len(consolation_seasons))
+        render_season_qualification_metrics(matchups)
     elif season_filter:
         post_season_stats = load_post_season_stats(season_filter)
         team_info = team_id_to_manager_map(season_filter)
