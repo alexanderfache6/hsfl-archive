@@ -11,8 +11,6 @@
 - [x] create schedule tab for each week
 
 # managers
-- [ ] highlight upcoming byes
-- [ ] button to manager page where manager name/team is used, link to that year section. or make into modal with option to go to manager page
 - [ ] everywhere team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc
 - [ ] "Revenge game" indicator — flag a matchup as a rematch following a previous loss between the same two managers.
 - [ ] 
@@ -21,7 +19,6 @@
 - [x] below fantasy points per game chart show stats per game
 - [x] show all weeks as 0 if player not on fantasy roster across full nfl season
 - [x] filter player stats per season
-- [ ] analysis tab - shows player usage, trends, breakout/decline
 
 # matchups
 - [x] fix defenses not having (TEAM)
