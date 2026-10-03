@@ -92,7 +92,7 @@ def build_picks_by_player() -> dict[str, list[dict]]:
     "auction_amount", "num_teams", "position", "player_id",
     "total_picks"}, ...]} - every draft pick across every season in the
     archive, keyed by player name. Shared by pages_drafts.py's Player
-    Analysis tab and pages_players.py's Value Analysis tab - built once
+    Analysis tab and pages_player_analysis.py's Value Analysis tab - built once
     here rather than each page re-scanning discover_seasons()/load_draft()
     on its own."""
     picks_by_player: dict[str, list[dict]] = {}
@@ -136,7 +136,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
     resolves per-season cost (real $ for auction, a pseudo-cost for
     snake, KEEPER_DEFAULT_COST for keepers) once for every drafted
     player, not just the one being viewed here. Shared by
-    pages_drafts.py and pages_players.py's Value Analysis tab -
+    pages_drafts.py and pages_player_analysis.py's Value Analysis tab -
     widget_key_prefix keeps each caller's own widget keys from colliding
     when both render on the same script run."""
     st.subheader("Fantasy Value")
@@ -222,7 +222,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
         yaxis_title = ("Adjusted " if is_adjusted else "") + "Points per Game"
     elif selected_view == "The Field":
         # Same "peer scatter + one highlighted player" pattern as
-        # pages_players.py's percentile chart - every OTHER player's own
+        # pages_player_analysis.py's percentile chart - every OTHER player's own
         # (season, stat) point plotted as one shared trace, the searched
         # player's own points as a second, outlined trace on top. "The
         # Field" is scoped to the searched player's OWN position only -

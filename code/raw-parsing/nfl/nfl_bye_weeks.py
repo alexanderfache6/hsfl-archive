@@ -1,7 +1,7 @@
 """Fetches each NFL team's bye week for every season, from ESPN's team
 schedule pages (not the fantasy league's own site - a separate, real-NFL
 data source). Used for bye-week validation per player on the frontend
-Players tab (see pages_players.py's _build_full_game_list): a player
+Player Analysis tab (see pages_player_analysis.py's _build_full_game_list): a player
 missing from a fantasy roster during their own NFL team's actual bye
 week is expected and not "unrostered" the way a genuine gap week is.
 
@@ -37,7 +37,7 @@ colspan bye row exists anywhere in either page). These are recorded
 explicitly via KNOWN_NO_BYE_EXCEPTIONS below as {"bye": null, "comment":
 "..."} rather than silently omitted, so the season still resolves to
 fully complete instead of being retried forever. Downstream consumers
-(not yet wired up - see pages_players.py's _render_summary_metrics) MUST
+(not yet wired up - see pages_player_analysis.py's _render_summary_metrics) MUST
 treat a null bye as "this team played every week, no bye to subtract"
 (0 weeks off), NOT as "unknown, skip this team-season" - otherwise a
 Dolphins/Buccaneers 2017 player's "NFL Games" total would be silently

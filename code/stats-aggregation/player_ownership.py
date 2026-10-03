@@ -3,7 +3,7 @@ weekly ownership timeline across all seasons - which team/manager had
 them, whether they started or benched that week, how many points they
 scored, and their raw stat_N breakdown that week (decode stat_N labels
 via archive/stat_id_labels.json). Built entirely from already-parsed
-rosters/*.json across every season - avoids the frontend Players tab
+rosters/*.json across every season - avoids the frontend Player Analysis tab
 having to scan ~1000+ roster files per search. See execution-plan.md
 Phase G.
 """

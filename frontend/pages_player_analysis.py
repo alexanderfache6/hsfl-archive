@@ -1,4 +1,4 @@
-"""Players tab - search for a player, see a flow chart of which manager's
+"""Player Analysis tab - search for a player, see a flow chart of which manager's
 team they've been on and for which weeks (collapsed into contiguous
 stints, not one node per week), plus a stacked bar chart summarizing
 starts vs bench per manager. See execution-plan.md Phase G.
@@ -7,6 +7,8 @@ starts vs bench per manager. See execution-plan.md Phase G.
 # ========================================
 # IMPORTS
 # ========================================
+
+import textwrap
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -27,14 +29,18 @@ from colors import (
     COLOR_STAT_MISMATCH,
 )
 from constants import (
+    BENCH_POSITION_COLOR,
+    BENCH_POSITION_ORDER,
     CHART_LEGEND_INSIDE_TOP_RIGHT,
     CHART_LEGEND_OUTSIDE_RIGHT,
     CHART_MARKER_SIZE_MEDIUM,
+    COMPARISON_BAR_CORNER_RADIUS,
 )
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
     ESPN_FIELD_TO_STAT_ID,
+    FLEX_ELIGIBLE_POSITIONS,
     NFL_STAT_FIELD_LABELS,
     NFL_STAT_FIELDS_BY_POSITION,
     NFL_STAT_FRACTIONAL_FIELDS,
@@ -50,6 +56,7 @@ from data_loader import (
     load_nfl_season_lengths,
     load_player_ownership,
     load_players,
+    load_starting_slot_counts,
     load_stat_id_labels,
     nfl_stat_field_value,
     player_nfl_team_by_season,
@@ -104,6 +111,11 @@ YARDAGE_STAT_LABELS = {"Pass Yds", "Rush Yds", "Rec Yds"}
 
 
 PLAYER_FILTER_WIDGET_BASE_KEYS = ("player_selected_player_id", "player_season_filter")
+
+COMPARISON_PLAYER_COUNT = 4
+COMPARISON_STAT_CHECKBOX_COLUMNS = 4
+COMPARISON_STAT_WIDGET_PREFIX = "player_comparison_stat_"
+COMPARISON_FILTER_WIDGET_BASE_KEYS = ("player_comparison_season", "player_comparison_position", *(f"player_comparison_player_{number}" for number in range(1, COMPARISON_PLAYER_COUNT + 1)))
 
 # ========================================
 # FUNCTIONS
@@ -213,6 +225,135 @@ def _bye_weeks_by_season(player_id: str) -> dict[int, int]:
         if bye_week is not None:
             bye_weeks[season] = bye_week
     return bye_weeks
+
+
+COMPARISON_LABEL_COLUMN_WIDTH = 1.2
+COMPARISON_LABEL_WRAP_CHARS = 12  # y-axis labels longer than this wrap onto more rows
+COMPARISON_ROW_HEIGHT = 60  # px of plot per selected stat
+COMPARISON_ROW_GAP = 24  # px between stat rows (room for each row's top x-axis ticks)
+# Shared by the label column and every player chart so their rows line up.
+COMPARISON_CHART_MARGIN = {"t": 80, "b": 20}
+
+# Stats that aren't raw ESPN fields, selected by these ids alongside the NFL fields.
+COMPARISON_GAMES_PLAYED = "games_played"
+COMPARISON_TOTAL_FANTASY_POINTS = "total_fantasy_points"
+COMPARISON_DEFAULT_STATS = (COMPARISON_GAMES_PLAYED, COMPARISON_TOTAL_FANTASY_POINTS)
+COMPARISON_SPECIAL_STAT_LABELS = {COMPARISON_GAMES_PLAYED: "Games Played", COMPARISON_TOTAL_FANTASY_POINTS: "Total Fantasy Points"}
+
+
+def _comparison_stat_label(stat_id: str) -> str:
+    return COMPARISON_SPECIAL_STAT_LABELS.get(stat_id) or NFL_STAT_FIELD_LABELS.get(stat_id, stat_id)
+
+
+def _comparison_stat_options(position_slot: str) -> list[str]:
+    """Stats selectable for a position group (a roster slot, FLEX = "W/R"):
+    Games Played and Total Fantasy Points, then every NFL stat that group
+    has - except averages/percentages, which can't be totaled over a season."""
+    positions = [position for position in BENCH_POSITION_ORDER if position in FLEX_ELIGIBLE_POSITIONS] if position_slot == "W/R" else [position_slot]
+    nfl_fields: list[str] = []
+    for position in positions:
+        for field in NFL_STAT_FIELDS_BY_POSITION.get(position, []):
+            if field not in nfl_fields and field not in NFL_STAT_FRACTIONAL_FIELDS and field not in NFL_STAT_PERCENTAGE_FIELDS:
+                nfl_fields.append(field)
+    return [*COMPARISON_DEFAULT_STATS, *nfl_fields]
+
+
+def _season_games_and_points(season_timeline: list[dict], player_id: str, nfl_player_stats: dict) -> tuple[int, float]:
+    """(games played, total fantasy points) for one player's season.
+    Games played = fantasy-rostered weeks that were real NFL games - not a
+    bye week and not a week with no ESPN record (same exclusions as the
+    Individual tab's Points per Fantasy Start/Bench). Total fantasy points
+    = every rostered week's points."""
+    bye_weeks_by_season = _bye_weeks_by_season(player_id)
+    games_played = sum(
+        1
+        for entry in season_timeline
+        if bye_weeks_by_season.get(entry["season"]) != entry["week"] and get_espn_week_stats(player_id, entry["season"], entry["week"], nfl_player_stats) is not None
+    )
+    return games_played, sum(entry["points"] for entry in season_timeline)
+
+
+def _season_nfl_stat_total(player_id: str, season: int, field: str, nfl_player_stats: dict) -> float:
+    """An ESPN stat summed over every NFL week of the season on record (any week, rostered or not)."""
+    weeks = nfl_player_stats.get(player_id, {}).get("seasons", {}).get(str(season), {}).get("weeks", {})
+    values = (nfl_stat_field_value(field, week_entry["stats"]) for week_entry in weeks.values())
+    return sum(value for value in values if value is not None)
+
+
+def _comparison_stat_value(stat_id: str, player_id: str, season: int, season_timeline: list[dict], nfl_player_stats: dict) -> float:
+    if stat_id in COMPARISON_DEFAULT_STATS:
+        games_played, total_points = _season_games_and_points(season_timeline, player_id, nfl_player_stats)
+        return games_played if stat_id == COMPARISON_GAMES_PLAYED else total_points
+    return _season_nfl_stat_total(player_id, season, stat_id, nfl_player_stats)
+
+
+def _format_comparison_value(value: float) -> str:
+    return f"{value:,.0f}" if float(value).is_integer() else f"{value:,.2f}"
+
+
+def _comparison_rows_figure(row_count: int) -> go.Figure:
+    """Empty one-column figure with a row per stat, sized and spaced the
+    same way for the label column and every player chart."""
+    plot_height = COMPARISON_ROW_HEIGHT * row_count + COMPARISON_ROW_GAP * (row_count - 1)
+    figure = make_subplots(rows=row_count, cols=1, vertical_spacing=COMPARISON_ROW_GAP / plot_height if row_count > 1 else 0)
+    figure.update_layout(height=plot_height + COMPARISON_CHART_MARGIN["t"] + COMPARISON_CHART_MARGIN["b"])
+    return figure
+
+
+def _render_player_comparison_charts(season: int, player_ids: list[str], stat_ids: list[str], players_data: dict, ownership_data: dict, player_names_by_id: dict[str, str]) -> None:
+    """One horizontal bar chart per selected player, side by side, with a
+    row per selected stat (x on top, bars in the player's position color).
+    Each stat row has its own x range, shared by every player, so bar
+    lengths compare across players even though the stats are on very
+    different scales (games vs yards)."""
+    if not stat_ids:
+        st.info("Select at least one stat above.")
+        return
+
+    nfl_player_stats = load_nfl_player_stats()
+    values_by_player = {
+        player_id: [_comparison_stat_value(stat_id, player_id, season, [entry for entry in ownership_data.get(player_id, []) if entry["season"] == season], nfl_player_stats) for stat_id in stat_ids]
+        for player_id in player_ids
+    }
+    stat_labels = [_comparison_stat_label(stat_id) for stat_id in stat_ids]
+    row_x_max = [(max(values[row] for values in values_by_player.values()) or 1) * 1.25 for row in range(len(stat_ids))]
+
+    # Column 0: the joint y-axis labels, an otherwise empty chart with the
+    # same rows as the player charts. The player charts hide their own labels.
+    label_column, *player_columns = st.columns([COMPARISON_LABEL_COLUMN_WIDTH] + [3] * len(player_ids), gap="xxsmall")
+    label_figure = _comparison_rows_figure(len(stat_ids))
+    for row, label in enumerate(stat_labels, start=1):
+        label_figure.add_trace(go.Bar(x=[0], y=[label], orientation="h", marker={"color": "rgba(0,0,0,0)"}, hoverinfo="skip"), row=row, col=1)
+        label_figure.update_xaxes(range=[0, 1], showgrid=False, zeroline=False, showticklabels=False, fixedrange=True, row=row, col=1)
+        label_figure.update_yaxes(tickvals=[label], ticktext=[textwrap.fill(label, COMPARISON_LABEL_WRAP_CHARS).replace("\n", "<br>")], automargin=True, fixedrange=True, row=row, col=1)
+    label_figure.update_layout(showlegend=False, margin={**COMPARISON_CHART_MARGIN, "l": 10, "r": 0})
+    with label_column:
+        st.plotly_chart(label_figure, width="stretch", config={"displayModeBar": False})
+
+    for column, player_id in zip(player_columns, player_ids):
+        position = players_data[player_id]["position"]
+        figure = _comparison_rows_figure(len(stat_ids))
+        for row, (label, value) in enumerate(zip(stat_labels, values_by_player[player_id]), start=1):
+            figure.add_trace(
+                go.Bar(
+                    x=[value],
+                    y=[label],
+                    orientation="h",
+                    marker={"color": BENCH_POSITION_COLOR.get(position, COLOR_MANAGER_BACKUP), "cornerradius": COMPARISON_BAR_CORNER_RADIUS},
+                    text=[_format_comparison_value(value)],
+                    textposition="outside",
+                    textfont={"weight": "bold"},
+                    cliponaxis=False,
+                    hovertemplate="%{y}: %{text}<extra></extra>",
+                ),
+                row=row,
+                col=1,
+            )
+            figure.update_xaxes(side="top", range=[0, row_x_max[row - 1]], nticks=3, row=row, col=1)
+            figure.update_yaxes(showticklabels=False, row=row, col=1)
+        figure.update_layout(title=f"{player_names_by_id[player_id]} ({position})", showlegend=False, margin={**COMPARISON_CHART_MARGIN, "l": 5, "r": 25})
+        with column:
+            st.plotly_chart(figure, width="stretch")
 
 
 # ========================================
@@ -1332,7 +1473,7 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
     transfers_column.metric("Transfers", len(stints), help="Number of fantasy ownership stints shown in the Transfers flow chart. The start of the season counts as a new transfer.")
 
 
-def render_players_page() -> None:
+def _render_individual_player_stats_tab() -> None:
     players_data = load_players()["players"]
     ownership_data = load_player_ownership()["player_ownership"]
     name_resolver = build_manager_name_resolver()
@@ -1503,4 +1644,163 @@ def render_players_page() -> None:
     #     if not player_picks:
     #         st.info(f"No draft data recorded for {selected_player_name}.")
     #     else:
-    #         render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="players_value_analysis")
+    #         render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="player_analysis_value_analysis")
+
+
+def _render_player_comparison_tab() -> None:
+    players_data = load_players()["players"]
+    ownership_data = load_player_ownership()["player_ownership"]
+    if not players_data:
+        st.info("No players in the archive yet.")
+        return
+
+    player_names_by_id = {player_id: player["name"] for player_id, player in players_data.items()}
+
+    # Same versioned-widget-key pattern as the Individual Player Stats
+    # tab's filters (Clear Filters bumps the generation to force fresh widgets).
+    generation = st.session_state.setdefault("player_comparison_filters_generation", 0)
+
+    def versioned_key(base_key: str) -> str:
+        return f"{base_key}_gen{generation}"
+
+    for base_key in COMPARISON_FILTER_WIDGET_BASE_KEYS:
+        widget_key = versioned_key(base_key)
+        if widget_key not in st.session_state and base_key in st.session_state:
+            st.session_state[widget_key] = st.session_state[base_key]
+
+    # Row 1: season, then position (the season's own roster-slot order,
+    # FLEX included) - both required before any player can be picked.
+    all_seasons = sorted({entry["season"] for entries in ownership_data.values() for entry in entries})
+    season_column, position_column, _, _ = st.columns(COMPARISON_PLAYER_COUNT)
+    with season_column:
+        selected_season = st.selectbox("Season", all_seasons, index=None, placeholder="Select a season", key=versioned_key("player_comparison_season"))
+
+    # The slot key for FLEX is "W/R" in the roster settings; shown as FLEX.
+    position_options = list(load_starting_slot_counts(selected_season)) if selected_season else []
+    position_widget_key = versioned_key("player_comparison_position")
+    # A season change can drop the previously-picked position from the options.
+    if st.session_state.get(position_widget_key) not in position_options and st.session_state.get(position_widget_key) is not None:
+        st.session_state[position_widget_key] = None
+    with position_column:
+        selected_position = st.selectbox(
+            "Position",
+            position_options,
+            index=None,
+            placeholder="Select a position",
+            disabled=selected_season is None,
+            help="Select a season first." if selected_season is None else None,
+            key=position_widget_key,
+        )
+
+    # Players are limited to those with data in the chosen season AND
+    # playing the chosen position (FLEX = any flex-eligible position).
+    # Empty until both are picked (the search boxes stay disabled until then).
+    eligible_positions = FLEX_ELIGIBLE_POSITIONS if selected_position == "W/R" else {selected_position}
+    eligible_player_ids = (
+        sorted(
+            (player_id for player_id in player_names_by_id if players_data[player_id]["position"] in eligible_positions and any(entry["season"] == selected_season for entry in ownership_data.get(player_id, []))),
+            key=lambda player_id: player_names_by_id[player_id],
+        )
+        if selected_season and selected_position
+        else []
+    )
+
+    # Row 2: one search box per compared player, filled in order - player 1
+    # first (after season + position), then 2, 3, etc. A player already
+    # picked in one box is removed from the other boxes' options.
+    selected_player_ids = []
+    for number, column in enumerate(st.columns(COMPARISON_PLAYER_COUNT), start=1):
+        player_widget_key = versioned_key(f"player_comparison_player_{number}")
+        if not (selected_season and selected_position):
+            disabled_help = "Select a season and a position group first."
+        elif number > 1 and not selected_player_ids[-1]:
+            disabled_help = f"Select player {number - 1} first."
+        else:
+            disabled_help = None
+
+        # Locked boxes drop any leftover pick (e.g. an earlier box was cleared).
+        if disabled_help and st.session_state.get(player_widget_key) is not None:
+            st.session_state[player_widget_key] = None
+
+        picked_elsewhere = {st.session_state.get(versioned_key(f"player_comparison_player_{other}")) for other in range(1, COMPARISON_PLAYER_COUNT + 1) if other != number}
+        player_options = [player_id for player_id in eligible_player_ids if player_id not in picked_elsewhere]
+        # A season/position change can drop a previously-picked player from the options.
+        if st.session_state.get(player_widget_key) not in player_options and st.session_state.get(player_widget_key) is not None:
+            st.session_state[player_widget_key] = None
+        with column:
+            selected_player_ids.append(
+                st.selectbox(
+                    f"Search for player {number}",
+                    player_options,
+                    format_func=lambda player_id: player_names_by_id[player_id],
+                    index=None,
+                    placeholder="Type a player's name...",
+                    disabled=disabled_help is not None,
+                    help=disabled_help,
+                    key=player_widget_key,
+                )
+            )
+
+    st.session_state["player_comparison_season"] = selected_season
+    st.session_state["player_comparison_position"] = selected_position
+    for number, player_id in enumerate(selected_player_ids, start=1):
+        st.session_state[f"player_comparison_player_{number}"] = player_id
+
+    # Row 3: same Apply / Clear Filters buttons as the other filter rows.
+    chosen_player_ids = [player_id for player_id in selected_player_ids if player_id]
+    apply_column, clear_column, _ = st.columns([1, 1, 6])
+    with apply_column:
+        applied = st.button(
+            "Apply Filters",
+            key="player_comparison_apply",
+            disabled=len(chosen_player_ids) < 2,
+            help="Select at least two players first" if len(chosen_player_ids) < 2 else None,
+            use_container_width=True,
+        )
+    with clear_column:
+        if st.button(CLEAR_FILTERS, key="player_comparison_clear", use_container_width=True):
+            for base_key in COMPARISON_FILTER_WIDGET_BASE_KEYS:
+                st.session_state.pop(base_key, None)
+            st.session_state.pop("player_comparison_applied_filters", None)
+            st.session_state["player_comparison_filters_generation"] = generation + 1
+            st.rerun()
+
+    if applied:
+        st.session_state["player_comparison_applied_filters"] = {"season": selected_season, "position": selected_position, "player_ids": chosen_player_ids}
+
+    applied_filters = st.session_state.get("player_comparison_applied_filters")
+    # Changing the season or position group resets the players and
+    # invalidates what was applied: drop it, which also hides the stat
+    # checkboxes and charts until Apply Filters is clicked again.
+    if applied_filters and (applied_filters["season"] != selected_season or applied_filters["position"] != selected_position):
+        st.session_state.pop("player_comparison_applied_filters")
+        applied_filters = None
+    if applied_filters is None:
+        st.info("Select season and position group for comparison. Then select at least two players. Then click Apply Filters.")
+        return
+
+    # Row 4 (only once filters are applied): one checkbox per stat
+    # available for the APPLIED position group, Games Played and Total
+    # Fantasy Points checked by default. Unlike the filters above these
+    # act live - the charts below re-render on every toggle, no Apply needed.
+    selected_stat_ids = []
+    stat_options = _comparison_stat_options(applied_filters["position"])
+    st.markdown("**Select Stats**")
+    for index, stat_id in enumerate(stat_options):
+        if index % COMPARISON_STAT_CHECKBOX_COLUMNS == 0:
+            checkbox_columns = st.columns(COMPARISON_STAT_CHECKBOX_COLUMNS)
+        checkbox_key = versioned_key(f"{COMPARISON_STAT_WIDGET_PREFIX}{applied_filters['season']}_{applied_filters['position']}_{stat_id}")
+        if checkbox_columns[index % COMPARISON_STAT_CHECKBOX_COLUMNS].checkbox(_comparison_stat_label(stat_id), value=stat_id in COMPARISON_DEFAULT_STATS, key=checkbox_key):
+            selected_stat_ids.append(stat_id)
+
+    _render_player_comparison_charts(applied_filters["season"], applied_filters["player_ids"], selected_stat_ids, players_data, ownership_data, player_names_by_id)
+
+
+def render_player_analysis_page() -> None:
+    individual_player_stats_tab, player_comparison_tab = st.tabs(["Individual Player Stats", "Player Comparison"])
+
+    with individual_player_stats_tab:
+        _render_individual_player_stats_tab()
+
+    with player_comparison_tab:
+        _render_player_comparison_tab()

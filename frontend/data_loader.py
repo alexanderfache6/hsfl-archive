@@ -201,8 +201,8 @@ def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
         return None
 
 
-# Curated per-position ESPN field list for the Players page's "Select
-# NFL Stat to View" chart (frontend/pages_players.py) - user-specified
+# Curated per-position ESPN field list for the Player Analysis page's "Select
+# NFL Stat to View" chart (frontend/pages_player_analysis.py) - user-specified
 # 2026-08-14, sourced directly from archive/nfl_player_stats.json's own
 # field names (NOT limited to this league's fantasy-scored stat_N set -
 # e.g. "completions"/"receivingTargets"/the "yardsPer..." per-attempt
@@ -285,7 +285,7 @@ NFL_STAT_FIELD_LABELS = {
     "totalKickingPoints": "Total Kicking Points",
 }
 
-# Chart y-axis treatment, same idea as pages_players.py's own
+# Chart y-axis treatment, same idea as pages_player_analysis.py's own
 # YARDAGE_STAT_LABELS/forced-integer-dtick split for the fantasy stat_N
 # chart - genuinely fractional fields (percentages, per-attempt
 # averages) and yardage fields (which can run into the hundreds) both
@@ -720,7 +720,7 @@ def player_nfl_team_by_season(player_id: str) -> dict[int, str]:
     guessing, same contract as before. A player who changes NFL teams
     mid-season (rare) gets whichever team appears most often that
     season - a real, deliberately unhandled edge case, same as
-    pages_players.py's "NFL Games" bye assumption."""
+    pages_player_analysis.py's "NFL Games" bye assumption."""
     from collections import Counter
 
     player_entry = load_nfl_player_stats().get(player_id)

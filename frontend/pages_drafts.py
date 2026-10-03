@@ -305,7 +305,7 @@ def _render_draft_recap_tab(season: int) -> None:
         # would just always empty the results.
         search_column, manager_column, position_column = st.columns([2, 1, 1])
         min_amount_column, max_amount_column, sort_picks_column = st.columns([1, 1, 2])
-        # Same "Search for a player" selectbox pattern as pages_players.py
+        # Same "Search for a player" selectbox pattern as pages_player_analysis.py
         # - pre-filtered to only players actually picked in THIS draft,
         # rather than every player in the archive.
         drafted_player_names = sorted({pick["player_name"] for pick in draft["picks"]})
@@ -1202,7 +1202,7 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
 
 
 def _render_player_analysis_tab() -> None:
-    # Shared with pages_players.py's Value Analysis tab - see
+    # Shared with pages_player_analysis.py's Value Analysis tab - see
     # helpers.build_picks_by_player.
     picks_by_player = build_picks_by_player()
 
@@ -1237,7 +1237,7 @@ def _render_archive_analysis_tab() -> None:
     x=overall pick (reversed, ascending right to left, same "more
     valuable = right side" convention as the other pick charts on this
     page), y=draft year. Built from build_picks_by_player (shared with
-    Player Analysis/pages_players.py) rather than re-scanning
+    Player Analysis/pages_player_analysis.py) rather than re-scanning
     discover_seasons()/load_draft() again."""
     picks_by_player = build_picks_by_player()
     all_picks = [{**pick, "player_name": player_name} for player_name, picks in picks_by_player.items() for pick in picks]

@@ -1,7 +1,7 @@
 """Fetches every mapped player's real NFL stats, per week, for every
 regular season 2012-present - REGARDLESS of whether that player was on
 a fantasy roster that week. This is the backfill data for the gap weeks
-pages_players.py's _build_full_game_list currently renders as a red
+pages_player_analysis.py's _build_full_game_list currently renders as a red
 "Not on a Fantasy Roster" placeholder with no real stats behind it (see
 instructions/cool-features.md's "players" section).
 
