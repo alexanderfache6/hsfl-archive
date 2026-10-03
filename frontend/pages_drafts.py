@@ -1171,7 +1171,7 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
         # the plot's own edge otherwise. tickvals is left as-is (no 170
         # added) - 170 isn't a real pick number, it's just extra
         # breathing room for the Undrafted markers sitting at 165.
-        yaxis={"title": "Pick", "range": [170, -5], "tickvals": [1, 20, 40, 60, 80, 100, 120, 140, 160]},
+        yaxis={"title": "Pick", "range": [170, -5], "tickvals": [1, 20, 40, 60, 80, 100, 120, 140, 160], "zeroline": False, "zerolinewidth": 0, "showline": False},
         # Padded 5 past the bottom end (-5, not 1) so a marker sitting
         # exactly at $1 doesn't render half-clipped by the plot's own
         # edge, same reasoning as Pick's padding above - $100 stays
