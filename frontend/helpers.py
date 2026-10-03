@@ -559,3 +559,24 @@ def parse_transaction_date(date_text: str, season: int) -> datetime:
     month_text = date_text.split(" ", 1)[0]
     year = season + 1 if month_text == "Jan" else season
     return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")  # noqa: DTZ007
+
+
+def render_pagination_input(state_key: str, total_pages: int) -> int:
+    """The "Pagination" number input shared by the Feedback issues table,
+    the Seasons transactions table and the Drafts auction table. Labeled
+    "Pagination" (not "Page") so it never reads like a "Page" filter.
+    A filter change can shrink total_pages below the page already in
+    session_state, which st.number_input rejects, so that's clamped back
+    to page 1 first. Returns the 1-based page."""
+    if st.session_state.get(state_key, 1) > total_pages:
+        st.session_state[state_key] = 1
+    return st.number_input("Pagination", min_value=1, max_value=total_pages, step=1, key=state_key)
+
+
+def render_html_table(headers: list[str], rows: list[list[str]]) -> None:
+    """Left-aligned table whose cells may contain HTML (e.g. position
+    pills), which st.dataframe can't render. Uses translucent borders and
+    inherited text color so it works in light and dark themes."""
+    header_html = "".join(f"<th style='text-align:left; padding:6px 10px; border-bottom:2px solid rgba(128,128,128,0.4);'>{header}</th>" for header in headers)
+    body_html = "".join("<tr>" + "".join(f"<td style='padding:6px 10px; border-bottom:1px solid rgba(128,128,128,0.2);'>{cell}</td>" for cell in row) + "</tr>" for row in rows)
+    st.markdown(f"<table style='width:100%; border-collapse:collapse;'><tr>{header_html}</tr>{body_html}</table>", unsafe_allow_html=True)

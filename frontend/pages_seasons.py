@@ -50,7 +50,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import ordinal_word, parse_transaction_date, return_plural, return_s
+from helpers import ordinal_word, parse_transaction_date, render_pagination_input, return_plural, return_s
 from strings import CLEAR_FILTERS, SELECT_STAT_TO_VIEW
 
 # ========================================
@@ -1242,19 +1242,11 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         del row["_sort"]
 
     total_pages = -(-len(rows) // TRANSACTIONS_PAGE_SIZE)
-    # A filter change can shrink total_pages below whatever page the user
-    # was previously on - st.number_input errors if its existing
-    # session_state value exceeds the new max_value, so clamp first.
-    if st.session_state.get("seasons_transactions_page", 1) > total_pages:
-        st.session_state["seasons_transactions_page"] = 1
     # page_column was created up front alongside the other filters (same
     # st.columns row) so Page visually sits on their right, even though
     # its max_value can only be computed after those filters are applied.
     with page_column:
-        # Labeled "Pagination" (not "Page") for the same reason as the
-        # Feedback tab's Issues table - keeps it distinct from any
-        # "Page" filter elsewhere in the app.
-        page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
+        page = render_pagination_input("seasons_transactions_page", total_pages)
 
     _render_transactions_metrics(chart_rows)
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} transactions)")

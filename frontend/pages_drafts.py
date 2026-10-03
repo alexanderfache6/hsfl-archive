@@ -29,7 +29,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, integer_yaxis_nticks, manager_pill, player_line, position_pill
+from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, integer_yaxis_nticks, manager_pill, player_line, position_pill, render_html_table, render_pagination_input
 from strings import CLEAR_FILTERS
 
 # ========================================
@@ -98,6 +98,8 @@ def _render_draft_pick_card(
                 unsafe_allow_html=True,
             )
 
+
+ARCHIVE_AUCTION_TABLE_PAGE_SIZE = 10
 
 DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount", "drafts_recap_sort_by_amount"]
 
@@ -1283,6 +1285,47 @@ def _render_archive_analysis_tab() -> None:
         height=350,
     )
     st.plotly_chart(figure, width="stretch")
+
+    # Most expensive real auction prices across the archive (keepers have
+    # no auction price, so they're excluded). Has its own player search and
+    # position filter, independent of the chart's position select above.
+    st.subheader("Most Expensive Auction Picks")
+    auction_picks = [pick for pick in all_picks if check_auction_pick_criteria(pick)]
+    if not auction_picks:
+        st.info("No auction picks recorded in the archive yet.")
+        return
+
+    search_column, position_column, pagination_column = st.columns(3)
+    selected_player_name = search_column.selectbox(
+        "Search for a player",
+        sorted({pick["player_name"] for pick in auction_picks}),
+        index=None,
+        placeholder="Type a player's name...",
+        key="drafts_archive_auction_search",
+    )
+    table_position_options = ["All"] + [position for position in BENCH_POSITION_ORDER if any(pick["position"] == position for pick in auction_picks)]
+    table_position = position_column.selectbox("Position", table_position_options, key="drafts_archive_auction_position")
+
+    expensive_picks = sorted(
+        (pick for pick in auction_picks if (not selected_player_name or pick["player_name"] == selected_player_name) and (table_position == "All" or pick["position"] == table_position)),
+        key=lambda pick: pick["auction_amount"],
+        reverse=True,
+    )
+    if not expensive_picks:
+        st.info("No auction picks match these filters.")
+        return
+
+    # Page state is per filter combination, so changing a filter always starts back on page 1.
+    total_pages = -(-len(expensive_picks) // ARCHIVE_AUCTION_TABLE_PAGE_SIZE)
+    with pagination_column:
+        page = render_pagination_input(f"drafts_archive_auction_page_{selected_player_name}_{table_position}", total_pages) - 1
+    pagination_column.caption(f"Pagination {page + 1} of {total_pages} ({len(expensive_picks)} picks)")
+    first_index = page * ARCHIVE_AUCTION_TABLE_PAGE_SIZE
+    rows = [
+        [str(first_index + offset + 1), pick["player_name"], position_pill(pick["position"]), f"${pick['auction_amount']}", str(pick["season"])]
+        for offset, pick in enumerate(expensive_picks[first_index : first_index + ARCHIVE_AUCTION_TABLE_PAGE_SIZE])
+    ]
+    render_html_table(["Number", "Player", "Position", "Auction Value", "Year"], rows)
 
 
 def _render_recap_tab(seasons):

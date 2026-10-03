@@ -28,6 +28,7 @@ from colors import (
     COLOR_ISSUES_OPENED,
 )
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
+from helpers import render_pagination_input
 from strings import CLEAR_FILTERS, GITHUB_ISSUE_BUG, GITHUB_ISSUE_ENHANCEMENT, GITHUB_ISSUE_NEW_FEATURE, ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE, PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS, PAGE_TRADE_ANALYSIS
 
 # ========================================
@@ -591,13 +592,8 @@ def _render_issues_table(issues: list[dict]) -> None:
     # widget mounts rather than letting st.number_input raise on an
     # out-of-range session_state value.
     total_pages = -(-len(rows) // ISSUES_PAGE_SIZE)
-    if st.session_state.get("feedback_issues_page", 1) > total_pages:
-        st.session_state["feedback_issues_page"] = 1
     with page_counter_column:
-        # Labeled "Pagination" (not "Page") to avoid reading like a
-        # second "Page" filter alongside the actual Page dropdown above.
-        page = st.number_input("Pagination", min_value=1, max_value=total_pages, step=1, key="feedback_issues_page")
-        # NOTE ^ removing `value=1` resolves "The widget with key "feedback_issues_page" was created with a default value but also had its value set via the Session State API." since value is passed in via session state
+        page = render_pagination_input("feedback_issues_page", total_pages)
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} issues)")
 
     start_index = (page - 1) * ISSUES_PAGE_SIZE
