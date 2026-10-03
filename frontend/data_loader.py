@@ -847,6 +847,17 @@ def _load_all_matchups_enriched() -> list[dict]:
     return matchups
 
 
+@st.cache_resource
+def load_fantasy_season_last_weeks() -> dict[int, int]:
+    """{season: last week of that season's fantasy season (regular season +
+    post season)} - the latest week with a matchup on record. NFL seasons
+    run past it (e.g. 2025: fantasy ends week 17, the NFL plays week 18)."""
+    last_weeks: dict[int, int] = {}
+    for matchup in _load_all_matchups_enriched():
+        last_weeks[matchup["season"]] = max(last_weeks.get(matchup["season"], 0), matchup["week"])
+    return last_weeks
+
+
 def load_matchups(
     season: int | None,
     week: int | None,

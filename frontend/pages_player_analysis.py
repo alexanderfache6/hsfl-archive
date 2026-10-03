@@ -52,6 +52,7 @@ from data_loader import (
     fantasy_raw_stat_value,
     get_bye_week,
     get_espn_week_stats,
+    load_fantasy_season_last_weeks,
     load_nfl_player_stats,
     load_nfl_season_lengths,
     load_player_ownership,
@@ -617,6 +618,12 @@ def _render_fantasy_points_per_game_chart_normal(
     difference between the two views."""
     full_game_list = _build_full_game_list(timeline, nfl_season_lengths)
     bye_weeks_by_season = _bye_weeks_by_season(player_id)
+
+    # This is a FANTASY chart: weeks after that season's fantasy season
+    # ended (regular + post season, e.g. NFL week 18 when fantasy ended in
+    # week 17) don't belong on it. The NFL stats charts keep every NFL week.
+    fantasy_last_weeks = load_fantasy_season_last_weeks()
+    full_game_list = [entry for entry in full_game_list if entry["week"] <= fantasy_last_weeks.get(entry["season"], entry["week"])]
 
     points, hover_text, is_bye_week, bye_hover_text, missing_hover_text = [], [], [], [], []
     is_missing_record, group_by_index = [], []
