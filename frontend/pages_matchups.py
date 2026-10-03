@@ -49,7 +49,7 @@ from data_loader import (
 )
 from helpers import manager_pill, optimal_lineup_details, pad_missing_starters, render_record_metrics, render_season_qualification_metrics
 from player_modal import open_player_stats_modal
-from strings import CLEAR_FILTERS, TOGGLE_OPTIMAL_LINEUP
+from strings import CLEAR_FILTERS, SELECT_MANAGER_1, TOGGLE_OPTIMAL_LINEUP
 
 # ========================================
 # CONSTANTS
@@ -78,11 +78,6 @@ def _manager_options(name_resolver: dict[str, str]) -> list[tuple[str, str]]:
     options = [(manager["manager_id"], resolve_manager_name(manager["manager_id"], name_resolver)) for manager in manager_stats["managers"]]
     options.sort(key=lambda option: option[1])
     return options
-
-
-def _seasons_played_by_manager() -> dict[str, list[int]]:
-    manager_stats = load_all_time_manager_stats()
-    return {manager["manager_id"]: manager["seasons_played"] for manager in manager_stats["managers"]}
 
 
 def _bench_sort_key(player: dict) -> int:
@@ -144,6 +139,21 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # now plain st.button widgets (form_submit_button can't sit next to a
     # regular button anyway) that read/reset the current widget values
     # directly.
+    # Every selector only lists options that still exist under the CURRENT
+    # value of the other filters (e.g. Week only offers weeks that have a
+    # matchup for the picked Manager 1 / Season / Manager 2 / Matchup Type).
+    # The other filters' current values are read straight from session_state
+    # (their versioned widget keys) because widgets run in code order, so
+    # a selector can't see a later widget's return value yet.
+    def _current(base_key: str, default=None):
+        return st.session_state.get(versioned_key(base_key), default)
+
+    current_team1 = _current("matchups_team1_manager_id")
+    current_season = _current("matchups_season")
+    current_week = _current("matchups_week")
+    current_team2 = _current("matchups_team2_manager_id")
+    current_type = _current("matchups_matchup_type", "all")
+
     team1_col, season_col, week_col, team2_col, type_col = st.columns(5)
     with team1_col:
         team1_manager_id = st.selectbox(
@@ -158,7 +168,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # Manager 1 is picked - showing the full unfiltered season list first
     # would let a user pick a season Manager 1 never actually played,
     # which is confusing even though it gets reset automatically below.
-    season_options = _seasons_played_by_manager().get(team1_manager_id, []) if team1_manager_id else []
+    season_options = sorted({matchup["season"] for matchup in load_matchups(None, current_week, team1_manager_id, current_team2, current_type)}) if team1_manager_id else []
     # A previously-picked season can fall outside the new Manager 1's
     # season_options (e.g. Season=2015 picked before Manager 1 was set,
     # then a Manager 1 who never played 2015 gets chosen) - Streamlit
@@ -174,18 +184,22 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             index=None,
             placeholder="Any",
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
             key=season_widget_key,
         )
+    week_options = sorted({matchup["week"] for matchup in load_matchups(current_season, None, team1_manager_id, current_team2, current_type)}) if team1_manager_id else list(range(1, MAX_WEEK + 1))
+    week_widget_key = versioned_key("matchups_week")
+    if st.session_state.get(week_widget_key) not in week_options and st.session_state.get(week_widget_key) is not None:
+        st.session_state[week_widget_key] = None
     with week_col:
         week = st.selectbox(
             "Week",
-            list(range(1, MAX_WEEK + 1)),
+            week_options,
             index=None,
             placeholder="Any",
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
-            key=versioned_key("matchups_week"),
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
+            key=week_widget_key,
         )
     # Matchup Type is picked here (out of visual column order - it still
     # renders into type_col, its normal rightmost spot) rather than after
@@ -193,15 +207,20 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # know season/week/matchup_type - widgets run in CODE order, not
     # column-layout order, so its value has to exist before team2_options
     # is computed just below.
+    types_present = {matchup["matchup_type"] for matchup in load_matchups(current_season, current_week, team1_manager_id, current_team2, "all")} if team1_manager_id else set(MATCHUP_TYPE_OPTIONS)
+    type_options = [option for option in MATCHUP_TYPE_OPTIONS if option == "all" or option in types_present]
+    type_widget_key = versioned_key("matchups_matchup_type")
+    if st.session_state.get(type_widget_key) not in type_options and st.session_state.get(type_widget_key) is not None:
+        st.session_state[type_widget_key] = "all"
     with type_col:
         matchup_type = st.selectbox(
             "Matchup Type",
-            MATCHUP_TYPE_OPTIONS,
+            type_options,
             format_func=lambda value: MATCHUP_TYPE_LABELS[value],
             index=0,
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
-            key=versioned_key("matchups_matchup_type"),
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
+            key=type_widget_key,
         )
     # Manager 2's options are only the managers Manager 1 has actually
     # faced under the CURRENT season/week/matchup_type filters (not just
@@ -226,7 +245,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             index=None,
             placeholder="Any",
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
             key=team2_widget_key,
         )
 
@@ -243,7 +262,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # selectboxes above already fill theirs) is what closes that gap.
     apply_col, clear_col, _ = st.columns([1, 1, 6])
     with apply_col:
-        applied = st.button("Apply Filters", disabled=team1_manager_id is None, help="Select Manager 1 first" if team1_manager_id is None else None, use_container_width=True)
+        applied = st.button("Apply Filters", disabled=team1_manager_id is None, help=SELECT_MANAGER_1 if team1_manager_id is None else None, use_container_width=True)
     with clear_col:
         if st.button(CLEAR_FILTERS, use_container_width=True):
             for base_key in FILTER_WIDGET_BASE_KEYS:
@@ -720,8 +739,8 @@ def render_matchups_page() -> None:
 
     applied_filters = _render_filters(name_resolver)
     if applied_filters is None:
-        st.info("Select Manager 1 first, then apply other filters.")
-        st.warning("Back to back filters may be slow, refresh page if more than 2 seconds.")
+        st.info(f"{SELECT_MANAGER_1} Then apply other filters.")
+        st.warning("Back to back filters may be slow, refresh page if loading for more than 2 seconds.")
         return
 
     matchups = load_matchups(
