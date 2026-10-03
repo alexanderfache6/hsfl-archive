@@ -20,6 +20,7 @@ from data_loader import (
     team_id_to_manager_map,
 )
 from helpers import integer_yaxis_nticks, optimal_lineup_details, pad_missing_starters, player_line, position_pill, render_record_metrics, render_season_qualification_metrics
+from player_modal import open_player_stats_modal
 from strings import TOGGLE_OPTIMAL_LINEUP
 
 # ========================================
@@ -27,7 +28,10 @@ from strings import TOGGLE_OPTIMAL_LINEUP
 # ========================================
 
 DEPTH_CHART_PLAYER_COLUMNS = 4
-DEPTH_CHART_LABEL_COLUMN_WIDTH = 0.5
+DEPTH_CHART_LABEL_COLUMN_WIDTH = 0.4
+
+# Player info vs fantasy-points button inside a card - the button column is wide enough for a full "xx.xx" label plus padding.
+PLAYER_CARD_COLUMN_RATIOS = [3, 2]
 
 # Code shown in the top-right of a player card -> (color, legend meaning).
 # The archive has no injury status, so IR means the player sat in the
@@ -74,13 +78,15 @@ def _player_status_code(player: dict) -> str | None:
     return None
 
 
-def _render_player_card(player: dict, card_key: str, is_bench: bool, optimal_details: dict | None, style_rules: list[str]) -> None:
+def _render_player_card(player: dict, card_key: str, is_bench: bool, optimal_details: dict | None, style_rules: list[str], season: int, week: int) -> None:
     """Same bordered card as the Drafts page's selection cards, minus the
     position pill - the slot label column already carries the position.
     With optimal_details, players in the optimal lineup are outlined
     (CSS collected in style_rules, injected once per chart) and their points
     are colored like the Matchups cards: green for a bench player who
-    belongs in the optimal lineup, red for a starter who doesn't."""
+    belongs in the optimal lineup, red for a starter who doesn't. The fantasy
+    points are a button opening the same player stats modal the Matchups
+    cards use."""
     with st.container(border=True, key=card_key):
         if player.get("is_empty_slot"):
             st.markdown(f"<span style='color:{COLOR_TABLE_ROSTER}; font-style:italic;'>Empty</span>", unsafe_allow_html=True)
@@ -96,7 +102,19 @@ def _render_player_card(player: dict, card_key: str, is_bench: bool, optimal_det
                 points_color = COLOR_POINTS_NEGATIVE
         status_code = _player_status_code(player)
         status_color = PLAYER_STATUS_CODES[status_code][0] if status_code else None
-        st.markdown(player_line(player["player_name"], player["nfl_team"], points=player["points"], points_color=points_color, status_code=status_code, status_color=status_color), unsafe_allow_html=True)
+        # Player on the left; the fantasy points on the right ARE the button
+        # that opens the player stats modal. Streamlit button labels take
+        # :green[...] / :red[...] markdown colors, used for the optimal
+        # lineup gain / displaced-starter coloring.
+        player_column, points_column = st.columns(PLAYER_CARD_COLUMN_RATIOS, vertical_alignment="center")
+        player_column.markdown(player_line(player["player_name"], player["nfl_team"], status_code=status_code, status_color=status_color), unsafe_allow_html=True)
+        points_label = f"{player['points']:.2f}"
+        if points_color == COLOR_POINTS_POSITIVE:
+            points_label = f":green[{points_label}]"
+        elif points_color == COLOR_POINTS_NEGATIVE:
+            points_label = f":red[{points_label}]"
+        if points_column.button(points_label, key=f"{card_key}_stats", help="Show this player's stats for the week.", use_container_width=True):
+            open_player_stats_modal(player.get("player_id"), player["player_name"], player["position"], player["nfl_team"], season, week)
 
 
 def _week_summary(season: int, week: int, manager_id: str) -> dict | None:
@@ -175,10 +193,10 @@ def _render_depth_chart(season: int, week: int, manager_id: str, show_optimal: b
         with columns[0]:
             st.markdown(position_pill(starter.get("slot", starter["position"])), unsafe_allow_html=True)
         with columns[1]:
-            _render_player_card(starter, f"{key_prefix}_{row_index}_0", False, card_optimal_details, style_rules)
+            _render_player_card(starter, f"{key_prefix}_{row_index}_0", False, card_optimal_details, style_rules, season, week)
         for backup_index, (column, backup) in enumerate(zip(columns[2:], slot_backups), start=1):
             with column:
-                _render_player_card(backup, f"{key_prefix}_{row_index}_{backup_index}", True, card_optimal_details, style_rules)
+                _render_player_card(backup, f"{key_prefix}_{row_index}_{backup_index}", True, card_optimal_details, style_rules, season, week)
 
     if style_rules:
         st.html(f"<style>{''.join(style_rules)}</style>")
