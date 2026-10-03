@@ -351,7 +351,7 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season
             final_rank_column.metric("Final Rank", rank_display)
 
 
-def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, matchup_type_filter: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """One bar per matchup: Manager 1's point differential (their score
     minus the opponent's). Only meaningful relative to Manager 1, so this
     is skipped entirely when Manager 1 isn't set. Win bars use Manager
@@ -370,7 +370,10 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         diff = team1_side["score"] - team2_side["score"]
         manager2_name = resolve_manager_name(team2_side["manager_id"], name_resolver, team2_side.get("display_name", ""))
 
-        x_labels.append(f"{matchup['season']} Wk{matchup['week']}")
+        # One season with every matchup type: two-row tick labels (season,
+        # then week) instead of one long "2023 Wk5" string.
+        label_separator = "<br>" if season_filter and matchup_type_filter == "all" else " "
+        x_labels.append(f"{matchup['season']}{label_separator}Wk{matchup['week']}")
         diffs.append(diff)
         hover_text.append(f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b><br>{manager1_name} vs {manager2_name}<br>{team1_side['team_name']} vs {team2_side['team_name']}<br>{team1_side['score']:g} vs {team2_side['score']:g}<br>Point Differential: {diff:+.2f}")
 
@@ -425,6 +428,11 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
+        # Plotly's default "group" mode gives each trace its own half-width
+        # slot at every x, so the Win and Loss/Tie bars (which never share
+        # an x) sat off-center and unevenly spaced. "overlay" centers every
+        # bar on its own x position.
+        barmode="overlay",
         title="Point Differential",
         xaxis={"title": "Season · Week" if season_filter else "Season", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
@@ -737,7 +745,7 @@ def render_matchups_page() -> None:
         applied_filters["week"],
         applied_filters["team2_manager_id"],
     )
-    _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
+    _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], applied_filters["matchup_type"], name_resolver, manager_color_map)
     st.divider()
 
     total_pages = max(1, -(-len(matchups) // MATCHUPS_PAGE_SIZE))
