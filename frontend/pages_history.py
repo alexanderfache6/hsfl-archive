@@ -359,7 +359,7 @@ def _render_wall_of_champions_table(champions_data: dict, name_resolver: dict[st
         champion_manager_ids.append(top_3.get(1, {}).get("manager_id", ""))
         rows.append(
             {
-                "Season": season_entry["season"],
+                "Season": str(season_entry["season"]),
                 f"Champion {EMOJI_FIRST_PLACE}": name_for(top_3.get(1, {})),
                 f"Runner-Up {EMOJI_SECOND_PLACE}": name_for(top_3.get(2, {})),
                 f"3rd Place {EMOJI_THIRD_PLACE}": name_for(top_3.get(3, {})),
