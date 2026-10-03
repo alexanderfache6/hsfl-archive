@@ -226,14 +226,25 @@ def _all_issues() -> list[dict]:
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    response = requests.get(
-        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
-        headers=headers,
-        params={"state": "all", "per_page": 100},
-        timeout=10,
-    )
-    response.raise_for_status()
-    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue and "[Internal]" not in issue["title"]]
+    # GitHub returns at most 100 items a page, and its issues endpoint mixes
+    # PRs in with issues - so every page is fetched, otherwise the oldest
+    # issues silently go missing once the repo passes 100 issues + PRs.
+    raw_issues: list[dict] = []
+    page = 1
+    while True:
+        response = requests.get(
+            f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
+            headers=headers,
+            params={"state": "all", "per_page": 100, "page": page},
+            timeout=10,
+        )
+        response.raise_for_status()
+        page_items = response.json()
+        raw_issues.extend(page_items)
+        if len(page_items) < 100:
+            break
+        page += 1
+    return [_parse_issue(issue) for issue in raw_issues if "pull_request" not in issue and "[Internal]" not in issue["title"]]
 
 
 @st.cache_data(ttl=300)
