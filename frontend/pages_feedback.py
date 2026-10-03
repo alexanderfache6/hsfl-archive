@@ -27,8 +27,10 @@ from colors import (
     COLOR_ISSUES_NEW_FEATURE,
     COLOR_ISSUES_OPENED,
 )
+from constants import BAR_CHART_CORNER_RADIUS
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
-from strings import PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS
+from helpers import render_pagination_input
+from strings import CLEAR_FILTERS, GITHUB_ISSUE_BUG, GITHUB_ISSUE_ENHANCEMENT, GITHUB_ISSUE_NEW_FEATURE, ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE, PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYER_ANALYSIS, PAGE_SEASONS, PAGE_TRADE_ANALYSIS
 
 # ========================================
 # CONSTANTS
@@ -39,13 +41,14 @@ PACIFIC_TIMEZONE = ZoneInfo("America/Los_Angeles")
 GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
-FEEDBACK_TYPES = ["Bug", "Enhancement", "New Feature"]
-REAL_PAGES = [PAGE_HISTORY, PAGE_SEASONS, PAGE_PLAYERS, PAGE_MATCHUPS, PAGE_FEEDBACK]
-KNOWN_PAGES = {*REAL_PAGES, "Other"}
+FEEDBACK_TYPES = [ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE]
+REAL_PAGE_ORDER = [PAGE_HISTORY, PAGE_SEASONS, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_DRAFTS, PAGE_TRADE_ANALYSIS, PAGE_PLAYER_ANALYSIS, PAGE_FEEDBACK]
+
+FEEDBACK_PAGE_OPTIONS = {*REAL_PAGE_ORDER, "Other"}
 TITLE_MAX_CHARS = 100
 DESCRIPTION_MAX_CHARS = 400
 
-ISSUE_LABELS_BY_TYPE = {"Bug": ["bug"], "Enhancement": ["enhancement"], "New Feature": ["new feature"]}
+ISSUE_LABELS_BY_TYPE = {ISSUE_BUG: [GITHUB_ISSUE_BUG], ISSUE_ENHANCEMENT: [GITHUB_ISSUE_ENHANCEMENT], ISSUE_NEW_FEATURE: [GITHUB_ISSUE_NEW_FEATURE]}
 
 # GitHub's create-issue REST endpoint has no attachment field (the
 # drag-and-drop upload used at github.com itself goes through a
@@ -62,9 +65,15 @@ MAX_SCREENSHOT_MB = 1  # real screenshots run well under this
 # normalized on read so old and new issues filter/display identically.
 ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
 
+# Issues filed while the page was still called "Players" (or "Players
+# Analysis") carry that name in their "[Page]" title bracket / "**Page:**"
+# body line - mapped onto the current page name so old and new issues
+# filter and display identically.
+ISSUE_PAGE_ALIASES = {"Players": PAGE_PLAYER_ANALYSIS, "Players Analysis": PAGE_PLAYER_ANALYSIS}
+
 # Same colors as this repo's actual GitHub labels, for the Issues
 # table's Type pill.
-ISSUE_TYPE_COLORS = {"Bug": COLOR_ISSUES_BUG, "Enhancement": COLOR_ISSUES_ENHANCEMENT, "New Feature": COLOR_ISSUES_NEW_FEATURE}
+ISSUE_TYPE_COLORS = {ISSUE_BUG: COLOR_ISSUES_BUG, ISSUE_ENHANCEMENT: COLOR_ISSUES_ENHANCEMENT, ISSUE_NEW_FEATURE: COLOR_ISSUES_NEW_FEATURE}
 # TODO don't hardcode this
 
 FEEDBACK_WIDGET_BASE_KEYS = ("feedback_type", "feedback_page", "feedback_title", "feedback_description")
@@ -85,7 +94,7 @@ ISSUES_FILTER_WIDGET_BASE_KEYS = (
 # bracket (the current naming format is "[Page] Title") but falls back
 # to the body's "**Page:**" line when the bracket isn't a recognized
 # page - older issues filed before this naming format held the TYPE in
-# that bracket instead (see _parse_issue's KNOWN_PAGES check).
+# that bracket instead (see _parse_issue's FEEDBACK_PAGE_OPTIONS check).
 ISSUE_TITLE_PATTERN = re.compile(r"^\[(.*?)\]\s*(.*)$")
 ISSUE_TYPE_PATTERN = re.compile(r"\*\*Type:\*\*\s*(.+)")
 ISSUE_PAGE_PATTERN = re.compile(r"\*\*Page:\*\*\s*(.+)")
@@ -169,7 +178,8 @@ def _parse_issue(issue: dict) -> dict:
     type_match = ISSUE_TYPE_PATTERN.search(body)
     issue_type = type_match.group(1).strip() if type_match else ""
     issue_type = ISSUE_TYPE_ALIASES.get(issue_type, issue_type)
-    if bracket in KNOWN_PAGES:
+    bracket = ISSUE_PAGE_ALIASES.get(bracket, bracket)
+    if bracket in FEEDBACK_PAGE_OPTIONS:
         page = bracket
     else:
         # Older issue, filed before the "[Page] Title" naming format -
@@ -177,6 +187,7 @@ def _parse_issue(issue: dict) -> dict:
         # own "**Page:**" line.
         page_match = ISSUE_PAGE_PATTERN.search(body)
         page = page_match.group(1).strip() if page_match else ""
+        page = ISSUE_PAGE_ALIASES.get(page, page)
     description_match = ISSUE_DESCRIPTION_PATTERN.search(body)
     description = description_match.group(1).strip() if description_match else ""
     return {
@@ -215,14 +226,25 @@ def _all_issues() -> list[dict]:
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    response = requests.get(
-        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
-        headers=headers,
-        params={"state": "all", "per_page": 100},
-        timeout=10,
-    )
-    response.raise_for_status()
-    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue and "[Internal]" not in issue["title"]]
+    # GitHub returns at most 100 items a page, and its issues endpoint mixes
+    # PRs in with issues - so every page is fetched, otherwise the oldest
+    # issues silently go missing once the repo passes 100 issues + PRs.
+    raw_issues: list[dict] = []
+    page = 1
+    while True:
+        response = requests.get(
+            f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
+            headers=headers,
+            params={"state": "all", "per_page": 100, "page": page},
+            timeout=10,
+        )
+        response.raise_for_status()
+        page_items = response.json()
+        raw_issues.extend(page_items)
+        if len(page_items) < 100:
+            break
+        page += 1
+    return [_parse_issue(issue) for issue in raw_issues if "pull_request" not in issue and "[Internal]" not in issue["title"]]
 
 
 @st.cache_data(ttl=300)
@@ -302,7 +324,7 @@ def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
     st.info("Provide feedback/new ideas. The more details the better. Logged with Github Issues.")
 
-    # Same versioned-widget-key pattern as the Matchups/Players tabs'
+    # Same versioned-widget-key pattern as the Matchups/Player Analysis tabs'
     # Clear Filters - Clear Feedback (and a successful Submit) bumps this
     # counter instead of just deleting session_state, forcing Streamlit
     # to mount brand-new widget instances (deleting session_state alone
@@ -320,7 +342,7 @@ def _render_feedback_form() -> None:
 
     feedback_type = st.radio("Issue Type", FEEDBACK_TYPES, key=versioned_key("feedback_type"), horizontal=True)
 
-    page_options = [*REAL_PAGES, "Other"] if feedback_type == "New Feature" else REAL_PAGES
+    page_options = [*REAL_PAGE_ORDER, "Other"] if feedback_type == "New Feature" else REAL_PAGE_ORDER
     page_widget_key = versioned_key("feedback_page")
     if st.session_state.get(page_widget_key) not in page_options:
         st.session_state[page_widget_key] = page_options[0]
@@ -365,7 +387,7 @@ def _render_feedback_form() -> None:
 
     def _reset_form_fields() -> None:
         st.session_state["feedback_type"] = FEEDBACK_TYPES[0]
-        st.session_state["feedback_page"] = REAL_PAGES[0]
+        st.session_state["feedback_page"] = REAL_PAGE_ORDER[0]
         st.session_state["feedback_title"] = ""
         st.session_state["feedback_description"] = ""
         st.session_state["feedback_form_generation"] = generation + 1
@@ -464,7 +486,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     except requests.RequestException:
         releases = []
 
-    # Same versioned-widget-key pattern as the Matchups/Players tabs'
+    # Same versioned-widget-key pattern as the Matchups/Player Analysis tabs'
     # Clear Filters - the Clear Filters button below bumps this counter
     # instead of just deleting session_state, forcing Streamlit to mount
     # brand-new widget instances (deleting session_state alone can leave
@@ -501,9 +523,9 @@ def _render_issues_table(issues: list[dict]) -> None:
             key=versioned_key("feedback_filter_release"),
         )
     with page_column:
-        selected_page = st.selectbox("App Page", [*REAL_PAGES, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
+        selected_page = st.selectbox("App Page", [*REAL_PAGE_ORDER, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
 
-    # Same searchable-selectbox pattern as the Players tab's player
+    # Same searchable-selectbox pattern as the Player Analysis tab's player
     # search - a plain text_input with substring matching below, not a
     # selectbox (which requires picking one exact full title from its
     # dropdown before it actually filters anything). Page counter shares
@@ -519,7 +541,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     st.session_state["feedback_filter_page"] = selected_page
     st.session_state["feedback_search_title"] = searched_title
 
-    if st.button("Clear Filters"):
+    if st.button(CLEAR_FILTERS):
         for base_key in ISSUES_FILTER_WIDGET_BASE_KEYS:
             st.session_state.pop(base_key, None)
         st.session_state["feedback_issues_filters_generation"] = generation + 1
@@ -590,13 +612,8 @@ def _render_issues_table(issues: list[dict]) -> None:
     # widget mounts rather than letting st.number_input raise on an
     # out-of-range session_state value.
     total_pages = -(-len(rows) // ISSUES_PAGE_SIZE)
-    if st.session_state.get("feedback_issues_page", 1) > total_pages:
-        st.session_state["feedback_issues_page"] = 1
     with page_counter_column:
-        # Labeled "Pagination" (not "Page") to avoid reading like a
-        # second "Page" filter alongside the actual Page dropdown above.
-        page = st.number_input("Pagination", min_value=1, max_value=total_pages, step=1, key="feedback_issues_page")
-        # NOTE ^ removing `value=1` resolves "The widget with key "feedback_issues_page" was created with a default value but also had its value set via the Session State API." since value is passed in via session state
+        page = render_pagination_input("feedback_issues_page", total_pages)
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} issues)")
 
     start_index = (page - 1) * ISSUES_PAGE_SIZE
@@ -651,7 +668,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Opened",
         x=all_dates,
         y=opened_values,
-        marker_color=COLOR_ISSUES_OPENED,
+        marker={"color": COLOR_ISSUES_OPENED, "cornerradius": BAR_CHART_CORNER_RADIUS},
         customdata=closed_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
@@ -659,7 +676,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Closed",
         x=all_dates,
         y=closed_values,
-        marker_color=COLOR_ISSUES_CLOSED,
+        marker={"color": COLOR_ISSUES_CLOSED, "cornerradius": BAR_CHART_CORNER_RADIUS},
         customdata=opened_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
@@ -668,7 +685,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",
-        xaxis={"type": "category", "nticks": CHART_XAXIS_MAX_TICKS},  # plain "yyyy-mm-dd" tick labels, no time-of-day
+        xaxis={"type": "date", "tickformat": "%Y-%m-%d", "hoverformat": "%Y-%m-%d", "nticks": CHART_XAXIS_MAX_TICKS},  # real date axis: bars sit by date, gaps between days stay proportional; plain "yyyy-mm-dd" labels, no time-of-day
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="",
     )

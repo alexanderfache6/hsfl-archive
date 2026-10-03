@@ -17,21 +17,20 @@ from colors import (
     COLOR_PERCENTILE_OTHER_PLAYERS,
     COLOR_PICK,
     COLOR_POINTS_POSITIVE,
-    COLOR_TABLE_ROSTER,
     COLOR_UNDRAFTED,
 )
-from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, MAX_YAXIS_TICKS, NFL_TEAM_ABBREVIATIONS
+from constants import AUCTION_BUDGET, BAR_CHART_CORNER_RADIUS, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, NFL_TEAM_ABBREVIATIONS
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
-    contrasting_text_color,
     discover_seasons,
     load_draft,
     load_player_ownership,
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, manager_pill
+from helpers import build_picks_by_player, check_auction_pick_criteria, check_keeper_pick_criteria, integer_yaxis_nticks, manager_pill, player_line, position_pill, render_html_table, render_pagination_input
+from strings import CLEAR_FILTERS
 
 # ========================================
 # RENDER
@@ -68,12 +67,7 @@ def _render_draft_pick_card(
 
         with player_column:
             nfl_team = pick.get("nfl_team") or NFL_TEAM_ABBREVIATIONS.get(pick["player_name"].split(" ")[-1], "")
-            position_background_color = BENCH_POSITION_COLOR.get(pick["position"], COLOR_TABLE_ROSTER)
-            position_text_color = contrasting_text_color(position_background_color)
-            st.markdown(
-                f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600; margin-right:8px;'>{pick['position']}</span><span style='font-weight:600;'>{pick['player_name']}</span> <span style='color:{COLOR_TABLE_ROSTER};'>({nfl_team})</span>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(player_line(pick["player_name"], nfl_team, pick["position"]), unsafe_allow_html=True)
 
         with manager_column:
             # auction_amount is null both for a snake draft (the concept
@@ -105,19 +99,9 @@ def _render_draft_pick_card(
             )
 
 
-DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount"]
+ARCHIVE_AUCTION_TABLE_PAGE_SIZE = 10
 
-
-def _integer_yaxis_nticks(values: list[int]) -> int:
-    """MAX_YAXIS_TICKS is a CEILING, not a target - passing it straight
-    through as Plotly's nticks forces that many ticks even over a tiny
-    integer range (e.g. 0-5), which makes Plotly fall back to a
-    fractional dtick and repeat rounded integer labels. Capping nticks
-    at the data's own distinct-integer-value count (max_value + 1, for a
-    0-based count axis) keeps every tick unique."""
-    if not values:
-        return MAX_YAXIS_TICKS
-    return min(max(values) + 1, MAX_YAXIS_TICKS)
+DRAFTS_FILTER_WIDGET_BASE_KEYS = ["drafts_recap_search", "drafts_recap_manager", "drafts_recap_position", "drafts_recap_min_amount", "drafts_recap_max_amount", "drafts_recap_sort_by_amount"]
 
 
 def _render_pick_distribution_chart(
@@ -180,7 +164,7 @@ def _render_pick_distribution_chart(
                 x=bucket_labels,
                 y=_bucket_counts(all_values),
                 name="All",
-                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
+                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5, "cornerradius": BAR_CHART_CORNER_RADIUS},
                 hovertemplate="<b>%{x}</b><br>All Player Count: %{y}<extra></extra>",
             )
         )
@@ -189,7 +173,7 @@ def _render_pick_distribution_chart(
     # plots positions), or the same faded gray as "All" when not filtered
     # - unfiltered, series 2 IS the "All" data, so it should look like
     # it, not like a real position's own color.
-    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position)} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5}
+    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position), "cornerradius": BAR_CHART_CORNER_RADIUS} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5, "cornerradius": BAR_CHART_CORNER_RADIUS}
     figure.add_trace(
         go.Bar(
             x=bucket_labels,
@@ -202,7 +186,7 @@ def _render_pick_distribution_chart(
     figure.update_layout(
         barmode="overlay",
         xaxis={"title": xaxis_title, "type": "category"},
-        yaxis={"title": "Player Count", "tickformat": "d", "nticks": _integer_yaxis_nticks(_bucket_counts(all_values) + _bucket_counts(values))},
+        yaxis={"title": "Player Count", "tickformat": "d", "nticks": integer_yaxis_nticks(_bucket_counts(all_values) + _bucket_counts(values))},
         showlegend=True,
         margin={"t": 20, "l": 60, "r": 20, "b": 50},
     )
@@ -319,8 +303,9 @@ def _render_draft_recap_tab(season: int) -> None:
         # Auction $ only means anything for an auction draft - a snake
         # draft's picks all carry a null auction_amount, so the filter
         # would just always empty the results.
-        search_column, manager_column, position_column, min_amount_column, max_amount_column = st.columns([3, 2, 1, 1, 1])
-        # Same "Search for a player" selectbox pattern as pages_players.py
+        search_column, manager_column, position_column = st.columns([2, 1, 1])
+        min_amount_column, max_amount_column, sort_picks_column = st.columns([1, 1, 2])
+        # Same "Search for a player" selectbox pattern as pages_player_analysis.py
         # - pre-filtered to only players actually picked in THIS draft,
         # rather than every player in the archive.
         drafted_player_names = sorted({pick["player_name"] for pick in draft["picks"]})
@@ -360,24 +345,38 @@ def _render_draft_recap_tab(season: int) -> None:
                 key=versioned_key("drafts_recap_max_amount"),
             )
 
+        # Sorting by auction amount only means anything for an auction
+        # draft - a snake draft has nothing but pick order to sort by.
+        sort_picks_by_amount = False
+        if draft_type == DRAFT_AUCTION:
+            sort_picks_by_amount = sort_picks_column.toggle("Sort by Auction Price", value=False, key=versioned_key("drafts_recap_sort_by_amount"), help="Sort by Pick Order or Auction Price (keepers are shown first).")
+
         st.session_state["drafts_recap_search"] = selected_player_name
         st.session_state["drafts_recap_manager"] = selected_manager_id
         st.session_state["drafts_recap_position"] = selected_position
         st.session_state["drafts_recap_min_amount"] = min_amount
         st.session_state["drafts_recap_max_amount"] = max_amount
+        st.session_state["drafts_recap_sort_by_amount"] = sort_picks_by_amount
 
         # Clear-only, left-aligned in the same [1, 1, 6] column pattern
         # used everywhere else - no Apply column here since there's
         # nothing to gate behind an Apply click anymore.
         clear_column, _ = st.columns([1, 7])
         with clear_column:
-            if st.button("Clear Filters", use_container_width=True, key="drafts_recap_clear_filters"):
+            if st.button(CLEAR_FILTERS, use_container_width=True, key="drafts_recap_clear_filters"):
                 for base_key in DRAFTS_FILTER_WIDGET_BASE_KEYS:
                     st.session_state.pop(base_key, None)
                 st.session_state["drafts_filters_generation"] = generation + 1
                 st.rerun()
 
-        picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"])
+        if sort_picks_by_amount:
+            # NOTE show keepers first
+            picks = sorted(draft["picks"], key=lambda pick: (pick["auction_amount"] is not None, -(pick["auction_amount"] or 0)), reverse=False)
+            # NOTE double tuple sort
+            # first - false before true (keepers before picks)
+            # second - keepers set to 0 price, - for sorting descending price on second tuple only
+        else:
+            picks = sorted(draft["picks"], key=lambda pick: pick["overall_pick"], reverse=False)
         if selected_player_name:
             picks = [pick for pick in picks if pick["player_name"] == selected_player_name]
         if selected_manager_id != "All":
@@ -414,13 +413,8 @@ def _render_draft_recap_tab(season: int) -> None:
         # identifies which position each number belongs to.
         position_metric_columns = st.columns(len(BENCH_POSITION_ORDER))
         for position_metric_column, position in zip(position_metric_columns, BENCH_POSITION_ORDER):
-            position_background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
-            position_text_color = contrasting_text_color(position_background_color)
             with position_metric_column:
-                st.markdown(
-                    f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{position}</span>",
-                    unsafe_allow_html=True,
-                )
+                st.markdown(position_pill(position), unsafe_allow_html=True)
                 st.metric("Drafted", position_counts[position], help=f"The number of {position}s in this year's draft.")
 
         if draft_type == DRAFT_AUCTION:
@@ -638,7 +632,7 @@ def _render_manager_recap_tab(season: int) -> None:
                                 go.Bar(
                                     x=bin_labels,
                                     y=bin_counts,
-                                    marker={"color": COLOR_CHART_STAT},
+                                    marker={"color": COLOR_CHART_STAT, "cornerradius": BAR_CHART_CORNER_RADIUS},
                                     customdata=bin_hover_text,
                                     hovertemplate="%{customdata}<extra></extra>",
                                 )
@@ -657,12 +651,7 @@ def _render_manager_recap_tab(season: int) -> None:
                         if not position_picks:
                             continue
 
-                        position_background_color = BENCH_POSITION_COLOR.get(position, COLOR_TABLE_ROSTER)
-                        position_text_color = contrasting_text_color(position_background_color)
-                        st.markdown(
-                            f"<span style='background-color:{position_background_color}; color:{position_text_color}; padding:2px 8px; border-radius:6px; font-weight:600;'>{position}</span>",
-                            unsafe_allow_html=True,
-                        )
+                        st.markdown(position_pill(position), unsafe_allow_html=True)
                         rows = [
                             {
                                 "Player": pick["player_name"],
@@ -731,7 +720,7 @@ def _render_manager_recap_tab(season: int) -> None:
                         go.Bar(
                             x=position_groups,
                             y=bar_values,
-                            marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups]},
+                            marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups], "cornerradius": BAR_CHART_CORNER_RADIUS},
                             hovertemplate="<b>%{x}</b><br>" + bar_label + ": %{y:.2f}<extra></extra>",
                         )
                     )
@@ -803,7 +792,7 @@ def _render_keepers_tab() -> None:
                     y=position_players,
                     orientation="h",
                     name=position,
-                    marker={"color": BENCH_POSITION_COLOR.get(position)},
+                    marker={"color": BENCH_POSITION_COLOR.get(position), "cornerradius": BAR_CHART_CORNER_RADIUS},
                     customdata=position_years_text,
                     hovertemplate="<b>%{y}</b><br>Frequency: %{x}<br>Years: %{customdata}<extra></extra>",
                 )
@@ -884,6 +873,8 @@ def _render_keepers_tab() -> None:
             xaxis_title="Frequency",
             yaxis_title="Player",
             barmode="stack",
+            # Layout-level (not per-trace) so the rounding applies to the stack as a whole.
+            barcornerradius=BAR_CHART_CORNER_RADIUS,
             yaxis={"categoryorder": "array", "categoryarray": loyalty_all_players},
             legend_title_text="Manager",
             # Legend is a color key only here (stacking makes hiding a
@@ -1001,7 +992,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         x=snake_years,
                         y=snake_counts,
                         name="Snake",
-                        marker={"color": COLOR_PICK},
+                        marker={"color": COLOR_PICK, "cornerradius": BAR_CHART_CORNER_RADIUS},
                         hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s Picked Ahead: %{{y}}<extra></extra>",
                     )
                 )
@@ -1012,7 +1003,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         y=auction_counts,
                         name="Auction",
                         legendgroup="auction",
-                        marker={"color": COLOR_AUCTION},
+                        marker={"color": COLOR_AUCTION, "cornerradius": BAR_CHART_CORNER_RADIUS},
                         hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s with Higher Auction Value: %{{y}}<extra></extra>",
                     )
                 )
@@ -1058,7 +1049,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
             ahead_figure.update_layout(
                 title=f"{selected_position}s Drafted Ahead of {selected_player}",
                 xaxis={"title": "Year", "type": "category", "categoryorder": "category ascending"},
-                yaxis={"title": "Players Drafted Ahead / Higher Auction Value", "tickformat": "d", "nticks": _integer_yaxis_nticks(snake_counts + auction_counts)},
+                yaxis={"title": "Players Drafted Ahead / Higher Auction Value", "tickformat": "d", "nticks": integer_yaxis_nticks(snake_counts + auction_counts)},
                 legend={"orientation": "h", "y": 1.15, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
                 margin={"t": 70, "l": 60, "r": 20, "b": 50},
             )
@@ -1184,7 +1175,7 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
         # the plot's own edge otherwise. tickvals is left as-is (no 170
         # added) - 170 isn't a real pick number, it's just extra
         # breathing room for the Undrafted markers sitting at 165.
-        yaxis={"title": "Pick", "range": [170, -5], "tickvals": [1, 20, 40, 60, 80, 100, 120, 140, 160]},
+        yaxis={"title": "Pick", "range": [170, -5], "tickvals": [1, 20, 40, 60, 80, 100, 120, 140, 160], "zeroline": False, "zerolinewidth": 0, "showline": False},
         # Padded 5 past the bottom end (-5, not 1) so a marker sitting
         # exactly at $1 doesn't render half-clipped by the plot's own
         # edge, same reasoning as Pick's padding above - $100 stays
@@ -1213,7 +1204,7 @@ def _render_player_analysis_individual_tab(picks_by_player: dict[str, list[dict]
 
 
 def _render_player_analysis_tab() -> None:
-    # Shared with pages_players.py's Value Analysis tab - see
+    # Shared with pages_player_analysis.py's Value Analysis tab - see
     # helpers.build_picks_by_player.
     picks_by_player = build_picks_by_player()
 
@@ -1248,7 +1239,7 @@ def _render_archive_analysis_tab() -> None:
     x=overall pick (reversed, ascending right to left, same "more
     valuable = right side" convention as the other pick charts on this
     page), y=draft year. Built from build_picks_by_player (shared with
-    Player Analysis/pages_players.py) rather than re-scanning
+    Player Analysis/pages_player_analysis.py) rather than re-scanning
     discover_seasons()/load_draft() again."""
     picks_by_player = build_picks_by_player()
     all_picks = [{**pick, "player_name": player_name} for player_name, picks in picks_by_player.items() for pick in picks]
@@ -1296,6 +1287,44 @@ def _render_archive_analysis_tab() -> None:
         height=350,
     )
     st.plotly_chart(figure, width="stretch")
+
+    # Most expensive real auction prices across the archive (keepers have
+    # no auction price, so they're excluded). Has its own player search and
+    # position filter, independent of the chart's position select above.
+    st.subheader("Most Expensive Auction Picks")
+    auction_picks = [pick for pick in all_picks if check_auction_pick_criteria(pick)]
+    if not auction_picks:
+        st.info("No auction picks recorded in the archive yet.")
+        return
+
+    search_column, position_column, pagination_column = st.columns(3)
+    selected_player_name = search_column.selectbox(
+        "Search for a player",
+        sorted({pick["player_name"] for pick in auction_picks}),
+        index=None,
+        placeholder="Type a player's name...",
+        key="drafts_archive_auction_search",
+    )
+    table_position_options = ["All"] + [position for position in BENCH_POSITION_ORDER if any(pick["position"] == position for pick in auction_picks)]
+    table_position = position_column.selectbox("Position", table_position_options, key="drafts_archive_auction_position")
+
+    expensive_picks = sorted(
+        (pick for pick in auction_picks if (not selected_player_name or pick["player_name"] == selected_player_name) and (table_position == "All" or pick["position"] == table_position)),
+        key=lambda pick: pick["auction_amount"],
+        reverse=True,
+    )
+    if not expensive_picks:
+        st.info("No auction picks match these filters.")
+        return
+
+    # Page state is per filter combination, so changing a filter always starts back on page 1.
+    total_pages = -(-len(expensive_picks) // ARCHIVE_AUCTION_TABLE_PAGE_SIZE)
+    with pagination_column:
+        page = render_pagination_input(f"drafts_archive_auction_page_{selected_player_name}_{table_position}", total_pages) - 1
+    pagination_column.caption(f"Pagination {page + 1} of {total_pages} ({len(expensive_picks)} picks)")
+    first_index = page * ARCHIVE_AUCTION_TABLE_PAGE_SIZE
+    rows = [[str(first_index + offset + 1), pick["player_name"], position_pill(pick["position"]), f"${pick['auction_amount']}", str(pick["season"])] for offset, pick in enumerate(expensive_picks[first_index : first_index + ARCHIVE_AUCTION_TABLE_PAGE_SIZE])]
+    render_html_table(["Number", "Player", "Position", "Auction Value", "Year"], rows)
 
 
 def _render_recap_tab(seasons):

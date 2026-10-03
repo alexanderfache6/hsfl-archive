@@ -99,6 +99,9 @@ COLOR_UNDRAFTED = COLOR_NFL_GAME_MISSED
 
 COLOR_STAT_MISMATCH = "#FF00FF"
 
+# optimal lineup player card outline
+COLOR_OPTIMAL_OUTLINE = "#FF00FF"
+
 # ----------------------------------------
 # bracket
 # ----------------------------------------
@@ -120,6 +123,7 @@ COLOR_ISSUES_OPENED = "#2E7733"
 COLOR_ISSUES_CLOSED = "#1E88EE"
 
 # ----------------------------------------
+# TODO
 # to sort
 # ----------------------------------------
 

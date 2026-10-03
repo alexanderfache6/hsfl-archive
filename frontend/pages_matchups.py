@@ -25,6 +25,7 @@ from colors import (
     COLOR_TABLE_ROSTER,
 )
 from constants import (
+    BAR_CHART_CORNER_RADIUS,
     BENCH_POSITION_ORDER,
     CHART_LEGEND_OUTSIDE_RIGHT,
     EMOJI_FIRST_PLACE,
@@ -38,20 +39,18 @@ from constants import (
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
     CHART_YAXIS_MAX_TICKS,
-    FLEX_ELIGIBLE_POSITIONS,
     build_manager_color_map,
     build_manager_name_resolver,
-    compute_optimal_lineup,
     contrasting_text_color,
     load_all_time_manager_stats,
     load_matchups,
     load_post_season_stats,
-    load_starting_slot_counts,
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import manager_pill
+from helpers import manager_pill, optimal_lineup_details, pad_missing_starters, render_record_metrics, render_season_qualification_metrics
 from player_modal import open_player_stats_modal
+from strings import CLEAR_FILTERS, SELECT_MANAGER_1, TOGGLE_OPTIMAL_LINEUP
 
 # ========================================
 # CONSTANTS
@@ -67,10 +66,6 @@ FILTER_WIDGET_BASE_KEYS = ("matchups_team1_manager_id", "matchups_season", "matc
 # of this, only the card loop itself is paginated.
 MATCHUPS_PAGE_SIZE = 10
 
-TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to bench players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
-
-
-TOGGLE_OPTIMAL_LINEUP = "Adds a green +points column to each bench table for players who belong in that week's optimal lineup. Adds a red points highlight to each starter for players who don't belong in that week's optimal lineup."
 
 # ========================================
 # FUNCTIONS
@@ -86,11 +81,6 @@ def _manager_options(name_resolver: dict[str, str]) -> list[tuple[str, str]]:
     return options
 
 
-def _seasons_played_by_manager() -> dict[str, list[int]]:
-    manager_stats = load_all_time_manager_stats()
-    return {manager["manager_id"]: manager["seasons_played"] for manager in manager_stats["managers"]}
-
-
 def _bench_sort_key(player: dict) -> int:
     # Any position not in the named order (e.g. IDP slots like "DB")
     # falls into a catch-all "RESERVE" bucket at the end.
@@ -98,185 +88,6 @@ def _bench_sort_key(player: dict) -> int:
         return BENCH_POSITION_ORDER.index(player["position"])
     except ValueError:
         return len(BENCH_POSITION_ORDER)
-
-
-def _optimal_lineup_details(side: dict, year: int) -> dict:
-    """{"gains": {player_id: +points}, "losses": {player_id: +points},
-    "optimal_points": float} - gains covers bench players who belong in
-    the optimal lineup (compute_optimal_lineup - the same formula behind
-    best_coaching_season/worst_coaching_season); losses is the mirror
-    image, one displaced actual starter per gain, same magnitude, opposite
-    sign when rendered.
-
-    Two-pass attribution over "added" (optimal starters who weren't
-    actually started) and "removed" (actual starters who aren't in the
-    optimal lineup):
-
-    Pass 1 matches each added player against a removed player at the SAME
-    (or FLEX-eligible) position first, biggest added points vs weakest
-    same-position removed - this is what correctly handles the common
-    case of two or more INDEPENDENT simple swaps in the same week (e.g. a
-    better bench DEF for the starting DEF, AND separately a better bench
-    TE for the starting TE - each attributed to its own real position
-    swap, not cross-matched by point value alone).
-
-    Pass 2 pairs whatever's left over (added points descending vs removed
-    points ascending) regardless of position - this covers the case a
-    same-position match alone can't explain: the true optimal lineup
-    reshuffled an EXISTING starter into a different slot (e.g. a starting
-    RB moved into FLEX to make room for a stronger bench RB) rather than
-    benching them outright, so pass 1 finds no same-position starter that
-    "dropped out" to pair against. See bugs.md for the real examples that
-    surfaced both failure modes this two-pass approach fixes (2022 Wk4/
-    Wk13/Wk15, Jeremy vs Alex F). Neither pass claims to reconstruct the
-    TRUE swap chain in multi-swap weeks - this is a display attribution
-    convention, same as before - but pass 1 keeps genuinely independent
-    swaps correctly attributed, and pass 2 guarantees no real gain is
-    dropped to zero the way the original single-pass version could.
-
-    A team's actual archived lineup can be genuinely short a starter
-    (fewer real starter entries that week than that season's roster
-    settings call for - the manager just never filled the slot). That
-    slot is treated as a real, legitimate starter scoring 0 - the same
-    "empty slot" placeholder _pad_missing_starters() already synthesizes
-    for display - so the optimizer can still consider the next-best
-    available bench player for it exactly like any other slot, and (if
-    no eligible bench player exists either) it correctly stays a 0-point
-    swap with no gain/loss recorded at all, rather than the "added" list
-    silently ending up longer than "removed" (see bugs.md bug 8).
-    optimal_points is the true optimal lineup's total, for the bench
-    table's summary row.
-
-    DB (Defensive Back / IDP) position players are excluded from the
-    optimizer entirely, on both sides of the comparison - 2012 is the
-    only season with this roster slot, it's vestigial (no player ever
-    legitimately fills it - see bugs.md bug 5's footnote), and trying to
-    "optimize" a slot with no real candidate pool just produced a
-    mismatched added/removed count. A DB starter is left untouched: never
-    a swap candidate, never highlighted red/green, with their real points
-    folded back into optimal_points unchanged so the displayed total
-    still matches the team's actual score."""
-    padded_starters = _pad_missing_starters(side["starters"], year)
-    for placeholder in padded_starters:
-        if placeholder.get("is_empty_slot"):
-            placeholder["points"] = 0.0
-            placeholder["player_id"] = f"_empty_slot_{id(placeholder)}"
-            # FLEX's slot label ("W/R") isn't a real position - flagged
-            # separately rather than forcing "position" to a concrete
-            # RB/WR guess, since it's genuinely either and the roster
-            # table still needs to display the literal "W/R" label for
-            # this row (see _render_roster_table/_cell).
-            if placeholder["position"] == "W/R":
-                placeholder["_flex_empty"] = True
-
-    # optimizable_starters (padded, includes 0-point empty-slot
-    # placeholders) is only used below for the "what changed" comparison
-    # - the solver itself only ever sees REAL players. Feeding a
-    # placeholder into the solver's own candidate pool would let it treat
-    # a fake 0-point "player" as a real FLEX/position candidate, which
-    # (combined with FLEX's position label not being a real position -
-    # see _flex_empty above) risks the solver silently mishandling it.
-    # Keeping the solver's input untouched also keeps its result
-    # identical to what code/stats-aggregation/coaching.py already
-    # computes from the same real-player pool.
-    optimizable_starters = [p for p in padded_starters if p.get("position") != "DB"]
-    real_starters = [p for p in side["starters"] if p.get("position") != "DB"]
-    optimizable_bench = [p for p in side["bench"] if p.get("position") != "DB"]
-    db_points = sum(p["points"] for p in side["starters"] if p.get("position") == "DB")
-
-    all_players = real_starters + optimizable_bench
-    optimal = compute_optimal_lineup(all_players, year)
-    optimal_ids = {p["player_id"] for p in optimal["optimal_starters"] if p.get("player_id")}
-    actual_starter_ids = {p["player_id"] for p in optimizable_starters if p.get("player_id")}
-
-    added = [p for p in optimal["optimal_starters"] if p.get("player_id") and p["player_id"] not in actual_starter_ids]
-    removed = [p for p in optimizable_starters if p.get("player_id") and p["player_id"] not in optimal_ids]
-    added.sort(key=lambda p: p["points"], reverse=True)
-
-    pairs: list[tuple[dict, dict]] = []
-
-    # Pass 1: direct same-position/FLEX-eligible swaps. A gained player's
-    # own EXACT position is tried first, before falling back to the
-    # broader FLEX-eligible union (RB/WR) - a FLEX-slot bench player (say
-    # a WR) greedily matching against the weakest candidate across BOTH
-    # positions can steal the wrong position's removed starter (e.g. an
-    # RB who happens to have fewer points than the actual same-position
-    # WR it should have paired against), starving a later same-position
-    # bench player of its own natural, same-position partner and forcing
-    # a mismatched pass-2 pairing - which can even go NEGATIVE if the
-    # only leftover "removed" starter outscores it. See bugs.md.
-    unmatched_added: list[dict] = []
-    remaining_removed = list(removed)
-    for gained_player in added:
-        eligible_positions = FLEX_ELIGIBLE_POSITIONS if gained_player["optimal_slot"] == "FLEX" else {gained_player["optimal_slot"]}
-        same_position_candidates = [
-            r
-            for r in remaining_removed
-            if r.get("position") == gained_player.get("position")
-            # An empty FLEX slot's own "position" is the literal "W/R"
-            # label, not a real position (see _flex_empty above) - any
-            # FLEX-eligible gained player (RB or WR) can count it as a
-            # same-slot match, since the empty slot was equally eligible
-            # for either.
-            or (r.get("_flex_empty") and gained_player.get("position") in FLEX_ELIGIBLE_POSITIONS)
-        ]
-        candidates = same_position_candidates or [r for r in remaining_removed if r.get("position") in eligible_positions]
-        if not candidates:
-            unmatched_added.append(gained_player)
-            continue
-        weakest_displaced = min(candidates, key=lambda r: r["points"])
-        pairs.append((gained_player, weakest_displaced))
-        remaining_removed.remove(weakest_displaced)
-
-    # Pass 2: whatever's left (chain-reassignment case), paired by rank.
-    remaining_removed.sort(key=lambda p: p["points"])
-    for gained_player, lost_player in zip(unmatched_added, remaining_removed):
-        pairs.append((gained_player, lost_player))
-
-    gains: dict[str, float] = {}
-    losses: dict[str, float] = {}
-    for gained_player, lost_player in pairs:
-        gain = gained_player["points"] - lost_player["points"]
-        # A real starter already scoring 0.0, tied with an equally
-        # 0.0-point bench "replacement," isn't a meaningful swap worth
-        # flagging - skip it entirely (leave both un-highlighted) rather
-        # than show a same-value green/red pair for what's functionally
-        # no change at all. An EMPTY slot (is_empty_slot placeholder - no
-        # real player rostered there at all) filled by a 0.0-point bench
-        # player is NOT this case: going from no player to an actual
-        # rostered player is a real, worth-showing change even when the
-        # score happens to be 0 (conceptually NaN -> 0.0, not 0.0 -> 0.0)
-        # - so only a real, already-rostered 0.0 starter is excluded here.
-        if gain == 0.0 and lost_player["points"] == 0.0 and not lost_player.get("is_empty_slot"):
-            continue
-        gains[gained_player["player_id"]] = gain
-        losses[lost_player["player_id"]] = gain
-
-    return {"gains": gains, "losses": losses, "optimal_points": optimal["optimal_points"] + db_points}
-
-
-def _pad_missing_starters(starters: list[dict], year: int) -> list[dict]:
-    """Rebuilds the starters list in roster_settings' own slot order
-    (QB, RB, RB, WR, WR, TE, FLEX, K, DEF, ...), inserting a blank
-    placeholder row wherever that season's settings call for a slot this
-    week's actual starters list is short on - e.g. settings call for 2 RB
-    but only 1 RB actually started, so the second RB slot renders empty
-    in its normal position rather than being silently omitted or tacked
-    on at the end out of order. This is a real gap the manager likely
-    just forgot to fill (as opposed to a bye/injury, which still shows an
-    actual, if low-scoring, player)."""
-    expected_slot_counts = load_starting_slot_counts(year)
-    remaining_by_slot: dict[str, list[dict]] = {}
-    for player in starters:
-        slot = player.get("slot", player["position"])
-        remaining_by_slot.setdefault(slot, []).append(player)
-
-    ordered: list[dict] = []
-    for slot, expected_count in expected_slot_counts.items():
-        available = remaining_by_slot.get(slot, [])
-        for _ in range(expected_count):
-            ordered.append(available.pop(0) if available else {"position": slot, "is_empty_slot": True})
-    return ordered
 
 
 # ========================================
@@ -329,6 +140,21 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # now plain st.button widgets (form_submit_button can't sit next to a
     # regular button anyway) that read/reset the current widget values
     # directly.
+    # Every selector only lists options that still exist under the CURRENT
+    # value of the other filters (e.g. Week only offers weeks that have a
+    # matchup for the picked Manager 1 / Season / Manager 2 / Matchup Type).
+    # The other filters' current values are read straight from session_state
+    # (their versioned widget keys) because widgets run in code order, so
+    # a selector can't see a later widget's return value yet.
+    def _current(base_key: str, default=None):
+        return st.session_state.get(versioned_key(base_key), default)
+
+    current_team1 = _current("matchups_team1_manager_id")
+    current_season = _current("matchups_season")
+    current_week = _current("matchups_week")
+    current_team2 = _current("matchups_team2_manager_id")
+    current_type = _current("matchups_matchup_type", "all")
+
     team1_col, season_col, week_col, team2_col, type_col = st.columns(5)
     with team1_col:
         team1_manager_id = st.selectbox(
@@ -343,7 +169,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # Manager 1 is picked - showing the full unfiltered season list first
     # would let a user pick a season Manager 1 never actually played,
     # which is confusing even though it gets reset automatically below.
-    season_options = _seasons_played_by_manager().get(team1_manager_id, []) if team1_manager_id else []
+    season_options = sorted({matchup["season"] for matchup in load_matchups(None, current_week, team1_manager_id, current_team2, current_type)}) if team1_manager_id else []
     # A previously-picked season can fall outside the new Manager 1's
     # season_options (e.g. Season=2015 picked before Manager 1 was set,
     # then a Manager 1 who never played 2015 gets chosen) - Streamlit
@@ -359,18 +185,22 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             index=None,
             placeholder="Any",
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
             key=season_widget_key,
         )
+    week_options = sorted({matchup["week"] for matchup in load_matchups(current_season, None, team1_manager_id, current_team2, current_type)}) if team1_manager_id else list(range(1, MAX_WEEK + 1))
+    week_widget_key = versioned_key("matchups_week")
+    if st.session_state.get(week_widget_key) not in week_options and st.session_state.get(week_widget_key) is not None:
+        st.session_state[week_widget_key] = None
     with week_col:
         week = st.selectbox(
             "Week",
-            list(range(1, MAX_WEEK + 1)),
+            week_options,
             index=None,
             placeholder="Any",
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
-            key=versioned_key("matchups_week"),
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
+            key=week_widget_key,
         )
     # Matchup Type is picked here (out of visual column order - it still
     # renders into type_col, its normal rightmost spot) rather than after
@@ -378,15 +208,20 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # know season/week/matchup_type - widgets run in CODE order, not
     # column-layout order, so its value has to exist before team2_options
     # is computed just below.
+    types_present = {matchup["matchup_type"] for matchup in load_matchups(current_season, current_week, team1_manager_id, current_team2, "all")} if team1_manager_id else set(MATCHUP_TYPE_OPTIONS)
+    type_options = [option for option in MATCHUP_TYPE_OPTIONS if option == "all" or option in types_present]
+    type_widget_key = versioned_key("matchups_matchup_type")
+    if st.session_state.get(type_widget_key) not in type_options and st.session_state.get(type_widget_key) is not None:
+        st.session_state[type_widget_key] = "all"
     with type_col:
         matchup_type = st.selectbox(
             "Matchup Type",
-            MATCHUP_TYPE_OPTIONS,
+            type_options,
             format_func=lambda value: MATCHUP_TYPE_LABELS[value],
             index=0,
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
-            key=versioned_key("matchups_matchup_type"),
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
+            key=type_widget_key,
         )
     # Manager 2's options are only the managers Manager 1 has actually
     # faced under the CURRENT season/week/matchup_type filters (not just
@@ -411,7 +246,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
             index=None,
             placeholder="Any",
             disabled=team1_manager_id is None,
-            help="Select Manager 1 first" if team1_manager_id is None else None,
+            help=SELECT_MANAGER_1 if team1_manager_id is None else None,
             key=team2_widget_key,
         )
 
@@ -428,9 +263,9 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # selectboxes above already fill theirs) is what closes that gap.
     apply_col, clear_col, _ = st.columns([1, 1, 6])
     with apply_col:
-        applied = st.button("Apply Filters", disabled=team1_manager_id is None, help="Select Manager 1 first" if team1_manager_id is None else None, use_container_width=True)
+        applied = st.button("Apply Filters", disabled=team1_manager_id is None, help=SELECT_MANAGER_1 if team1_manager_id is None else None, use_container_width=True)
     with clear_col:
-        if st.button("Clear Filters", use_container_width=True):
+        if st.button(CLEAR_FILTERS, use_container_width=True):
             for base_key in FILTER_WIDGET_BASE_KEYS:
                 st.session_state.pop(base_key, None)
             st.session_state.pop("matchups_applied_filters", None)
@@ -498,30 +333,42 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season
         st.metric("Matchups", len(matchups))
         return
 
-    wins = losses = ties = 0
-    points_for = points_against = 0.0
-    for matchup in matchups:
-        home, away = matchup["home"], matchup["away"]
-        team1_side, other_side = (home, away) if home["manager_id"] == team1_manager_id else (away, home)
-        points_for += team1_side["score"]
-        points_against += other_side["score"]
-        if team1_side["score"] > other_side["score"]:
-            wins += 1
-        elif team1_side["score"] < other_side["score"]:
-            losses += 1
+    render_record_metrics(matchups, team1_manager_id)
+
+    # A week filter or a Manager 2 filter narrows matchups down to a
+    # handful of head-to-head games - season/bracket/rank summaries
+    # aren't meaningful at that granularity, so skip the whole row.
+    if week_filter or team2_manager_id:
+        return
+
+    # Only meaningful across the manager's whole history - a single
+    # season or a single matchup type filtered out makes "how many
+    # seasons qualified" a trivial 0-or-1 question, not worth a row.
+    if not season_filter and matchup_type_filter == "all":
+        render_season_qualification_metrics(matchups)
+    elif season_filter:
+        post_season_stats = load_post_season_stats(season_filter)
+        team_info = team_id_to_manager_map(season_filter)
+        team_id = next((team_id for team_id, info in team_info.items() if info.get("manager_id") == team1_manager_id), None)
+        final_placements = post_season_stats["final_placements"] if post_season_stats else {}
+        final_rank = final_placements.get(team_id) if team_id else None
+
+        matchup_types = {matchup["matchup_type"] for matchup in matchups}
+        if "championship" in matchup_types:
+            bracket = "Championship"
+        elif "consolation" in matchup_types:
+            bracket = "Consolation"
         else:
-            ties += 1
+            bracket = "-"
 
-    win_pct = wins / len(matchups) if matchups else 0.0
-
-    total_column, win_column, loss_column, tie_column, win_pct_column, points_for_column, points_against_column = st.columns(7)
-    total_column.metric("Matchups", len(matchups))
-    win_column.metric("Wins", wins)
-    loss_column.metric("Losses", losses)
-    tie_column.metric("Ties", ties)
-    win_pct_column.metric("Win %", f"{win_pct:.1%}")
-    points_for_column.metric("Points For", f"{points_for:.2f}")
-    points_against_column.metric("Points Against", f"{points_against:.2f}")
+        bracket_column, final_rank_column = st.columns(2)
+        bracket_column.metric("Bracket", bracket)
+        if final_rank is not None:
+            placement_emoji = {1: EMOJI_FIRST_PLACE, 2: EMOJI_SECOND_PLACE, 3: EMOJI_THIRD_PLACE}.get(final_rank)
+            if placement_emoji is None and final_placements and final_rank == max(final_placements.values()):
+                placement_emoji = EMOJI_LAST_PLACE
+            rank_display = f"{_ordinal_rank(final_rank)} {placement_emoji}" if placement_emoji else _ordinal_rank(final_rank)
+            final_rank_column.metric("Final Rank", rank_display)
 
     # A week filter or a Manager 2 filter narrows matchups down to a
     # handful of head-to-head games - season/bracket/rank summaries
@@ -566,7 +413,7 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season
             final_rank_column.metric("Final Rank", rank_display)
 
 
-def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
+def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, matchup_type_filter: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """One bar per matchup: Manager 1's point differential (their score
     minus the opponent's). Only meaningful relative to Manager 1, so this
     is skipped entirely when Manager 1 isn't set. Win bars use Manager
@@ -585,7 +432,10 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         diff = team1_side["score"] - team2_side["score"]
         manager2_name = resolve_manager_name(team2_side["manager_id"], name_resolver, team2_side.get("display_name", ""))
 
-        x_labels.append(f"{matchup['season']} Wk{matchup['week']}")
+        # One season with every matchup type: two-row tick labels (season,
+        # then week) instead of one long "2023 Wk5" string.
+        label_separator = "<br>" if season_filter and matchup_type_filter == "all" else " "
+        x_labels.append(f"{matchup['season']}{label_separator}Wk{matchup['week']}")
         diffs.append(diff)
         hover_text.append(f"<b>{matchup['season']} · Week {matchup['week']} · {MATCHUP_TYPE_LABELS[matchup['matchup_type']]}</b><br>{manager1_name} vs {manager2_name}<br>{team1_side['team_name']} vs {team2_side['team_name']}<br>{team1_side['score']:g} vs {team2_side['score']:g}<br>Point Differential: {diff:+.2f}")
 
@@ -626,7 +476,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     figure.add_bar(
         x=x_positions,
         y=win_diffs,
-        marker_color=manager1_color,
+        marker={"color": manager1_color, "cornerradius": BAR_CHART_CORNER_RADIUS},
         name="Win",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",
@@ -634,12 +484,17 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     figure.add_bar(
         x=x_positions,
         y=loss_diffs,
-        marker_color=COLOR_PLAYER_BENCH,
+        marker={"color": COLOR_PLAYER_BENCH, "cornerradius": BAR_CHART_CORNER_RADIUS},
         name="Loss/Tie",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
+        # Plotly's default "group" mode gives each trace its own half-width
+        # slot at every x, so the Win and Loss/Tie bars (which never share
+        # an x) sat off-center and unevenly spaced. "overlay" centers every
+        # bar on its own x position.
+        barmode="overlay",
         title="Point Differential",
         xaxis={"title": "Season · Week" if season_filter else "Season", "tickangle": tick_angle, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title="Point Differential",
@@ -794,7 +649,7 @@ def _render_matchup_card(matchup: dict, team1_manager_id: str | None, name_resol
                 # Computed once per side and reused for both the header
                 # score and the bench table below, rather than solving
                 # the optimal lineup twice.
-                optimal_details = _optimal_lineup_details(side, matchup["season"]) if show_optimal else None
+                optimal_details = optimal_lineup_details(side, matchup["season"]) if show_optimal else None
                 optimal_score_html = f" <span style='font-size:0.5em; font-weight:400;'>({optimal_details['optimal_points']:.2f})</span>" if optimal_details else ""
                 # Name/team block aligns to its own side of the card; the
                 # score joins the same colored block but anchors to the
@@ -817,7 +672,7 @@ def _render_matchup_card(matchup: dict, team1_manager_id: str | None, name_resol
                 # across the many cards that can be on screen at once
                 # (e.g. Season filter set to "Any").
                 row_key_prefix = f"{matchup['season']}_{matchup['week']}_{side['team_id']}"
-                padded_starters = _pad_missing_starters(side["starters"], matchup["season"])
+                padded_starters = pad_missing_starters(side["starters"], matchup["season"])
                 # Starters and Bench are now the SAME kind of collapsible
                 # container (Starters just defaults open) - no more
                 # negative-margin hack to squeeze one against the other,
@@ -927,8 +782,8 @@ def render_matchups_page() -> None:
 
     applied_filters = _render_filters(name_resolver)
     if applied_filters is None:
-        st.info("Select Manager 1 first, then apply other filters.")
-        st.warning("Back to back filters may be slow, refresh page if more than 2 seconds.")
+        st.info(f"{SELECT_MANAGER_1} Then apply other filters.")
+        st.warning("Back to back filters may be slow, refresh page if loading for more than 2 seconds.")
         return
 
     matchups = load_matchups(
@@ -952,7 +807,7 @@ def render_matchups_page() -> None:
         applied_filters["week"],
         applied_filters["team2_manager_id"],
     )
-    _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], name_resolver, manager_color_map)
+    _render_diff_chart(matchups, applied_filters["team1_manager_id"], applied_filters["season"], applied_filters["matchup_type"], name_resolver, manager_color_map)
     st.divider()
 
     total_pages = max(1, -(-len(matchups) // MATCHUPS_PAGE_SIZE))

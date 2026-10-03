@@ -201,8 +201,8 @@ def fantasy_raw_stat_value(stat_id: str, entry_stats: dict) -> int | None:
         return None
 
 
-# Curated per-position ESPN field list for the Players page's "Select
-# NFL Stat to View" chart (frontend/pages_players.py) - user-specified
+# Curated per-position ESPN field list for the Player Analysis page's "Select
+# NFL Stat to View" chart (frontend/pages_player_analysis.py) - user-specified
 # 2026-08-14, sourced directly from archive/nfl_player_stats.json's own
 # field names (NOT limited to this league's fantasy-scored stat_N set -
 # e.g. "completions"/"receivingTargets"/the "yardsPer..." per-attempt
@@ -285,7 +285,7 @@ NFL_STAT_FIELD_LABELS = {
     "totalKickingPoints": "Total Kicking Points",
 }
 
-# Chart y-axis treatment, same idea as pages_players.py's own
+# Chart y-axis treatment, same idea as pages_player_analysis.py's own
 # YARDAGE_STAT_LABELS/forced-integer-dtick split for the fantasy stat_N
 # chart - genuinely fractional fields (percentages, per-attempt
 # averages) and yardage fields (which can run into the hundreds) both
@@ -526,6 +526,56 @@ def load_players() -> dict:
 
 
 @st.cache_resource
+def load_week_player_info(season: int, week: int) -> dict[str, dict]:
+    """{player_name: {"position", "nfl_team"}} for every player on any
+    team's roster that week (starters + bench) - the position/NFL team
+    lookup for transaction rows, which only carry a player's name."""
+    info: dict[str, dict] = {}
+    rosters_directory = PARSED_DIRECTORY / str(season) / "rosters"
+    if not rosters_directory.exists():
+        return info
+    for roster_path in rosters_directory.glob(f"team_*_week_{week}.json"):
+        roster = _read_json(roster_path)
+        for player in roster["starters"] + roster["bench"]:
+            info[player["player_name"]] = {"position": player["position"], "nfl_team": player["nfl_team"]}
+    return info
+
+
+@st.cache_resource
+def _load_season_roster_entries(season: int) -> list[dict]:
+    """Every player entry (starters + bench, every team, every week) of one
+    season's rosters as {"week", "player_name", "points", "is_bye"}."""
+    entries: list[dict] = []
+    rosters_directory = PARSED_DIRECTORY / str(season) / "rosters"
+    if not rosters_directory.exists():
+        return entries
+    for roster_path in rosters_directory.glob("team_*_week_*.json"):
+        roster = _read_json(roster_path)
+        for player in roster["starters"] + roster["bench"]:
+            entries.append({"week": roster["week"], "player_name": player["player_name"], "points": player["points"], "is_bye": str(player.get("opp", "")).lower() == "bye"})
+    return entries
+
+
+def load_season_player_weekly_points(season: int) -> dict[str, dict[int, float]]:
+    """{player_name: {week: fantasy points}} across every team's roster
+    that season (starters + bench) - a player's points count no matter
+    whose roster they were on that week."""
+    points_by_player: dict[str, dict[int, float]] = {}
+    for entry in _load_season_roster_entries(season):
+        points_by_player.setdefault(entry["player_name"], {})[entry["week"]] = entry["points"]
+    return points_by_player
+
+
+def load_season_player_bye_weeks(season: int) -> dict[str, set[int]]:
+    """{player_name: {weeks that player's NFL team was on a bye}}."""
+    bye_weeks: dict[str, set[int]] = {}
+    for entry in _load_season_roster_entries(season):
+        if entry["is_bye"]:
+            bye_weeks.setdefault(entry["player_name"], set()).add(entry["week"])
+    return bye_weeks
+
+
+@st.cache_resource
 def load_player_ownership() -> dict:
     return _read_json(ARCHIVE_DIRECTORY / "player_ownership.json")
 
@@ -670,7 +720,7 @@ def player_nfl_team_by_season(player_id: str) -> dict[int, str]:
     guessing, same contract as before. A player who changes NFL teams
     mid-season (rare) gets whichever team appears most often that
     season - a real, deliberately unhandled edge case, same as
-    pages_players.py's "NFL Games" bye assumption."""
+    pages_player_analysis.py's "NFL Games" bye assumption."""
     from collections import Counter
 
     player_entry = load_nfl_player_stats().get(player_id)
@@ -795,6 +845,17 @@ def _load_all_matchups_enriched() -> list[dict]:
 
     matchups.sort(key=lambda matchup: (matchup["season"], matchup["week"]))
     return matchups
+
+
+@st.cache_resource
+def load_fantasy_season_last_weeks() -> dict[int, int]:
+    """{season: last week of that season's fantasy season (regular season +
+    post season)} - the latest week with a matchup on record. NFL seasons
+    run past it (e.g. 2025: fantasy ends week 17, the NFL plays week 18)."""
+    last_weeks: dict[int, int] = {}
+    for matchup in _load_all_matchups_enriched():
+        last_weeks[matchup["season"]] = max(last_weeks.get(matchup["season"], 0), matchup["week"])
+    return last_weeks
 
 
 def load_matchups(

@@ -6,6 +6,8 @@ across every season in the archive. See execution-plan.md Phase G.
 # ========================================
 # IMPORTS
 # ========================================
+import math
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -16,6 +18,7 @@ from colors import (
     COLOR_PODIUM_THIRD,
 )
 from constants import (
+    BAR_CHART_CORNER_RADIUS,
     EMOJI_FIRST_PLACE,
     EMOJI_LAST_PLACE,
     EMOJI_NO_FIRST_PLACE,
@@ -359,7 +362,7 @@ def _render_wall_of_champions_table(champions_data: dict, name_resolver: dict[st
         champion_manager_ids.append(top_3.get(1, {}).get("manager_id", ""))
         rows.append(
             {
-                "Season": season_entry["season"],
+                "Season": str(season_entry["season"]),
                 f"Champion {EMOJI_FIRST_PLACE}": name_for(top_3.get(1, {})),
                 f"Runner-Up {EMOJI_SECOND_PLACE}": name_for(top_3.get(2, {})),
                 f"3rd Place {EMOJI_THIRD_PLACE}": name_for(top_3.get(3, {})),
@@ -516,6 +519,8 @@ def _render_championship_charts(champions_data: dict, name_resolver: dict[str, s
         bar_figure.update_layout(
             title="Podiums by Manager",
             barmode="stack",
+            # Layout-level (not per-trace) so the rounding applies to the stack as a whole.
+            barcornerradius=BAR_CHART_CORNER_RADIUS,
             hovermode="x",
             xaxis_title="Manager",
             xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
@@ -704,16 +709,20 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
         go.Bar(
             x=chart_data["Manager"],
             y=chart_data[selected_stat],
-            marker_color=bar_colors,
+            marker={"color": bar_colors, "cornerradius": BAR_CHART_CORNER_RADIUS},
             hovertemplate="%{x}<br>" + selected_stat_label + ": %{y}<extra></extra>",
         )
     )
+    yaxis = {"nticks": CHART_YAXIS_MAX_TICKS}
+    if selected_stat != "Win %":
+        # NOTE whole number ticks between 1 and max
+        yaxis.update({"tickformat": "d", "tick0": 0, "dtick": max(1, math.ceil(chart_data[selected_stat].max() / CHART_YAXIS_MAX_TICKS))})
     stat_figure.update_layout(
         title=f"{selected_stat_label} by Manager",
         xaxis_title="Manager",
         xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         yaxis_title=selected_stat_label,
-        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        yaxis=yaxis,
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     st.plotly_chart(stat_figure, width="stretch")

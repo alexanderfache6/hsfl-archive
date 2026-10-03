@@ -7,7 +7,6 @@ single selected season. See execution-plan.md Phase G.
 # ========================================
 
 import html
-from datetime import datetime
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -51,8 +50,8 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import ordinal_word, return_plural, return_s
-from strings import SELECT_STAT_TO_VIEW
+from helpers import ordinal_word, parse_transaction_date, render_pagination_input, return_plural, return_s
+from strings import CLEAR_FILTERS, SELECT_STAT_TO_VIEW
 
 # ========================================
 # CONSTANTS
@@ -92,16 +91,6 @@ def _full_table_height(row_count: int) -> int:
     has more rows than fit; passing an explicit height instead shows
     every row with no fold/scroll."""
     return 38 + 35 * row_count
-
-
-def _parse_transaction_date(date_text: str, season: int) -> datetime:
-    """ "Dec 28, 4:33pm" + season -> a real datetime. A season's playoffs
-    can run into January of the FOLLOWING calendar year (confirmed for
-    2012, 2021, 2022) - only "Jan" dates get season+1, everything else
-    (Aug-Dec) uses the season's own year."""
-    month_text = date_text.split(" ", 1)[0]
-    year = season + 1 if month_text == "Jan" else season
-    return datetime.strptime(f"{date_text} {year}", "%b %d, %I:%M%p %Y")  # noqa: DTZ007
 
 
 def _bracket_effective_winner(game: dict) -> str:
@@ -717,6 +706,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]
+    team_count = len(weekly_tables[-1]["standings"])
 
     figure = go.Figure()
     for team_id, info in team_info.items():
@@ -761,7 +751,10 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
         # Rank is lower-is-better - reverse so the top of the chart
         # visually matches "doing well", consistent with the Rank column
         # itself (1 = best).
-        yaxis={"autorange": "reversed", "nticks": CHART_YAXIS_MAX_TICKS} if selected_stat == "Rank" else {"nticks": CHART_YAXIS_MAX_TICKS},
+        # Explicit reversed range (codebase convention, not autorange) with
+        # a tick on every whole rank, so the axis starts at 1 at the top
+        # and counts down to the last rank at the bottom.
+        yaxis={"range": [team_count + 0.5, 0.5], "tickvals": list(range(1, team_count + 1)), "tickformat": "d"} if selected_stat == "Rank" else {"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )
@@ -1151,7 +1144,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     # actually ended up with that player - the only way both sides of a
     # trade show up under their own manager.
     manager_name_by_team_name = {info["team_name"]: resolve_manager_name(info["manager_id"], name_resolver, info["display_name"]) for info in team_id_to_manager_map(season).values()}
-    all_dates = [_parse_transaction_date(t["date"], season) for t in transactions]
+    all_dates = [parse_transaction_date(t["date"], season) for t in transactions]
     min_date, max_date = min(all_dates).date(), max(all_dates).date()
     transaction_types = sorted({t["type"] for t in transactions})
 
@@ -1194,7 +1187,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
 
     clear_col, _ = st.columns([1, 7])
     with clear_col:
-        if st.button("Clear Filters", key="seasons_transactions_clear", use_container_width=True):
+        if st.button(CLEAR_FILTERS, key="seasons_transactions_clear", use_container_width=True):
             st.session_state["seasons_transactions_filters_generation"] = generation + 1
             st.session_state["seasons_transactions_page"] = 1
             st.rerun()
@@ -1208,7 +1201,7 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
     for transaction in transactions:
         if selected_type and transaction["type"] != selected_type:
             continue
-        transaction_datetime = _parse_transaction_date(transaction["date"], season)
+        transaction_datetime = parse_transaction_date(transaction["date"], season)
         if not (start_date <= transaction_datetime.date() <= end_date):
             continue
         if transaction["type"] == "Trade":
@@ -1249,19 +1242,11 @@ def _render_transactions_table(season: int, name_resolver: dict[str, str]) -> No
         del row["_sort"]
 
     total_pages = -(-len(rows) // TRANSACTIONS_PAGE_SIZE)
-    # A filter change can shrink total_pages below whatever page the user
-    # was previously on - st.number_input errors if its existing
-    # session_state value exceeds the new max_value, so clamp first.
-    if st.session_state.get("seasons_transactions_page", 1) > total_pages:
-        st.session_state["seasons_transactions_page"] = 1
     # page_column was created up front alongside the other filters (same
     # st.columns row) so Page visually sits on their right, even though
     # its max_value can only be computed after those filters are applied.
     with page_column:
-        # Labeled "Pagination" (not "Page") for the same reason as the
-        # Feedback tab's Issues table - keeps it distinct from any
-        # "Page" filter elsewhere in the app.
-        page = st.number_input("Pagination", min_value=1, max_value=total_pages, value=1, step=1, key="seasons_transactions_page")
+        page = render_pagination_input("seasons_transactions_page", total_pages)
 
     _render_transactions_metrics(chart_rows)
     st.caption(f"Pagination {page} of {total_pages} ({len(rows)} transactions)")
