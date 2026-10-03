@@ -1323,10 +1323,7 @@ def _render_archive_analysis_tab() -> None:
         page = render_pagination_input(f"drafts_archive_auction_page_{selected_player_name}_{table_position}", total_pages) - 1
     pagination_column.caption(f"Pagination {page + 1} of {total_pages} ({len(expensive_picks)} picks)")
     first_index = page * ARCHIVE_AUCTION_TABLE_PAGE_SIZE
-    rows = [
-        [str(first_index + offset + 1), pick["player_name"], position_pill(pick["position"]), f"${pick['auction_amount']}", str(pick["season"])]
-        for offset, pick in enumerate(expensive_picks[first_index : first_index + ARCHIVE_AUCTION_TABLE_PAGE_SIZE])
-    ]
+    rows = [[str(first_index + offset + 1), pick["player_name"], position_pill(pick["position"]), f"${pick['auction_amount']}", str(pick["season"])] for offset, pick in enumerate(expensive_picks[first_index : first_index + ARCHIVE_AUCTION_TABLE_PAGE_SIZE])]
     render_html_table(["Number", "Player", "Position", "Auction Value", "Year"], rows)
 
 

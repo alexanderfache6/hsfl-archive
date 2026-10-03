@@ -1,5 +1,6 @@
 # history
 - [x] add spreadsheet table stats views
+- [ ] Auto-generated season "story" blurb per year (already have _render_season_summary_paragraph-style logic) extended into a short recap paragraph per season, not just all-time.
 
 # seasons
 - [x] schedule tab, kinda similar games view but restricted
@@ -9,6 +10,9 @@
 - [x] true tab
 - [x] transactions tab
 - [x] create schedule tab for each week
+- [ ] Weekly "Power Rankings" chart blending win%, points for, and all-play record into one index, tracked week over week.
+- [ ] countdown till next games
+- [ ] show last update time
 
 # managers
 - [ ] everywhere team name is listed created icon with logo/name/manager that can open modal showing historical stats/etc

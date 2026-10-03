@@ -370,6 +370,48 @@ def _render_aggregate(matchups: list[dict], team1_manager_id: str | None, season
             rank_display = f"{_ordinal_rank(final_rank)} {placement_emoji}" if placement_emoji else _ordinal_rank(final_rank)
             final_rank_column.metric("Final Rank", rank_display)
 
+    # A week filter or a Manager 2 filter narrows matchups down to a
+    # handful of head-to-head games - season/bracket/rank summaries
+    # aren't meaningful at that granularity, so skip the whole row.
+    if week_filter or team2_manager_id:
+        return
+
+    # Only meaningful across the manager's whole history - a single
+    # season or a single matchup type filtered out makes "how many
+    # seasons qualified" a trivial 0-or-1 question, not worth a row.
+    if not season_filter and matchup_type_filter == "all":
+        seasons_competed = {matchup["season"] for matchup in matchups}
+        championship_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "championship"}
+        consolation_seasons = {matchup["season"] for matchup in matchups if matchup["matchup_type"] == "consolation"}
+
+        seasons_column, championship_column, consolation_column = st.columns(3)
+        seasons_column.metric("Seasons", len(seasons_competed))
+        championship_column.metric("Championship Qualifying Seasons", len(championship_seasons))
+        consolation_column.metric("Consolation Qualifying Seasons", len(consolation_seasons))
+    elif season_filter:
+        post_season_stats = load_post_season_stats(season_filter)
+        team_info = team_id_to_manager_map(season_filter)
+        team_id = next((team_id for team_id, info in team_info.items() if info.get("manager_id") == team1_manager_id), None)
+        final_placements = post_season_stats["final_placements"] if post_season_stats else {}
+        final_rank = final_placements.get(team_id) if team_id else None
+
+        matchup_types = {matchup["matchup_type"] for matchup in matchups}
+        if "championship" in matchup_types:
+            bracket = "Championship"
+        elif "consolation" in matchup_types:
+            bracket = "Consolation"
+        else:
+            bracket = "-"
+
+        bracket_column, final_rank_column = st.columns(2)
+        bracket_column.metric("Bracket", bracket)
+        if final_rank is not None:
+            placement_emoji = {1: EMOJI_FIRST_PLACE, 2: EMOJI_SECOND_PLACE, 3: EMOJI_THIRD_PLACE}.get(final_rank)
+            if placement_emoji is None and final_placements and final_rank == max(final_placements.values()):
+                placement_emoji = EMOJI_LAST_PLACE
+            rank_display = f"{_ordinal_rank(final_rank)} {placement_emoji}" if placement_emoji else _ordinal_rank(final_rank)
+            final_rank_column.metric("Final Rank", rank_display)
+
 
 def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, season_filter: int | None, matchup_type_filter: str | None, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     """One bar per matchup: Manager 1's point differential (their score

@@ -177,7 +177,7 @@ def build_player_stats(start_season: int = FIRST_SEASON, end_season: int | None 
     resolved_players = _resolved_players()
     print(f"{len(resolved_players)} players with a resolved ESPN ID, fetching seasons {start_season}-{end_season} (active season {active_season} always refetched)")
 
-    print('fetching game logs')
+    print("fetching game logs")
     with httpx.Client(timeout=30) as client:
         for player_id, entry in tqdm(sorted(resolved_players.items())):
             for season in range(start_season, end_season + 1):
@@ -185,7 +185,7 @@ def build_player_stats(start_season: int = FIRST_SEASON, end_season: int | None 
 
     # Rebuilt entirely from the raw cache (see module docstring), not
     # incrementally merged with any prior output.
-    print('parsing game logs')
+    print("parsing game logs")
     player_stats: dict[str, dict] = {}
     for player_id, entry in tqdm(sorted(resolved_players.items())):
         espn_id = entry["espn_id"]
