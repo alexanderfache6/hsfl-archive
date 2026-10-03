@@ -48,7 +48,7 @@ CHART_MARKER_SIZE_MEDIUM = 8
 CHART_MARKER_SIZE_LARGE = 12
 
 # rounded bar ends (px) - Plotly's native marker.cornerradius
-COMPARISON_BAR_CORNER_RADIUS = 8
+BAR_CHART_CORNER_RADIUS = 8
 
 # for consistent line chart line width
 CHART_LINE_WIDTH_SMALL = 2

@@ -25,6 +25,7 @@ from colors import (
     COLOR_TABLE_ROSTER,
 )
 from constants import (
+    BAR_CHART_CORNER_RADIUS,
     BENCH_POSITION_ORDER,
     CHART_LEGEND_OUTSIDE_RIGHT,
     EMOJI_FIRST_PLACE,
@@ -433,7 +434,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     figure.add_bar(
         x=x_positions,
         y=win_diffs,
-        marker_color=manager1_color,
+        marker={"color": manager1_color, "cornerradius": BAR_CHART_CORNER_RADIUS},
         name="Win",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",
@@ -441,7 +442,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     figure.add_bar(
         x=x_positions,
         y=loss_diffs,
-        marker_color=COLOR_PLAYER_BENCH,
+        marker={"color": COLOR_PLAYER_BENCH, "cornerradius": BAR_CHART_CORNER_RADIUS},
         name="Loss/Tie",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",

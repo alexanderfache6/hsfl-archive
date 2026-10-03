@@ -18,6 +18,7 @@ from colors import (
     COLOR_PODIUM_THIRD,
 )
 from constants import (
+    BAR_CHART_CORNER_RADIUS,
     EMOJI_FIRST_PLACE,
     EMOJI_LAST_PLACE,
     EMOJI_NO_FIRST_PLACE,
@@ -518,6 +519,8 @@ def _render_championship_charts(champions_data: dict, name_resolver: dict[str, s
         bar_figure.update_layout(
             title="Podiums by Manager",
             barmode="stack",
+            # Layout-level (not per-trace) so the rounding applies to the stack as a whole.
+            barcornerradius=BAR_CHART_CORNER_RADIUS,
             hovermode="x",
             xaxis_title="Manager",
             xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
@@ -706,7 +709,7 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
         go.Bar(
             x=chart_data["Manager"],
             y=chart_data[selected_stat],
-            marker_color=bar_colors,
+            marker={"color": bar_colors, "cornerradius": BAR_CHART_CORNER_RADIUS},
             hovertemplate="%{x}<br>" + selected_stat_label + ": %{y}<extra></extra>",
         )
     )
