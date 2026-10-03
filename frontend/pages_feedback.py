@@ -674,7 +674,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",
-        xaxis={"type": "category", "nticks": CHART_XAXIS_MAX_TICKS},  # plain "yyyy-mm-dd" tick labels, no time-of-day
+        xaxis={"type": "date", "tickformat": "%Y-%m-%d", "hoverformat": "%Y-%m-%d", "nticks": CHART_XAXIS_MAX_TICKS},  # real date axis: bars sit by date, gaps between days stay proportional; plain "yyyy-mm-dd" labels, no time-of-day
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="",
     )
