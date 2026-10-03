@@ -29,12 +29,12 @@ from colors import (
     COLOR_STAT_MISMATCH,
 )
 from constants import (
+    BAR_CHART_CORNER_RADIUS,
     BENCH_POSITION_COLOR,
     BENCH_POSITION_ORDER,
     CHART_LEGEND_INSIDE_TOP_RIGHT,
     CHART_LEGEND_OUTSIDE_RIGHT,
     CHART_MARKER_SIZE_MEDIUM,
-    COMPARISON_BAR_CORNER_RADIUS,
 )
 from data_loader import (
     CHART_XAXIS_MAX_TICKS,
@@ -339,7 +339,7 @@ def _render_player_comparison_charts(season: int, player_ids: list[str], stat_id
                     x=[value],
                     y=[label],
                     orientation="h",
-                    marker={"color": BENCH_POSITION_COLOR.get(position, COLOR_MANAGER_BACKUP), "cornerradius": COMPARISON_BAR_CORNER_RADIUS},
+                    marker={"color": BENCH_POSITION_COLOR.get(position, COLOR_MANAGER_BACKUP), "cornerradius": BAR_CHART_CORNER_RADIUS},
                     text=[_format_comparison_value(value)],
                     textposition="outside",
                     textfont={"weight": "bold"},
@@ -473,6 +473,8 @@ def _render_manager_summary_chart(stints: list[dict], name_resolver: dict[str, s
     figure.update_layout(
         title="Starter vs Bench by Manager",
         barmode="stack",
+        # Layout-level (not per-trace) so the rounding applies to the stack as a whole.
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         xaxis_title="Manager",
         xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         yaxis_title="Fantasy Games",
@@ -708,7 +710,7 @@ def _render_fantasy_points_per_game_chart_normal(
         figure.add_bar(
             x=x_positions,
             y=[points[i] if i in group_set else None for i in x_positions],
-            marker_color=color,
+            marker={"color": color, "cornerradius": BAR_CHART_CORNER_RADIUS},
             customdata=hover_text,
             hovertemplate="%{customdata}<extra></extra>",
             name=name,
@@ -1116,7 +1118,7 @@ def _render_nfl_stat_chart(
         y_dtick = max(1, -(-int(max_value) // CHART_YAXIS_MAX_TICKS))
         y_axis_config = {"dtick": y_dtick, "tickformat": "d"}
 
-    figure = go.Figure(go.Bar(x=x_positions, y=values, marker_color=colors, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False))
+    figure = go.Figure(go.Bar(x=x_positions, y=values, marker={"color": colors, "cornerradius": BAR_CHART_CORNER_RADIUS}, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False))
     figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_CHART_STAT}, name=stat_label, showlegend=True)
     if any(is_bye_week):
         figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_BYE_WEEK}, name="Bye Week", showlegend=True)
@@ -1323,7 +1325,7 @@ def _render_espn_nfl_stat_chart(
         go.Bar(
             x=x_positions,
             y=normal_values,
-            marker_color=COLOR_STAT,
+            marker={"color": COLOR_STAT, "cornerradius": BAR_CHART_CORNER_RADIUS},
             name=stat_label,
             legendgroup=stat_label,
             customdata=hover_text,
@@ -1335,7 +1337,7 @@ def _render_espn_nfl_stat_chart(
         figure.add_bar(
             x=x_positions,
             y=mismatch_values,
-            marker_color=COLOR_STAT_MISMATCH,
+            marker={"color": COLOR_STAT_MISMATCH, "cornerradius": BAR_CHART_CORNER_RADIUS},
             name="Data Mismatch",
             legendgroup="Data Mismatch",
             customdata=hover_text,

@@ -19,7 +19,7 @@ from colors import (
     COLOR_POINTS_POSITIVE,
     COLOR_UNDRAFTED,
 )
-from constants import AUCTION_BUDGET, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, NFL_TEAM_ABBREVIATIONS
+from constants import AUCTION_BUDGET, BAR_CHART_CORNER_RADIUS, BENCH_POSITION_COLOR, BENCH_POSITION_ORDER, CHART_LEGEND_OUTSIDE_RIGHT, CHART_LINE_WIDTH_MEDIUM, CHART_LINE_WIDTH_SMALL, CHART_MARKER_SIZE_LARGE, CHART_MARKER_SIZE_MEDIUM, DRAFT_AUCTION, DRAFT_SNAKE, NFL_TEAM_ABBREVIATIONS
 from data_loader import (
     build_manager_color_map,
     build_manager_name_resolver,
@@ -164,7 +164,7 @@ def _render_pick_distribution_chart(
                 x=bucket_labels,
                 y=_bucket_counts(all_values),
                 name="All",
-                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
+                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5, "cornerradius": BAR_CHART_CORNER_RADIUS},
                 hovertemplate="<b>%{x}</b><br>All Player Count: %{y}<extra></extra>",
             )
         )
@@ -173,7 +173,7 @@ def _render_pick_distribution_chart(
     # plots positions), or the same faded gray as "All" when not filtered
     # - unfiltered, series 2 IS the "All" data, so it should look like
     # it, not like a real position's own color.
-    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position)} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5}
+    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position), "cornerradius": BAR_CHART_CORNER_RADIUS} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5, "cornerradius": BAR_CHART_CORNER_RADIUS}
     figure.add_trace(
         go.Bar(
             x=bucket_labels,
@@ -632,7 +632,7 @@ def _render_manager_recap_tab(season: int) -> None:
                                 go.Bar(
                                     x=bin_labels,
                                     y=bin_counts,
-                                    marker={"color": COLOR_CHART_STAT},
+                                    marker={"color": COLOR_CHART_STAT, "cornerradius": BAR_CHART_CORNER_RADIUS},
                                     customdata=bin_hover_text,
                                     hovertemplate="%{customdata}<extra></extra>",
                                 )
@@ -720,7 +720,7 @@ def _render_manager_recap_tab(season: int) -> None:
                         go.Bar(
                             x=position_groups,
                             y=bar_values,
-                            marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups]},
+                            marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups], "cornerradius": BAR_CHART_CORNER_RADIUS},
                             hovertemplate="<b>%{x}</b><br>" + bar_label + ": %{y:.2f}<extra></extra>",
                         )
                     )
@@ -792,7 +792,7 @@ def _render_keepers_tab() -> None:
                     y=position_players,
                     orientation="h",
                     name=position,
-                    marker={"color": BENCH_POSITION_COLOR.get(position)},
+                    marker={"color": BENCH_POSITION_COLOR.get(position), "cornerradius": BAR_CHART_CORNER_RADIUS},
                     customdata=position_years_text,
                     hovertemplate="<b>%{y}</b><br>Frequency: %{x}<br>Years: %{customdata}<extra></extra>",
                 )
@@ -873,6 +873,8 @@ def _render_keepers_tab() -> None:
             xaxis_title="Frequency",
             yaxis_title="Player",
             barmode="stack",
+            # Layout-level (not per-trace) so the rounding applies to the stack as a whole.
+            barcornerradius=BAR_CHART_CORNER_RADIUS,
             yaxis={"categoryorder": "array", "categoryarray": loyalty_all_players},
             legend_title_text="Manager",
             # Legend is a color key only here (stacking makes hiding a
@@ -990,7 +992,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         x=snake_years,
                         y=snake_counts,
                         name="Snake",
-                        marker={"color": COLOR_PICK},
+                        marker={"color": COLOR_PICK, "cornerradius": BAR_CHART_CORNER_RADIUS},
                         hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s Picked Ahead: %{{y}}<extra></extra>",
                     )
                 )
@@ -1001,7 +1003,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         y=auction_counts,
                         name="Auction",
                         legendgroup="auction",
-                        marker={"color": COLOR_AUCTION},
+                        marker={"color": COLOR_AUCTION, "cornerradius": BAR_CHART_CORNER_RADIUS},
                         hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s with Higher Auction Value: %{{y}}<extra></extra>",
                     )
                 )

@@ -7,7 +7,7 @@
 import plotly.graph_objects as go
 import streamlit as st
 from colors import COLOR_MANAGER_BACKUP, COLOR_NFL_BYE_WEEK, COLOR_NFL_GAME_MISSED, COLOR_OPTIMAL_OUTLINE, COLOR_PLAYER_BENCH, COLOR_PLAYER_STARTER, COLOR_POINTS_NEGATIVE, COLOR_POINTS_POSITIVE, COLOR_TABLE_ROSTER
-from constants import CHART_LINE_WIDTH_MEDIUM, CHART_MARKER_SIZE_MEDIUM, EMOJI_FIRST_PLACE, EMOJI_LAST_PLACE, EMOJI_SECOND_PLACE, EMOJI_THIRD_PLACE, MATCHUP_TYPE_LABELS, MATCHUP_TYPE_OPTIONS
+from constants import BAR_CHART_CORNER_RADIUS, CHART_LINE_WIDTH_MEDIUM, CHART_MARKER_SIZE_MEDIUM, EMOJI_FIRST_PLACE, EMOJI_LAST_PLACE, EMOJI_SECOND_PLACE, EMOJI_THIRD_PLACE, MATCHUP_TYPE_LABELS, MATCHUP_TYPE_OPTIONS
 from data_loader import (
     CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
@@ -221,8 +221,8 @@ def _render_season_stats_chart(season: int, weeks: list[int], manager_id: str) -
     hovertemplate = "<b>%{x}</b><br>Total Points: %{customdata[0]:.2f}<br>Optimal Points: %{customdata[1]:.2f}<br>Points Missed: %{customdata[2]:.2f}<br>Optimal Starters: %{customdata[3]} / %{customdata[4]}<extra></extra>"
 
     figure = go.Figure()
-    figure.add_trace(go.Bar(x=week_labels, y=points, name="Total Points", marker={"color": COLOR_PLAYER_STARTER}, customdata=hover_data, hovertemplate=hovertemplate))
-    figure.add_trace(go.Bar(x=week_labels, y=optimal_points, name="Optimal Points", marker={"color": COLOR_OPTIMAL_OUTLINE}, customdata=hover_data, hovertemplate=hovertemplate))
+    figure.add_trace(go.Bar(x=week_labels, y=points, name="Total Points", marker={"color": COLOR_PLAYER_STARTER, "cornerradius": BAR_CHART_CORNER_RADIUS}, customdata=hover_data, hovertemplate=hovertemplate))
+    figure.add_trace(go.Bar(x=week_labels, y=optimal_points, name="Optimal Points", marker={"color": COLOR_OPTIMAL_OUTLINE, "cornerradius": BAR_CHART_CORNER_RADIUS}, customdata=hover_data, hovertemplate=hovertemplate))
     figure.add_trace(
         go.Scatter(
             x=week_labels,

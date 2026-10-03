@@ -27,6 +27,7 @@ from colors import (
     COLOR_ISSUES_NEW_FEATURE,
     COLOR_ISSUES_OPENED,
 )
+from constants import BAR_CHART_CORNER_RADIUS
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
 from helpers import render_pagination_input
 from strings import CLEAR_FILTERS, GITHUB_ISSUE_BUG, GITHUB_ISSUE_ENHANCEMENT, GITHUB_ISSUE_NEW_FEATURE, ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE, PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYER_ANALYSIS, PAGE_SEASONS, PAGE_TRADE_ANALYSIS
@@ -656,7 +657,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Opened",
         x=all_dates,
         y=opened_values,
-        marker_color=COLOR_ISSUES_OPENED,
+        marker={"color": COLOR_ISSUES_OPENED, "cornerradius": BAR_CHART_CORNER_RADIUS},
         customdata=closed_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{y}<br>Closed Issues: %{customdata}<extra></extra>",
     )
@@ -664,7 +665,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         name="Closed",
         x=all_dates,
         y=closed_values,
-        marker_color=COLOR_ISSUES_CLOSED,
+        marker={"color": COLOR_ISSUES_CLOSED, "cornerradius": BAR_CHART_CORNER_RADIUS},
         customdata=opened_values,
         hovertemplate="<b>%{x}</b><br>Opened Issues: %{customdata}<br>Closed Issues: %{y}<extra></extra>",
     )
