@@ -1,4 +1,4 @@
-"""Players tab - search for a player, see a flow chart of which manager's
+"""Player Analysis tab - search for a player, see a flow chart of which manager's
 team they've been on and for which weeks (collapsed into contiguous
 stints, not one node per week), plus a stacked bar chart summarizing
 starts vs bench per manager. See execution-plan.md Phase G.
@@ -1332,7 +1332,7 @@ def _render_summary_metrics(timeline: list[dict], nfl_season_lengths: dict[str, 
     transfers_column.metric("Transfers", len(stints), help="Number of fantasy ownership stints shown in the Transfers flow chart. The start of the season counts as a new transfer.")
 
 
-def render_players_page() -> None:
+def render_player_analysis_page() -> None:
     players_data = load_players()["players"]
     ownership_data = load_player_ownership()["player_ownership"]
     name_resolver = build_manager_name_resolver()
@@ -1503,4 +1503,4 @@ def render_players_page() -> None:
     #     if not player_picks:
     #         st.info(f"No draft data recorded for {selected_player_name}.")
     #     else:
-    #         render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="players_value_analysis")
+    #         render_fantasy_value_section(selected_player_name, player_picks, widget_key_prefix="player_analysis_value_analysis")

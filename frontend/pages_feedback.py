@@ -29,7 +29,7 @@ from colors import (
 )
 from data_loader import CHART_XAXIS_MAX_TICKS, CHART_YAXIS_MAX_TICKS
 from helpers import render_pagination_input
-from strings import CLEAR_FILTERS, GITHUB_ISSUE_BUG, GITHUB_ISSUE_ENHANCEMENT, GITHUB_ISSUE_NEW_FEATURE, ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE, PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYERS, PAGE_SEASONS, PAGE_TRADE_ANALYSIS
+from strings import CLEAR_FILTERS, GITHUB_ISSUE_BUG, GITHUB_ISSUE_ENHANCEMENT, GITHUB_ISSUE_NEW_FEATURE, ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE, PAGE_DRAFTS, PAGE_FEEDBACK, PAGE_HISTORY, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_PLAYER_ANALYSIS, PAGE_SEASONS, PAGE_TRADE_ANALYSIS
 
 # ========================================
 # CONSTANTS
@@ -41,7 +41,7 @@ GITHUB_REPO = "alexanderfache6/hsfl-archive"
 GITHUB_API_BASE = "https://api.github.com"
 
 FEEDBACK_TYPES = [ISSUE_BUG, ISSUE_ENHANCEMENT, ISSUE_NEW_FEATURE]
-REAL_PAGE_ORDER = [PAGE_HISTORY, PAGE_SEASONS, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_DRAFTS, PAGE_TRADE_ANALYSIS, PAGE_PLAYERS, PAGE_FEEDBACK]
+REAL_PAGE_ORDER = [PAGE_HISTORY, PAGE_SEASONS, PAGE_MANAGERS, PAGE_MATCHUPS, PAGE_DRAFTS, PAGE_TRADE_ANALYSIS, PAGE_PLAYER_ANALYSIS, PAGE_FEEDBACK]
 
 FEEDBACK_PAGE_OPTIONS = {*REAL_PAGE_ORDER, "Other"}
 TITLE_MAX_CHARS = 100
@@ -63,6 +63,12 @@ MAX_SCREENSHOT_MB = 1  # real screenshots run well under this
 # "Enhancement" still have "**Type:** Improvement" in their body -
 # normalized on read so old and new issues filter/display identically.
 ISSUE_TYPE_ALIASES = {"Improvement": "Enhancement"}
+
+# Issues filed while the page was still called "Players" (or "Players
+# Analysis") carry that name in their "[Page]" title bracket / "**Page:**"
+# body line - mapped onto the current page name so old and new issues
+# filter and display identically.
+ISSUE_PAGE_ALIASES = {"Players": PAGE_PLAYER_ANALYSIS, "Players Analysis": PAGE_PLAYER_ANALYSIS}
 
 # Same colors as this repo's actual GitHub labels, for the Issues
 # table's Type pill.
@@ -171,6 +177,7 @@ def _parse_issue(issue: dict) -> dict:
     type_match = ISSUE_TYPE_PATTERN.search(body)
     issue_type = type_match.group(1).strip() if type_match else ""
     issue_type = ISSUE_TYPE_ALIASES.get(issue_type, issue_type)
+    bracket = ISSUE_PAGE_ALIASES.get(bracket, bracket)
     if bracket in FEEDBACK_PAGE_OPTIONS:
         page = bracket
     else:
@@ -179,6 +186,7 @@ def _parse_issue(issue: dict) -> dict:
         # own "**Page:**" line.
         page_match = ISSUE_PAGE_PATTERN.search(body)
         page = page_match.group(1).strip() if page_match else ""
+        page = ISSUE_PAGE_ALIASES.get(page, page)
     description_match = ISSUE_DESCRIPTION_PATTERN.search(body)
     description = description_match.group(1).strip() if description_match else ""
     return {
@@ -304,7 +312,7 @@ def _render_feedback_form() -> None:
     st.subheader("Submit Feedback")
     st.info("Provide feedback/new ideas. The more details the better. Logged with Github Issues.")
 
-    # Same versioned-widget-key pattern as the Matchups/Players tabs'
+    # Same versioned-widget-key pattern as the Matchups/Player Analysis tabs'
     # Clear Filters - Clear Feedback (and a successful Submit) bumps this
     # counter instead of just deleting session_state, forcing Streamlit
     # to mount brand-new widget instances (deleting session_state alone
@@ -466,7 +474,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     except requests.RequestException:
         releases = []
 
-    # Same versioned-widget-key pattern as the Matchups/Players tabs'
+    # Same versioned-widget-key pattern as the Matchups/Player Analysis tabs'
     # Clear Filters - the Clear Filters button below bumps this counter
     # instead of just deleting session_state, forcing Streamlit to mount
     # brand-new widget instances (deleting session_state alone can leave
@@ -505,7 +513,7 @@ def _render_issues_table(issues: list[dict]) -> None:
     with page_column:
         selected_page = st.selectbox("App Page", [*REAL_PAGE_ORDER, "Other"], index=None, placeholder="Any", key=versioned_key("feedback_filter_page"))
 
-    # Same searchable-selectbox pattern as the Players tab's player
+    # Same searchable-selectbox pattern as the Player Analysis tab's player
     # search - a plain text_input with substring matching below, not a
     # selectbox (which requires picking one exact full title from its
     # dropdown before it actually filters anything). Page counter shares

@@ -85,7 +85,7 @@ def _trade_key(trade: dict) -> str:
 
 
 def _select_trade(trade_key: str) -> None:
-    st.session_state["trades_selected_trade"] = trade_key
+    st.session_state["trade_analysis_selected_trade"] = trade_key
 
 
 def _render_trade_card(trade: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -258,7 +258,7 @@ def _render_trade_stats(trade: dict | None, name_resolver: dict[str, str], manag
 # ========================================
 
 
-def render_trades_page() -> None:
+def render_trade_analysis_page() -> None:
     # Only seasons that actually had a trade are offered in the filter.
     trades_by_season = {season: _load_trades(season) for season in sorted(discover_seasons(), reverse=True)}
     seasons = [season for season, season_trades in trades_by_season.items() if season_trades]
@@ -274,7 +274,7 @@ def render_trades_page() -> None:
     left_column, right_column = st.columns([1, 2])
 
     with left_column:
-        selected_year = st.selectbox("Select Year", ["All"] + seasons, key="trades_year")
+        selected_year = st.selectbox("Select Year", ["All"] + seasons, key="trade_analysis_year")
 
         selected_seasons = seasons if selected_year == "All" else [selected_year]
         trades = [trade for season in selected_seasons for trade in trades_by_season[season]]
@@ -289,6 +289,6 @@ def render_trades_page() -> None:
             _render_trade_card(trade, name_resolver, manager_color_map)
 
     with right_column:
-        selected_trade_key = st.session_state.get("trades_selected_trade")
+        selected_trade_key = st.session_state.get("trade_analysis_selected_trade")
         selected_trade = next((trade for trade in trades if _trade_key(trade) == selected_trade_key), None)
         _render_trade_stats(selected_trade, name_resolver, manager_color_map)
