@@ -706,6 +706,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
 
     team_info = team_id_to_manager_map(season)
     weeks = [week_table["week"] for week_table in weekly_tables]
+    team_count = len(weekly_tables[-1]["standings"])
 
     figure = go.Figure()
     for team_id, info in team_info.items():
@@ -750,7 +751,10 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
         # Rank is lower-is-better - reverse so the top of the chart
         # visually matches "doing well", consistent with the Rank column
         # itself (1 = best).
-        yaxis={"autorange": "reversed", "nticks": CHART_YAXIS_MAX_TICKS} if selected_stat == "Rank" else {"nticks": CHART_YAXIS_MAX_TICKS},
+        # Explicit reversed range (codebase convention, not autorange) with
+        # a tick on every whole rank, so the axis starts at 1 at the top
+        # and counts down to the last rank at the bottom.
+        yaxis={"range": [team_count + 0.5, 0.5], "tickvals": list(range(1, team_count + 1)), "tickformat": "d"} if selected_stat == "Rank" else {"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="Manager",
         height=450,
     )

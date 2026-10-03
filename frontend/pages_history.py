@@ -6,6 +6,8 @@ across every season in the archive. See execution-plan.md Phase G.
 # ========================================
 # IMPORTS
 # ========================================
+import math
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -708,12 +710,16 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
             hovertemplate="%{x}<br>" + selected_stat_label + ": %{y}<extra></extra>",
         )
     )
+    yaxis = {"nticks": CHART_YAXIS_MAX_TICKS}
+    if selected_stat != "Win %":
+        # NOTE whole number ticks between 1 and max
+        yaxis.update({"tickformat": "d", "tick0": 0, "dtick": max(1, math.ceil(chart_data[selected_stat].max() / CHART_YAXIS_MAX_TICKS))})
     stat_figure.update_layout(
         title=f"{selected_stat_label} by Manager",
         xaxis_title="Manager",
         xaxis={"nticks": CHART_XAXIS_MAX_TICKS},
         yaxis_title=selected_stat_label,
-        yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
+        yaxis=yaxis,
         margin={"t": 40, "b": 0, "l": 0, "r": 0},
     )
     st.plotly_chart(stat_figure, width="stretch")
