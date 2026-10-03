@@ -226,14 +226,25 @@ def _all_issues() -> list[dict]:
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    response = requests.get(
-        f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
-        headers=headers,
-        params={"state": "all", "per_page": 100},
-        timeout=10,
-    )
-    response.raise_for_status()
-    return [_parse_issue(issue) for issue in response.json() if "pull_request" not in issue and "[Internal]" not in issue["title"]]
+    # GitHub returns at most 100 items a page, and its issues endpoint mixes
+    # PRs in with issues - so every page is fetched, otherwise the oldest
+    # issues silently go missing once the repo passes 100 issues + PRs.
+    raw_issues: list[dict] = []
+    page = 1
+    while True:
+        response = requests.get(
+            f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/issues",
+            headers=headers,
+            params={"state": "all", "per_page": 100, "page": page},
+            timeout=10,
+        )
+        response.raise_for_status()
+        page_items = response.json()
+        raw_issues.extend(page_items)
+        if len(page_items) < 100:
+            break
+        page += 1
+    return [_parse_issue(issue) for issue in raw_issues if "pull_request" not in issue and "[Internal]" not in issue["title"]]
 
 
 @st.cache_data(ttl=300)
@@ -674,7 +685,7 @@ def _render_issue_activity_chart(issues: list[dict]) -> None:
         barmode="group",  # side by side per day, not stacked
         xaxis_title="Date",
         yaxis_title="Number of Issues",
-        xaxis={"type": "category", "nticks": CHART_XAXIS_MAX_TICKS},  # plain "yyyy-mm-dd" tick labels, no time-of-day
+        xaxis={"type": "date", "tickformat": "%Y-%m-%d", "hoverformat": "%Y-%m-%d", "nticks": CHART_XAXIS_MAX_TICKS},  # real date axis: bars sit by date, gaps between days stay proportional; plain "yyyy-mm-dd" labels, no time-of-day
         yaxis={"nticks": CHART_YAXIS_MAX_TICKS},
         legend_title_text="",
     )
