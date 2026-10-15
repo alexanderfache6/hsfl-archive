@@ -344,7 +344,9 @@ def _render_historical_stats_tab(manager: dict) -> None:
             )
         )
     else:
-        figure.add_trace(go.Bar(x=years, y=values, name=selected_stat, marker={"color": manager_color}, hovertemplate=hovertemplate))
+        # Same scheme as the Matchups Point Differential chart: positive bars in the manager's color, zero/negative ones gray.
+        bar_colors = [manager_color if value > 0 else COLOR_PLAYER_BENCH for value in values] if selected_stat == "Point Differential" else manager_color
+        figure.add_trace(go.Bar(x=years, y=values, name=selected_stat, marker={"color": bar_colors}, hovertemplate=hovertemplate))
     yaxis = {"title": selected_stat}
     if is_rank:
         # Full axis: every rank from 1 to the league size (largest league
