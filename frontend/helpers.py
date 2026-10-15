@@ -508,10 +508,10 @@ def integer_yaxis_nticks(values: list[int]) -> int:
 
 
 def render_record_metrics(matchups: list[dict], manager_id: str) -> None:
-    """Matchups / Wins / Losses / Ties / Win % / Points For / Points
-    Against for one manager across the given matchups - shared by the
-    Matchups page and the Managers page's Historical Stats tab."""
-    wins = losses = ties = 0
+    """Matchups / Wins / Losses / Win % / Points For / Points Against for
+    one manager across the given matchups - shared by the Matchups page
+    and the Managers page's Historical Stats tab."""
+    wins = losses = 0
     points_for = points_against = 0.0
     for matchup in matchups:
         home, away = matchup["home"], matchup["away"]
@@ -522,16 +522,13 @@ def render_record_metrics(matchups: list[dict], manager_id: str) -> None:
             wins += 1
         elif manager_side["score"] < other_side["score"]:
             losses += 1
-        else:
-            ties += 1
 
-    win_pct = wins / len(matchups) if matchups else 0.0
+    win_pct = wins / (wins + losses) if wins + losses else 0.0
 
-    total_column, win_column, loss_column, tie_column, win_pct_column, points_for_column, points_against_column = st.columns(7)
+    total_column, win_column, loss_column, win_pct_column, points_for_column, points_against_column = st.columns(6)
     total_column.metric("Matchups", len(matchups))
     win_column.metric("Wins", wins)
     loss_column.metric("Losses", losses)
-    tie_column.metric("Ties", ties)
     win_pct_column.metric("Win %", f"{win_pct:.1%}")
     points_for_column.metric("Points For", f"{points_for:.2f}")
     points_against_column.metric("Points Against", f"{points_against:.2f}")

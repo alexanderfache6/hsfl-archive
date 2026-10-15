@@ -103,7 +103,6 @@ MANAGER_STAT_COLUMNS = [
     "Avg Post. Finish",
     "W",
     "L",
-    "T",
     "Win %",
     "Points For",
     "Points Against",
@@ -125,7 +124,6 @@ MANAGER_STAT_FULL_LABELS = {
     "Avg Post. Finish": "Average Postseason Finish",
     "W": "Wins",
     "L": "Losses",
-    "T": "Ties",
     "Win %": "Win Percentage",
     "Points For": "Points For",
     "Points Against": "Points Against",
@@ -138,11 +136,11 @@ MANAGER_STAT_FULL_LABELS = {
 # this way. Per Game deliberately excludes Players Started (unlike Per
 # Season) - a career "players started per game" rate isn't a meaningful
 # stat the way a per-season rate is.
-PER_SEASON_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against", "Players Started"}
-PER_GAME_ELIGIBLE_STATS = {"W", "L", "T", "Points For", "Points Against"}
+PER_SEASON_ELIGIBLE_STATS = {"W", "L", "Points For", "Points Against", "Players Started"}
+PER_GAME_ELIGIBLE_STATS = {"W", "L", "Points For", "Points Against"}
 
 NORMALIZATION_LABELS = {"all_time": "All Time", "per_season": "Per Season", "per_game": "Per Game"}
-NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, T, Points For, Points Against, Players Started."
+NORMALIZATION_HELP = "Per Season/Per Game are only offered for stats where that normalization is meaningful: W, L, Points For, Points Against, Players Started."
 
 # ========================================
 # FUNCTIONS
@@ -295,7 +293,6 @@ def _build_manager_standings_dataframe(manager_stats_data: dict, name_resolver: 
                 "Avg Post. Finish": manager["average_post_season_finish"],
                 "W": combined["wins"],
                 "L": combined["losses"],
-                "T": combined["ties"],
                 "Win %": combined["win_pct"],
                 "Points For": combined["points_for"],
                 "Points Against": combined["points_against"],
@@ -689,13 +686,13 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
 
     selected_stat_label = MANAGER_STAT_FULL_LABELS[selected_stat]
 
-    columns = list(dict.fromkeys(["manager_id", "Manager", "Seasons", "W", "L", "T", selected_stat]))
+    columns = list(dict.fromkeys(["manager_id", "Manager", "Seasons", "W", "L", selected_stat]))
     chart_data = dataframe[columns].dropna(subset=[selected_stat]).copy()
     if normalization == "per_season":
         chart_data[selected_stat] = chart_data[selected_stat] / chart_data["Seasons"]
         selected_stat_label = f"{selected_stat_label} per Season"
     elif normalization == "per_game":
-        games_played = chart_data["W"] + chart_data["L"] + chart_data["T"]
+        games_played = chart_data["W"] + chart_data["L"]
         chart_data[selected_stat] = chart_data[selected_stat] / games_played.replace(0, pd.NA)
         selected_stat_label = f"{selected_stat_label} per Game"
     # Lower is better for finish stats (1st place beats 10th), so those
