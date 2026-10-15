@@ -11,7 +11,7 @@ from colors import (
     COLOR_PICK,
     COLOR_TABLE_ROSTER,
 )
-from constants import BENCH_POSITION_COLOR, CHART_LINE_WIDTH_LARGE, CHART_MARKER_SIZE_MEDIUM, MAX_YAXIS_TICKS, ORDINAL_WORDS
+from constants import BAR_CHART_CORNER_RADIUS, BENCH_POSITION_COLOR, CHART_LINE_WIDTH_LARGE, CHART_MARKER_SIZE_MEDIUM, MAX_YAXIS_TICKS, ORDINAL_WORDS
 from data_loader import (
     FLEX_ELIGIBLE_POSITIONS,
     compute_optimal_lineup,
@@ -306,6 +306,7 @@ def render_fantasy_value_section(selected_player: str, player_picks: list[dict],
     max_games_played = max((value for value in games_played_by_season if value is not None), default=1)
 
     fantasy_figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         title=f"{yaxis_title} per Season",
         xaxis={"title": "Season", "type": "category"},
         yaxis={"title": yaxis_title},

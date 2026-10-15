@@ -706,7 +706,7 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
         go.Bar(
             x=chart_data["Manager"],
             y=chart_data[selected_stat],
-            marker={"color": bar_colors, "cornerradius": BAR_CHART_CORNER_RADIUS},
+            marker={"color": bar_colors},
             hovertemplate="%{x}<br>" + selected_stat_label + ": %{y}<extra></extra>",
         )
     )
@@ -715,6 +715,7 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
         # NOTE whole number ticks between 1 and max
         yaxis.update({"tickformat": "d", "tick0": 0, "dtick": max(1, math.ceil(chart_data[selected_stat].max() / CHART_YAXIS_MAX_TICKS))})
     stat_figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         title=f"{selected_stat_label} by Manager",
         xaxis_title="Manager",
         xaxis={"nticks": CHART_XAXIS_MAX_TICKS},

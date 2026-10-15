@@ -340,7 +340,7 @@ def _render_player_comparison_charts(season: int, player_ids: list[str], stat_id
                     x=[value],
                     y=[label],
                     orientation="h",
-                    marker={"color": BENCH_POSITION_COLOR.get(position, COLOR_MANAGER_BACKUP), "cornerradius": BAR_CHART_CORNER_RADIUS},
+                    marker={"color": BENCH_POSITION_COLOR.get(position, COLOR_MANAGER_BACKUP)},
                     text=[_format_comparison_value(value)],
                     textposition="outside",
                     textfont={"weight": "bold"},
@@ -352,7 +352,7 @@ def _render_player_comparison_charts(season: int, player_ids: list[str], stat_id
             )
             figure.update_xaxes(side="top", range=[0, row_x_max[row - 1]], nticks=3, row=row, col=1)
             figure.update_yaxes(showticklabels=False, row=row, col=1)
-        figure.update_layout(title=f"{player_names_by_id[player_id]} ({position})", showlegend=False, margin={**COMPARISON_CHART_MARGIN, "l": 5, "r": 25})
+        figure.update_layout(title=f"{player_names_by_id[player_id]} ({position})", showlegend=False, barcornerradius=BAR_CHART_CORNER_RADIUS, margin={**COMPARISON_CHART_MARGIN, "l": 5, "r": 25})
         with column:
             st.plotly_chart(figure, width="stretch")
 
@@ -717,7 +717,7 @@ def _render_fantasy_points_per_game_chart_normal(
         figure.add_bar(
             x=x_positions,
             y=[points[i] if i in group_set else None for i in x_positions],
-            marker={"color": color, "cornerradius": BAR_CHART_CORNER_RADIUS},
+            marker={"color": color},
             customdata=hover_text,
             hovertemplate="%{customdata}<extra></extra>",
             name=name,
@@ -829,6 +829,7 @@ def _render_fantasy_points_per_game_chart_normal(
         )
 
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         title=chart_title,
         legend={**CHART_LEGEND_OUTSIDE_RIGHT, "tracegroupgap": 0},
         margin={"t": 40, "b": 0, "l": 0, "r": 150},
@@ -1125,13 +1126,14 @@ def _render_nfl_stat_chart(
         y_dtick = max(1, -(-int(max_value) // CHART_YAXIS_MAX_TICKS))
         y_axis_config = {"dtick": y_dtick, "tickformat": "d"}
 
-    figure = go.Figure(go.Bar(x=x_positions, y=values, marker={"color": colors, "cornerradius": BAR_CHART_CORNER_RADIUS}, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False))
+    figure = go.Figure(go.Bar(x=x_positions, y=values, marker={"color": colors}, customdata=hover_text, hovertemplate="%{customdata}<extra></extra>", showlegend=False))
     figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_CHART_STAT}, name=stat_label, showlegend=True)
     if any(is_bye_week):
         figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_NFL_BYE_WEEK}, name="Bye Week", showlegend=True)
     if has_unrostered:
         figure.add_scatter(x=[None], y=[None], mode="markers", marker={"size": CHART_MARKER_SIZE_MEDIUM, "color": COLOR_PLAYER_UNROSTERED}, name="Not on a Fantasy Roster", showlegend=True)
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         title=f"{stat_label} per Game",
         xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title=stat_label,
@@ -1332,7 +1334,7 @@ def _render_espn_nfl_stat_chart(
         go.Bar(
             x=x_positions,
             y=normal_values,
-            marker={"color": COLOR_STAT, "cornerradius": BAR_CHART_CORNER_RADIUS},
+            marker={"color": COLOR_STAT},
             name=stat_label,
             legendgroup=stat_label,
             customdata=hover_text,
@@ -1344,7 +1346,7 @@ def _render_espn_nfl_stat_chart(
         figure.add_bar(
             x=x_positions,
             y=mismatch_values,
-            marker={"color": COLOR_STAT_MISMATCH, "cornerradius": BAR_CHART_CORNER_RADIUS},
+            marker={"color": COLOR_STAT_MISMATCH},
             name="Data Mismatch",
             legendgroup="Data Mismatch",
             customdata=hover_text,
@@ -1352,6 +1354,7 @@ def _render_espn_nfl_stat_chart(
             showlegend=True,
         )
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         title=f"{stat_label} per Game",
         xaxis={"title": "Season", "tickangle": 0, "tickmode": "array", "tickvals": tick_positions, "ticktext": tick_text},
         yaxis_title=stat_label,

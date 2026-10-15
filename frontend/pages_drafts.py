@@ -164,7 +164,7 @@ def _render_pick_distribution_chart(
                 x=bucket_labels,
                 y=_bucket_counts(all_values),
                 name="All",
-                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5, "cornerradius": BAR_CHART_CORNER_RADIUS},
+                marker={"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5},
                 hovertemplate="<b>%{x}</b><br>All Player Count: %{y}<extra></extra>",
             )
         )
@@ -173,7 +173,7 @@ def _render_pick_distribution_chart(
     # plots positions), or the same faded gray as "All" when not filtered
     # - unfiltered, series 2 IS the "All" data, so it should look like
     # it, not like a real position's own color.
-    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position), "cornerradius": BAR_CHART_CORNER_RADIUS} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5, "cornerradius": BAR_CHART_CORNER_RADIUS}
+    series_2_marker = {"color": BENCH_POSITION_COLOR.get(selected_position)} if is_filtered else {"color": COLOR_PERCENTILE_OTHER_PLAYERS, "opacity": 0.5}
     figure.add_trace(
         go.Bar(
             x=bucket_labels,
@@ -184,6 +184,7 @@ def _render_pick_distribution_chart(
         )
     )
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         barmode="overlay",
         xaxis={"title": xaxis_title, "type": "category"},
         yaxis={"title": "Player Count", "tickformat": "d", "nticks": integer_yaxis_nticks(_bucket_counts(all_values) + _bucket_counts(values))},
@@ -632,12 +633,13 @@ def _render_manager_recap_tab(season: int) -> None:
                                 go.Bar(
                                     x=bin_labels,
                                     y=bin_counts,
-                                    marker={"color": COLOR_CHART_STAT, "cornerradius": BAR_CHART_CORNER_RADIUS},
+                                    marker={"color": COLOR_CHART_STAT},
                                     customdata=bin_hover_text,
                                     hovertemplate="%{customdata}<extra></extra>",
                                 )
                             )
                             histogram_figure.update_layout(
+                                barcornerradius=BAR_CHART_CORNER_RADIUS,
                                 title="Auction Price Distribution",
                                 xaxis_title="Auction Price",
                                 yaxis_title="Player Count",
@@ -720,11 +722,12 @@ def _render_manager_recap_tab(season: int) -> None:
                         go.Bar(
                             x=position_groups,
                             y=bar_values,
-                            marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups], "cornerradius": BAR_CHART_CORNER_RADIUS},
+                            marker={"color": [BENCH_POSITION_COLOR.get(position) for position in position_groups]},
                             hovertemplate="<b>%{x}</b><br>" + bar_label + ": %{y:.2f}<extra></extra>",
                         )
                     )
                     bar_figure.update_layout(
+                        barcornerradius=BAR_CHART_CORNER_RADIUS,
                         title=f"{'Average Auction Price per Pick' if draft_type == 'auction' else 'Average Pick'}",
                         xaxis_title="Position",
                         yaxis_title=bar_label,
@@ -792,12 +795,13 @@ def _render_keepers_tab() -> None:
                     y=position_players,
                     orientation="h",
                     name=position,
-                    marker={"color": BENCH_POSITION_COLOR.get(position), "cornerradius": BAR_CHART_CORNER_RADIUS},
+                    marker={"color": BENCH_POSITION_COLOR.get(position)},
                     customdata=position_years_text,
                     hovertemplate="<b>%{y}</b><br>Frequency: %{x}<br>Years: %{customdata}<extra></extra>",
                 )
             )  # NOTE single bar and legend per position
         bar_figure.update_layout(
+            barcornerradius=BAR_CHART_CORNER_RADIUS,
             title="Keeper Frequency",
             xaxis_title="Frequency",
             yaxis_title="Player",
@@ -992,7 +996,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         x=snake_years,
                         y=snake_counts,
                         name="Snake",
-                        marker={"color": COLOR_PICK, "cornerradius": BAR_CHART_CORNER_RADIUS},
+                        marker={"color": COLOR_PICK},
                         hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s Picked Ahead: %{{y}}<extra></extra>",
                     )
                 )
@@ -1003,7 +1007,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                         y=auction_counts,
                         name="Auction",
                         legendgroup="auction",
-                        marker={"color": COLOR_AUCTION, "cornerradius": BAR_CHART_CORNER_RADIUS},
+                        marker={"color": COLOR_AUCTION},
                         hovertemplate=f"<b>%{{x}}</b><br>{selected_position}s with Higher Auction Value: %{{y}}<extra></extra>",
                     )
                 )
@@ -1047,6 +1051,7 @@ def _render_entire_player_analysis_chart(picks_by_player: dict[str, list[dict]],
                     )
                 )
             ahead_figure.update_layout(
+                barcornerradius=BAR_CHART_CORNER_RADIUS,
                 title=f"{selected_position}s Drafted Ahead of {selected_player}",
                 xaxis={"title": "Year", "type": "category", "categoryorder": "category ascending"},
                 yaxis={"title": "Players Drafted Ahead / Higher Auction Value", "tickformat": "d", "nticks": integer_yaxis_nticks(snake_counts + auction_counts)},
