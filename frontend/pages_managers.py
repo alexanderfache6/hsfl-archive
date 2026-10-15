@@ -19,7 +19,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import integer_yaxis_nticks, optimal_lineup_details, pad_missing_starters, player_line, position_pill, render_record_metrics, render_season_qualification_metrics
+from helpers import SCHEDULE_ROW_COLUMN_RATIOS, go_to_matchup_from_schedule, integer_yaxis_nticks, matchup_side_header_html, optimal_lineup_details, pad_missing_starters, player_line, position_pill, render_record_metrics, render_season_qualification_metrics
 from player_modal import open_player_stats_modal
 from strings import TOGGLE_OPTIMAL_LINEUP
 
@@ -126,7 +126,7 @@ def _week_summary(season: int, week: int, manager_id: str) -> dict | None:
         return None
 
     matchup = matchups[0]
-    side = matchup["home"] if matchup["home"]["manager_id"] == manager_id else matchup["away"]
+    side, opponent_side = (matchup["home"], matchup["away"]) if matchup["home"]["manager_id"] == manager_id else (matchup["away"], matchup["home"])
     starters = pad_missing_starters(side["starters"], season)
     optimal_details = optimal_lineup_details(side, season)
 
@@ -136,6 +136,8 @@ def _week_summary(season: int, week: int, manager_id: str) -> dict | None:
     optimal_started_count = sum(1 for starter in countable_starters if starter.get("player_id") in optimal_details["optimal_player_ids"])
     return {
         "side": side,
+        "opponent_side": opponent_side,
+        "matchup_type": matchup["matchup_type"],
         "starters": starters,
         "optimal_details": optimal_details,
         "points": side["score"],
@@ -157,6 +159,24 @@ def _render_depth_chart(season: int, week: int, manager_id: str, show_optimal: b
     backups = _assign_backups(starters, side["bench"])
     card_optimal_details = optimal_details if show_optimal else None
 
+    # The week's matchup, same look as a Matchups page card: the selected
+    # manager (Manager 1) on the left, their opponent on the right.
+    name_resolver = build_manager_name_resolver()
+    manager_color_map = build_manager_color_map()
+    left_column, button_column, right_column = st.columns(SCHEDULE_ROW_COLUMN_RATIOS, vertical_alignment="center")
+    left_column.markdown(matchup_side_header_html(side, True, name_resolver, manager_color_map), unsafe_allow_html=True)
+    with button_column:
+        # Measured from a screenshot: with vertical_alignment="center" alone the button sits ~13px above the
+        # blocks' true center (the blocks' markdown wrapper adds extra height below them). A spacer above the
+        # button pushes its center down by half the spacer's height, so 27px closes that gap.
+        st.markdown("<div style='height:27px;'></div>", unsafe_allow_html=True)
+        if st.button("View Matchup", key=f"depth_{season}_{week}_{manager_id}_view_matchup", use_container_width=True):
+            go_to_matchup_from_schedule(season, week, manager_id, summary["opponent_side"]["manager_id"], summary["matchup_type"])
+    right_column.markdown(matchup_side_header_html(summary["opponent_side"], False, name_resolver, manager_color_map), unsafe_allow_html=True)
+
+    # Breathing room between the matchup row and the metrics.
+    st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
+
     # All five metrics in one row; the bye / IR counts are colored to match the BYE / IR card codes.
     style_rules: list[str] = []
     roster_status_codes = [_player_status_code(player) for player in side["starters"] + side["bench"]]
@@ -171,8 +191,10 @@ def _render_depth_chart(season: int, week: int, manager_id: str, show_optimal: b
         with column, st.container(key=metric_key):
             st.metric(label, roster_status_codes.count(code), help=f"Rostered players with the {code} code ({PLAYER_STATUS_CODES[code][1]}).")
 
-    legend_html = " &nbsp;·&nbsp; ".join(f"<span style='color:{color}; font-weight:700;'>{code}</span> {meaning}" for code, (color, meaning) in PLAYER_STATUS_CODES.items())
-    st.caption(f"{legend_html}", unsafe_allow_html=True)
+    # st.markdown (not st.caption): caption text is rendered faded, which
+    # washed out the BYE / IR code colors. The meanings are muted individually instead.
+    legend_html = " &nbsp;·&nbsp; ".join(f"<span style='color:{color}; font-weight:700;'>{code}</span> <span style='opacity:0.6;'>{meaning}</span>" for code, (color, meaning) in PLAYER_STATUS_CODES.items())
+    st.markdown(f"<div style='font-size:0.875rem;'>{legend_html}</div>", unsafe_allow_html=True)
 
     # 4 player columns (starter + up to 3 backups), preceded by a narrow
     # position column. More backups than that widen the grid rather than

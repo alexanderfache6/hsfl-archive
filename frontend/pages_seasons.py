@@ -51,7 +51,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import manager_pill, ordinal_word, parse_transaction_date, render_pagination_input, return_plural, return_s
+from helpers import SCHEDULE_ROW_COLUMN_RATIOS, go_to_matchup_from_schedule, manager_pill, ordinal_word, parse_transaction_date, render_pagination_input, return_plural, return_s
 from strings import CLEAR_FILTERS, SELECT_STAT_TO_VIEW
 
 # ========================================
@@ -78,8 +78,6 @@ PODIUM_DISPLAY_ORDER = [2, 1, 3]
 
 PODIUM_LOGO_SIZE_PX = {1: 120, 2: 100, 3: 90}
 PODIUM_LOGO_GAP_PX = 10
-
-SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.8, 4]
 
 # ========================================
 # FUNCTIONS
@@ -387,30 +385,6 @@ def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> di
     return top_three
 
 
-def _go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str, matchup_type: str = "regular") -> None:
-    """Jumps to the Matchups page pre-filtered to this exact matchup,
-    same st.switch_page pattern as the History tab's _go_to_matchup -
-    must be called from the main script body (not a button's on_click
-    callback), since st.switch_page is a no-op/error from within a
-    callback. matchup_type defaults to "regular" for the Schedule tab's
-    own call site, but the Bracket tab (see _render_bracket) passes
-    "championship"/"consolation" through the same function."""
-    st.session_state["matchups_team1_manager_id"] = team1_manager_id
-    st.session_state["matchups_season"] = season
-    st.session_state["matchups_week"] = week
-    st.session_state["matchups_team2_manager_id"] = team2_manager_id
-    st.session_state["matchups_matchup_type"] = matchup_type
-    st.session_state["matchups_filters_generation"] = st.session_state.get("matchups_filters_generation", 0) + 1
-    st.session_state["matchups_applied_filters"] = {
-        "season": season,
-        "week": week,
-        "team1_manager_id": team1_manager_id,
-        "team2_manager_id": team2_manager_id,
-        "matchup_type": matchup_type,
-    }
-    st.switch_page(st.session_state["_matchups_page"])
-
-
 # ========================================
 # RENDER
 # ========================================
@@ -513,7 +487,7 @@ def _render_player_start_row(key: str, ordinal: str, entry: dict, name_resolver:
             unsafe_allow_html=True,
         )
     if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
-        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["manager_id"], entry["opponent_manager_id"], entry["matchup_type"])
+        go_to_matchup_from_schedule(entry["season"], entry["week"], entry["manager_id"], entry["opponent_manager_id"], entry["matchup_type"])
 
 
 def _render_player_start_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -546,7 +520,7 @@ def _render_season_stat_row(key: str, ordinal: str, entry: dict, name_resolver: 
             unsafe_allow_html=True,
         )
     if button_column.button("View Matchup", key=f"season_stat_{key}_{ordinal}", use_container_width=True):
-        _go_to_matchup_from_schedule(entry["season"], entry["week"], entry["winner_manager_id"], entry["loser_manager_id"], entry["matchup_type"])
+        go_to_matchup_from_schedule(entry["season"], entry["week"], entry["winner_manager_id"], entry["loser_manager_id"], entry["matchup_type"])
 
 
 def _render_season_stat_cell(key: str, title: str, top_n: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
@@ -1508,7 +1482,7 @@ def _render_bracket(
                             team1_manager_id = team_info.get(game["team_id_home"], {}).get("manager_id", "")
                             team2_manager_id = team_info.get(game["team_id_away"], {}).get("manager_id", "")
                             matchup_type = "consolation" if is_consolation else "championship"
-                            _go_to_matchup_from_schedule(season, week, team1_manager_id, team2_manager_id, matchup_type)
+                            go_to_matchup_from_schedule(season, week, team1_manager_id, team2_manager_id, matchup_type)
         column_index += 1
 
         if round_index < len(rounds_with_rows) - 1:
@@ -2100,7 +2074,7 @@ def _render_schedule_week(season: int, week: int, name_resolver: dict[str, str],
                 with button_column:
                     st.markdown("<div style='height:1.45rem;'></div>", unsafe_allow_html=True)
                     if st.button("View Matchup", key=f"schedule_view_game_{matchup['matchup_id']}", use_container_width=True):
-                        _go_to_matchup_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
+                        go_to_matchup_from_schedule(season, week, home.get("manager_id", ""), away.get("manager_id", ""))
                 with team2_highlight_column:
                     _render_schedule_highlight(away, name_resolver, manager_color_map, align="right")
 
