@@ -417,7 +417,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     """One bar per matchup: Manager 1's point differential (their score
     minus the opponent's). Only meaningful relative to Manager 1, so this
     is skipped entirely when Manager 1 isn't set. Win bars use Manager
-    1's own color; loss/tie bars use the same neutral gray as the Bench
+    1's own color; loss bars use the same neutral gray as the Bench
     segment elsewhere in the app."""
     if not team1_manager_id:
         return
@@ -464,7 +464,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         tick_angle = 0
 
     # Split into two REAL traces (not one bar trace + dummy legend
-    # markers) so clicking "Win"/"Loss/Tie" in the legend actually
+    # markers) so clicking "Win"/"Loss" in the legend actually
     # toggles those bars - a single trace's legend entry can only
     # show/hide that whole trace, and a dummy marker trace has no bars
     # of its own to hide. Both traces share the same x_positions/win_diff
@@ -485,13 +485,13 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
         x=x_positions,
         y=loss_diffs,
         marker={"color": COLOR_PLAYER_BENCH, "cornerradius": BAR_CHART_CORNER_RADIUS},
-        name="Loss/Tie",
+        name="Loss",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
         # Plotly's default "group" mode gives each trace its own half-width
-        # slot at every x, so the Win and Loss/Tie bars (which never share
+        # slot at every x, so the Win and Loss bars (which never share
         # an x) sat off-center and unevenly spaced. "overlay" centers every
         # bar on its own x position.
         barmode="overlay",

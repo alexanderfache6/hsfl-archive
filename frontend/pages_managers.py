@@ -343,21 +343,19 @@ def _render_historical_stats_tab(manager: dict) -> None:
 
 
 def _head_to_head_records(matchups: list[dict], manager_id: str) -> dict[str, dict[str, float]]:
-    """{opponent_manager_id: {"wins", "losses", "ties", "points_for",
+    """{opponent_manager_id: {"wins", "losses", "points_for",
     "points_against"}} from the given manager's point of view."""
     records: dict[str, dict[str, float]] = {}
     for matchup in matchups:
         home, away = matchup["home"], matchup["away"]
         manager_side, other_side = (home, away) if home["manager_id"] == manager_id else (away, home)
-        record = records.setdefault(other_side["manager_id"], {"wins": 0, "losses": 0, "ties": 0, "points_for": 0.0, "points_against": 0.0})
+        record = records.setdefault(other_side["manager_id"], {"wins": 0, "losses": 0, "points_for": 0.0, "points_against": 0.0})
         record["points_for"] += manager_side["score"]
         record["points_against"] += other_side["score"]
         if manager_side["score"] > other_side["score"]:
             record["wins"] += 1
         elif manager_side["score"] < other_side["score"]:
             record["losses"] += 1
-        else:
-            record["ties"] += 1
     return records
 
 
@@ -417,13 +415,13 @@ def _render_head_to_head_tab(manager_id: str, all_manager_ids: list[str], name_r
     opponent_ids = sorted((opponent_id for opponent_id in all_manager_ids if opponent_id != manager_id), key=lambda opponent_id: resolve_manager_name(opponent_id, name_resolver))
     opponent_names = [resolve_manager_name(opponent_id, name_resolver) for opponent_id in opponent_ids]
     muted_names = {name for opponent_id, name in zip(opponent_ids, opponent_names) if opponent_id not in records}
-    no_matchups = {"wins": 0, "losses": 0, "ties": 0, "points_for": 0.0, "points_against": 0.0}
+    no_matchups = {"wins": 0, "losses": 0, "points_for": 0.0, "points_against": 0.0}
     manager_color = build_manager_color_map().get(manager_id, COLOR_MANAGER_BACKUP)
 
     def _values(field: str) -> list[float]:
         return [records.get(opponent_id, no_matchups)[field] for opponent_id in opponent_ids]
 
-    games = [record["wins"] + record["losses"] + record["ties"] for record in (records.get(opponent_id, no_matchups) for opponent_id in opponent_ids)]
+    games = [record["wins"] + record["losses"] for record in (records.get(opponent_id, no_matchups) for opponent_id in opponent_ids)]
     win_percentages = [wins / game_count if game_count else 0 for wins, game_count in zip(_values("wins"), games)]
     point_differentials = [points_for - points_against for points_for, points_against in zip(_values("points_for"), _values("points_against"))]
 

@@ -352,14 +352,14 @@ def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> di
     ranks 1-3 - post-season final_placements when available (matches the
     Final Standings tab), falling back to the final week's regular-season
     standings rank for a season with no recorded playoff bracket.
-    combined_record sums the regular-season W-L-T with the post-season
+    combined_record sums the regular-season W-L with the post-season
     (championship or consolation bracket) W-L, when there was one."""
     team_info = team_id_to_manager_map(season)
     post_season_stats = load_post_season_stats(season)
     weekly_tables = load_weekly_tables(season)["weeks"]
     if not weekly_tables:
         return {}
-    regular_season_record_by_team = {row["team_id"]: (row["wins"], row["losses"], row["ties"]) for row in weekly_tables[-1]["standings"]}
+    regular_season_record_by_team = {row["team_id"]: (row["wins"], row["losses"]) for row in weekly_tables[-1]["standings"]}
 
     if post_season_stats and post_season_stats.get("final_placements"):
         ranked_team_ids = sorted(post_season_stats["final_placements"].items(), key=lambda entry: entry[1])
@@ -374,14 +374,13 @@ def _top_three_final_standings(season: int, name_resolver: dict[str, str]) -> di
         team_name = info.get("team_name", "")
         manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
 
-        wins, losses, ties = regular_season_record_by_team.get(team_id, (0, 0, 0))
+        wins, losses = regular_season_record_by_team.get(team_id, (0, 0))
         if post_season_stats:
             post_season_record = post_season_stats["championship"].get(team_id) or post_season_stats["consolation"].get(team_id)
             if post_season_record:
                 wins += post_season_record["wins"]
                 losses += post_season_record["losses"]
-                ties += post_season_record["ties"]
-        combined_record = f"{wins}-{losses}-{ties}" if ties else f"{wins}-{losses}"
+        combined_record = f"{wins}-{losses}"
 
         top_three[rank] = (team_id, team_name, manager_name, combined_record)
     return top_three
@@ -611,7 +610,7 @@ def _render_standings_table(season: int, name_resolver: dict[str, str]) -> None:
                 # modal (team name, image, stats, etc), per user
                 # direction that modal's design is a separate discussion.
                 "Team": f"{team_name} ({manager_name})",
-                "W-L-T": f"{row['wins']}-{row['losses']}-{row['ties']}",
+                "W-L": f"{row['wins']}-{row['losses']}",
                 "Win %": row["win_pct"],
                 "Active Streak": int(row["win_streak"][1:]) * (1 if row["win_streak"][0] == "W" else -1) if row["win_streak"] else 0,
                 "Points For": row["points_for"],
@@ -725,7 +724,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
             custom_data.append(
                 [
                     manager_name,
-                    f"{row['wins']}-{row['losses']}-{row['ties']}",
+                    f"{row['wins']}-{row['losses']}",
                     row["weekly"]["result"],
                     _standings_stat_display(stat_value, selected_stat),
                 ]
@@ -739,7 +738,7 @@ def _render_standings_chart(season: int, name_resolver: dict[str, str], manager_
                 name=manager_name,
                 line={"color": manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP)},
                 customdata=custom_data,
-                hovertemplate=(f"<b>%{{customdata[0]}}<br></b>W-L-T: %{{customdata[1]}}<br>Week Result: %{{customdata[2]}}<br>Cumulative {selected_stat}: " + "%{customdata[3]}<extra></extra>"),
+                hovertemplate=(f"<b>%{{customdata[0]}}<br></b>W-L: %{{customdata[1]}}<br>Week Result: %{{customdata[2]}}<br>Cumulative {selected_stat}: " + "%{customdata[3]}<extra></extra>"),
             )
         )
 
@@ -788,12 +787,12 @@ def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
         row = {
             "Rank": cumulative["rank"],
             "Team": f"{team_name} ({manager_name})",
-            "Overall W-L-T": f"{cumulative['wins']}-{cumulative['losses']}-{cumulative['ties']}",
+            "Overall W-L": f"{cumulative['wins']}-{cumulative['losses']}",
         }
         for week_table in weekly_tables:
             week_row = next((r for r in week_table["breakdown"] if r["team_id"] == team_id), None)
             weekly = week_row["weekly"] if week_row else None
-            row[f"Wk {week_table['week']}"] = f"{weekly['wins']}-{weekly['losses']}-{weekly['ties']}" if weekly else "—"
+            row[f"Wk {week_table['week']}"] = f"{weekly['wins']}-{weekly['losses']}" if weekly else "—"
         rows.append(row)
 
     dataframe = pd.DataFrame(rows).sort_values("Rank")
@@ -806,10 +805,10 @@ def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
     def _highlight_perfect_week(value: str) -> str:
         if value == "—" or "-" not in value:
             return ""
-        wins, losses, ties = (int(part) for part in value.split("-"))
-        if losses == 0 and ties == 0 and wins > 0:
+        wins, losses = (int(part) for part in value.split("-"))
+        if losses == 0 and wins > 0:
             return f"background-color: {COLOR_EXTREME_MAX}"
-        if wins == 0 and ties == 0 and losses > 0:
+        if wins == 0 and losses > 0:
             return f"background-color: {COLOR_EXTREME_MIN}"
         return ""
 
@@ -824,7 +823,7 @@ def _render_breakdown_table(season: int, name_resolver: dict[str, str]) -> None:
         column_config={
             "Rank": st.column_config.Column(pinned=True),
             "Team": st.column_config.Column(pinned=True),
-            "Overall W-L-T": st.column_config.Column(pinned=True),
+            "Overall W-L": st.column_config.Column(pinned=True),
         },
     )
 
@@ -854,14 +853,14 @@ def _render_breakdown_chart(season: int, name_resolver: dict[str, str], manager_
                 continue
             cumulative = row["cumulative"]
             weekly = row["weekly"]
-            games = cumulative["wins"] + cumulative["losses"] + cumulative["ties"]
-            percentage = round((cumulative["wins"] + 0.5 * cumulative["ties"]) / games * 100, 1) if games else None
+            games = cumulative["wins"] + cumulative["losses"]
+            percentage = round(cumulative["wins"] / games * 100, 1) if games else None
             percentages.append(percentage)
             custom_data.append(
                 [
                     manager_name,
-                    f"{cumulative['wins']}-{cumulative['losses']}-{cumulative['ties']}",
-                    f"{weekly['wins']}-{weekly['losses']}-{weekly['ties']}",
+                    f"{cumulative['wins']}-{cumulative['losses']}",
+                    f"{weekly['wins']}-{weekly['losses']}",
                     f"{percentage:.1f}%" if percentage is not None else "—",
                 ]
             )
@@ -1681,7 +1680,7 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
         team_name = info.get("team_name", "")
 
         regular_row = regular_season_standings.get(team_id, {})
-        wins, losses, ties = regular_row.get("wins", 0), regular_row.get("losses", 0), regular_row.get("ties", 0)
+        wins, losses = regular_row.get("wins", 0), regular_row.get("losses", 0)
         points_for, points_against = regular_row.get("points_for", 0.0), regular_row.get("points_against", 0.0)
 
         if post_season_stats:
@@ -1689,7 +1688,6 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
             if post_season_record:
                 wins += post_season_record["wins"]
                 losses += post_season_record["losses"]
-                ties += post_season_record["ties"]
                 points_for += post_season_record["points_for"]
                 points_against += post_season_record["points_against"]
 
@@ -1705,7 +1703,6 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
                 "regular_season_rank": regular_row.get("rank", rank),
                 "wins": wins,
                 "losses": losses,
-                "ties": ties,
                 "point_difference": points_for - points_against,
                 "active_streak": active_streak,
             }
@@ -1737,7 +1734,7 @@ def _render_season_summary_paragraph(season: int, name_resolver: dict[str, str],
     sentences = []
 
     if champion_row:
-        record = f"{champion_row['wins']}-{champion_row['losses']}-{champion_row['ties']}" if champion_row["ties"] else f"{champion_row['wins']}-{champion_row['losses']}"
+        record = f"{champion_row['wins']}-{champion_row['losses']}"
         sentences.append(f"{champion_row['team_name']}, run by team manager {champion_row['manager_name']}, won the {season} championship with a final record of {record}.")
         championship_count = placement_counts_by_manager_id.get(champion_row["manager_id"], {}).get(1, 0)
         sentences.append(f"This is {champion_row['manager_name']}'s {ordinal_word(championship_count)} championship ({EMOJI_FIRST_PLACE * championship_count})." if championship_count > 1 else f"This is {champion_row['manager_name']}'s first championship{'!' * championship_count}")
@@ -1854,7 +1851,7 @@ def _render_season_podium(season: int, name_resolver: dict[str, str]) -> None:
 
 def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> None:
     """Combined regular + post-season table - same combined-record idea
-    as the podium/Final Standings tab, but every team, with W-L-T/Win
+    as the podium/Final Standings tab, but every team, with W-L/Win
     %/Points For/Points Against all summing the regular season with
     whichever post-season bracket (if any) that team played in."""
     st.subheader("End of Postseason Standings")
@@ -1882,7 +1879,7 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
         manager_name = resolve_manager_name(info.get("manager_id", ""), name_resolver, info.get("display_name", ""))
 
         regular_row = regular_season_standings.get(team_id, {})
-        wins, losses, ties = regular_row.get("wins", 0), regular_row.get("losses", 0), regular_row.get("ties", 0)
+        wins, losses = regular_row.get("wins", 0), regular_row.get("losses", 0)
         points_for, points_against = regular_row.get("points_for", 0.0), regular_row.get("points_against", 0.0)
 
         bracket_name = "—"
@@ -1893,13 +1890,12 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
                     bracket_name = candidate_name
                     wins += post_season_record["wins"]
                     losses += post_season_record["losses"]
-                    ties += post_season_record["ties"]
                     points_for += post_season_record["points_for"]
                     points_against += post_season_record["points_against"]
                     break
 
-        games_played = wins + losses + ties
-        win_pct = (wins + 0.5 * ties) / games_played if games_played else 0.0
+        games_played = wins + losses
+        win_pct = wins / games_played if games_played else 0.0
 
         rows.append(
             {
@@ -1907,7 +1903,7 @@ def _render_season_summary_table(season: int, name_resolver: dict[str, str]) -> 
                 "Podium": PODIUM_EMOJI.get(rank) or (LAST_PLACE_EMOJI if rank == last_place_rank else ""),
                 "Team": f"{team_name} ({manager_name})",
                 "Bracket": bracket_name,
-                "W-L-T": f"{wins}-{losses}-{ties}",
+                "W-L": f"{wins}-{losses}",
                 "Win %": win_pct,
                 "Points For": points_for,
                 "Points Against": points_against,
@@ -1968,7 +1964,7 @@ def _render_schedule_record(standings_row: dict | None, align: str) -> None:
     if not standings_row:
         return
     lines = [
-        f"Record: {standings_row['wins']}-{standings_row['losses']}-{standings_row['ties']}",
+        f"Record: {standings_row['wins']}-{standings_row['losses']}",
         f"Streak: {standings_row['win_streak'] or '—'}",
         f"Rank: {standings_row['rank']}",
     ]
