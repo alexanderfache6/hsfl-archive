@@ -2166,7 +2166,7 @@ def render_seasons_page() -> None:
     # Single mandatory season (not an "Any" filter like Players/Games -
     # this whole tab is inherently scoped to one season at a time),
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="seasons_season")  # NOTE key allows for session_state switch_page jumps
+    selected_season = st.selectbox("Select Season", sorted(seasons, reverse=True), index=0, key="seasons_season")  # NOTE key allows for session_state switch_page jumps
 
     name_resolver = build_manager_name_resolver()
     manager_color_map = build_manager_color_map()

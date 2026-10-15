@@ -1532,7 +1532,7 @@ def _render_individual_player_stats_tab() -> None:
     # Only seasons this specific player actually has data for - same
     # "Any" (single season or all) treatment as the Matchups tab's Season
     # filter.
-    player_seasons = sorted({entry["season"] for entry in ownership_data.get(selected_player_id, [])}) if selected_player_id else []
+    player_seasons = sorted({entry["season"] for entry in ownership_data.get(selected_player_id, [])}, reverse=True) if selected_player_id else []
     season_widget_key = versioned_key("player_season_filter")
     # A previously-picked season can fall outside the new player's
     # player_seasons (e.g. a season picked before switching players) -
@@ -1682,10 +1682,10 @@ def _render_player_comparison_tab() -> None:
 
     # Row 1: season, then position (the season's own roster-slot order,
     # FLEX included) - both required before any player can be picked.
-    all_seasons = sorted({entry["season"] for entries in ownership_data.values() for entry in entries})
+    all_seasons = sorted({entry["season"] for entries in ownership_data.values() for entry in entries}, reverse=True)
     season_column, position_column, _, _ = st.columns(COMPARISON_PLAYER_COUNT)
     with season_column:
-        selected_season = st.selectbox("Season", all_seasons, index=None, placeholder="Select a season", key=versioned_key("player_comparison_season"))
+        selected_season = st.selectbox("Season", all_seasons, index=0, key=versioned_key("player_comparison_season"))
 
     # The slot key for FLEX is "W/R" in the roster settings; shown as FLEX.
     position_options = list(load_starting_slot_counts(selected_season)) if selected_season else []

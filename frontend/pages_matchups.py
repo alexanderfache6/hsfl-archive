@@ -168,7 +168,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # Manager 1 is picked - showing the full unfiltered season list first
     # would let a user pick a season Manager 1 never actually played,
     # which is confusing even though it gets reset automatically below.
-    season_options = sorted({matchup["season"] for matchup in load_matchups(None, current_week, team1_manager_id, current_team2, current_type)}) if team1_manager_id else []
+    season_options = sorted({matchup["season"] for matchup in load_matchups(None, current_week, team1_manager_id, current_team2, current_type)}, reverse=True) if team1_manager_id else []
     # A previously-picked season can fall outside the new Manager 1's
     # season_options (e.g. Season=2015 picked before Manager 1 was set,
     # then a Manager 1 who never played 2015 gets chosen) - Streamlit

@@ -1335,7 +1335,7 @@ def _render_archive_analysis_tab() -> None:
 def _render_recap_tab(seasons):
     # Single mandatory season (same pattern as pages_seasons.py) -
     # defaulting to the most recent one.
-    selected_season = st.selectbox("Select Season", seasons, index=len(seasons) - 1, key="drafts_season")
+    selected_season = st.selectbox("Select Season", sorted(seasons, reverse=True), index=0, key="drafts_season")
 
     draft_recap_tab, manager_recap_tab = st.tabs(["Draft Recap", "Manager Recap"])
 
