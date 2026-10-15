@@ -322,14 +322,11 @@ def _render_league_summary_paragraph(champions_data: dict, name_resolver: dict[s
         champion_row = next((row for row in season_entry["top_3"] if row["rank"] == 1), None)
         if not champion_row:
             continue
-        champion_manager_id = champion_row.get("champion_manager_id", "")
+        champion_manager_id = champion_row.get("manager_id", "")
         championship_count_by_manager[champion_manager_id] = championship_count_by_manager.get(champion_manager_id, 0) + 1
         reigning_champion_entry = (champion_manager_id, champion_row, championship_count_by_manager[champion_manager_id])
 
     number_of_champions = len(championship_count_by_manager)
-
-    if not championship_count_by_manager:
-        return
 
     most_winning_manager_id = max(championship_count_by_manager, key=lambda manager_id: championship_count_by_manager[manager_id])
     most_winning_manager_number_of_championships = championship_count_by_manager[most_winning_manager_id]
