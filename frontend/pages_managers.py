@@ -221,8 +221,8 @@ def _render_season_stats_chart(season: int, weeks: list[int], manager_id: str) -
     hovertemplate = "<b>%{x}</b><br>Total Points: %{customdata[0]:.2f}<br>Optimal Points: %{customdata[1]:.2f}<br>Points Missed: %{customdata[2]:.2f}<br>Optimal Starters: %{customdata[3]} / %{customdata[4]}<extra></extra>"
 
     figure = go.Figure()
-    figure.add_trace(go.Bar(x=week_labels, y=points, name="Total Points", marker={"color": COLOR_PLAYER_STARTER, "cornerradius": BAR_CHART_CORNER_RADIUS}, customdata=hover_data, hovertemplate=hovertemplate))
-    figure.add_trace(go.Bar(x=week_labels, y=optimal_points, name="Optimal Points", marker={"color": COLOR_OPTIMAL_OUTLINE, "cornerradius": BAR_CHART_CORNER_RADIUS}, customdata=hover_data, hovertemplate=hovertemplate))
+    figure.add_trace(go.Bar(x=week_labels, y=points, name="Total Points", marker={"color": COLOR_PLAYER_STARTER}, customdata=hover_data, hovertemplate=hovertemplate))
+    figure.add_trace(go.Bar(x=week_labels, y=optimal_points, name="Optimal Points", marker={"color": COLOR_OPTIMAL_OUTLINE}, customdata=hover_data, hovertemplate=hovertemplate))
     figure.add_trace(
         go.Scatter(
             x=week_labels,
@@ -237,6 +237,7 @@ def _render_season_stats_chart(season: int, weeks: list[int], manager_id: str) -
         )
     )
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         barmode="group",
         xaxis={"title": "Week", "type": "category"},
         yaxis={"title": "Points"},
@@ -334,6 +335,7 @@ def _render_historical_stats_tab(manager: dict) -> None:
     elif is_whole_number:
         yaxis.update({"tickformat": "d", "nticks": integer_yaxis_nticks(values)})
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         xaxis={"title": "Season", "type": "category"},
         yaxis=yaxis,
         showlegend=False,

@@ -25,6 +25,7 @@ from colors import (
     COLOR_TRANSACTION_TYPES,
 )
 from constants import (
+    BAR_CHART_CORNER_RADIUS,
     EMOJI_FIRST_PLACE,
     EMOJI_LAST_PLACE,
     EMOJI_SECOND_PLACE,
@@ -1311,6 +1312,7 @@ def _render_transactions_chart(chart_rows: list[dict]) -> None:
     figure.update_layout(
         title="Transaction Count",
         barmode="stack",
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         xaxis_title="Date",
         yaxis_title="Transaction Count",
         # nticks caps the y-axis at ~10 gridlines regardless of the max

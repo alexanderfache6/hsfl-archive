@@ -434,7 +434,7 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     figure.add_bar(
         x=x_positions,
         y=win_diffs,
-        marker={"color": manager1_color, "cornerradius": BAR_CHART_CORNER_RADIUS},
+        marker={"color": manager1_color},
         name="Win",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",
@@ -442,12 +442,13 @@ def _render_diff_chart(matchups: list[dict], team1_manager_id: str | None, seaso
     figure.add_bar(
         x=x_positions,
         y=loss_diffs,
-        marker={"color": COLOR_PLAYER_BENCH, "cornerradius": BAR_CHART_CORNER_RADIUS},
+        marker={"color": COLOR_PLAYER_BENCH},
         name="Loss",
         customdata=hover_text,
         hovertemplate="%{customdata}<extra></extra>",
     )
     figure.update_layout(
+        barcornerradius=BAR_CHART_CORNER_RADIUS,
         # Plotly's default "group" mode gives each trace its own half-width
         # slot at every x, so the Win and Loss bars (which never share
         # an x) sat off-center and unevenly spaced. "overlay" centers every
