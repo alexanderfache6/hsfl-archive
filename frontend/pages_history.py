@@ -701,16 +701,29 @@ def _render_career_manager_stat_chart(dataframe: pd.DataFrame, manager_color_map
     chart_data = chart_data.sort_values(selected_stat, ascending=ascending)
     bar_colors = [manager_color_map.get(manager_id, COLOR_MANAGER_BACKUP) for manager_id in chart_data["manager_id"]]
 
+    # Whole numbers for plain counts. Doubles for anything per season / per
+    # game, and for stats that are inherently decimal (the formats the
+    # standings table already uses: Win %, average finishes, points).
+    if normalization != "all_time":
+        value_format = ".2f"
+    elif selected_stat in MANAGER_STAT_COLUMN_FORMATS:
+        value_format = MANAGER_STAT_COLUMN_FORMATS[selected_stat].lstrip("%")
+    else:
+        value_format = ",.0f"
+
     stat_figure = go.Figure(
         go.Bar(
             x=chart_data["Manager"],
             y=chart_data[selected_stat],
             marker={"color": bar_colors},
-            hovertemplate="%{x}<br>" + selected_stat_label + ": %{y}<extra></extra>",
+            hovertemplate="%{x}<br>" + selected_stat_label + ": %{y:" + value_format + "}<extra></extra>",
         )
     )
     yaxis = {"nticks": CHART_YAXIS_MAX_TICKS}
-    if selected_stat != "Win %":
+    if normalization == "per_game" and selected_stat in ("W", "L"):
+        # A per-game win/loss rate gets the same 0.1-step ticks as Win %, up to the first tick that covers the tallest bar.
+        yaxis.update({"range": [0, math.ceil(chart_data[selected_stat].max() * 10) / 10], "tick0": 0, "dtick": 0.1, "tickformat": ".1f"})
+    elif selected_stat != "Win %":
         # NOTE whole number ticks between 1 and max
         yaxis.update({"tickformat": "d", "tick0": 0, "dtick": max(1, math.ceil(chart_data[selected_stat].max() / CHART_YAXIS_MAX_TICKS))})
     stat_figure.update_layout(
