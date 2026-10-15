@@ -157,17 +157,14 @@ def _render_depth_chart(season: int, week: int, manager_id: str, show_optimal: b
     backups = _assign_backups(starters, side["bench"])
     card_optimal_details = optimal_details if show_optimal else None
 
-    points_column, optimal_points_column, optimal_started_column = st.columns(3)
-    points_column.metric("Total Points", f"{summary['points']:.2f}")
-    optimal_points_column.metric("Optimal Points", f"{summary['optimal_points']:.2f}")
-    optimal_started_column.metric("Optimal Players Started", f"{summary['optimal_started_count']} / {summary['starter_count']}")
-
-    # Row 2: whole-roster (starters + bench) status counts, value colored
-    # to match the BYE / IR card codes.
+    # All five metrics in one row; the bye / IR counts are colored to match the BYE / IR card codes.
     style_rules: list[str] = []
     roster_status_codes = [_player_status_code(player) for player in side["starters"] + side["bench"]]
     key_prefix = f"depth_{season}_{week}_{manager_id}"
-    bye_column, ir_column, _ = st.columns(3)
+    points_column, optimal_points_column, optimal_started_column, bye_column, ir_column = st.columns(5)
+    points_column.metric("Total Points", f"{summary['points']:.2f}")
+    optimal_points_column.metric("Optimal Points", f"{summary['optimal_points']:.2f}")
+    optimal_started_column.metric("Optimal Players Started", f"{summary['optimal_started_count']} / {summary['starter_count']}")
     for column, code, label in ((bye_column, "BYE", "Players on Bye"), (ir_column, "IR", "Players on IR")):
         metric_key = f"{key_prefix}_metric_{code}"
         style_rules.append(f".st-key-{metric_key} [data-testid='stMetricValue'] {{ color: {PLAYER_STATUS_CODES[code][0]}; }}")
