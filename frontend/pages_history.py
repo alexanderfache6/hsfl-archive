@@ -41,7 +41,7 @@ from data_loader import (
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import ordinal_word
+from helpers import manager_pill, ordinal_word
 from strings import SELECT_STAT_TO_VIEW, THE_MUSIC_LEAGUE
 
 # ========================================
@@ -189,8 +189,10 @@ def _years_label(years: list[int], empty_placeholder: str = "") -> str:
     return ", ".join(str(year) for year in sorted(years)) if years else empty_placeholder
 
 
-def _record_context_line(entry: dict, name_resolver: dict[str, str]) -> str:
-    display_name = resolve_manager_name(entry.get("manager_id", ""), name_resolver, entry.get("display_name", ""))
+def _record_context_line(entry: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> str:
+    # The manager shows as their colored pill (same as the Matchups page); a record with no manager id falls back to plain text.
+    manager_id = entry.get("manager_id", "")
+    display_name = manager_pill(manager_id, name_resolver, manager_color_map) if manager_id else entry.get("display_name", "")
 
     if "start_week" in entry:
         # Streak entries: show the full start->end range, not just the
@@ -526,7 +528,7 @@ def _render_championship_charts(champions_data: dict, name_resolver: dict[str, s
         st.plotly_chart(bar_figure, width="stretch")
 
 
-def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
+def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str], row_height: str, score_size: str, info_size: str) -> None:
     # Both the score and info columns get their OWN identically-sized
     # flex box (same explicit row_height, align-items:center) rather
     # than only the info column being wrapped - two separate columns
@@ -542,7 +544,7 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
         )
     with info_column:
         st.markdown(
-            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver)}</span></div>",
+            f"<div style='display:flex; align-items:center; height:{row_height};'><span style='font-size:{info_size}; color:gray;'>{_record_context_line(entry, name_resolver, manager_color_map)}</span></div>",
             unsafe_allow_html=True,
         )
     button_label = "View Matchup" if "week" in entry else "View Season"
@@ -550,7 +552,7 @@ def _render_record_row(key: str, ordinal: str, entry: dict, name_resolver: dict[
         _go_to_matchup(entry)
 
 
-def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, str], label: str | None = None, widget_key: str | None = None) -> None:
+def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, str], manager_color_map: dict[str, str], label: str | None = None, widget_key: str | None = None) -> None:
     # label/widget_key let a caller reuse this same rendering for a
     # record stored under a different underlying data key than its
     # displayed title - the streak row's variant selector swaps which
@@ -576,12 +578,12 @@ def _render_record_cell(key: str, top_n: list[dict], name_resolver: dict[str, st
     # the button's real rendered height (roughly constant regardless of
     # the row) for the score/info text to align with it, even though the
     # 2nd/3rd rows deliberately use smaller font sizes than the 1st.
-    _render_record_row(widget_key, "1", top_n[0], name_resolver, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
+    _render_record_row(widget_key, "1", top_n[0], name_resolver, manager_color_map, row_height="2.4rem", score_size="1.75rem", info_size="1rem")
     for ordinal, entry in zip(("2nd", "3rd"), top_n[1:]):
-        _render_record_row(widget_key, ordinal, entry, name_resolver, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
+        _render_record_row(widget_key, ordinal, entry, name_resolver, manager_color_map, row_height="2.4rem", score_size="1.1rem", info_size="0.85rem")
 
 
-def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> None:
+def _render_streak_row(records_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     with st.container(border=True):
         variant_suffix = st.selectbox(
             "Select Streak Variant",
@@ -594,31 +596,31 @@ def _render_streak_row(records_data: dict, name_resolver: dict[str, str]) -> Non
 
         left_column, right_column = st.columns(2)
         with left_column:
-            _render_record_cell(win_key, records_data.get(win_key) or [], name_resolver, label=RECORD_LABELS["longest_win_streak"])
+            _render_record_cell(win_key, records_data.get(win_key) or [], name_resolver, manager_color_map, label=RECORD_LABELS["longest_win_streak"])
         with right_column:
-            _render_record_cell(loss_key, records_data.get(loss_key) or [], name_resolver, label=RECORD_LABELS["longest_losing_streak"])
+            _render_record_cell(loss_key, records_data.get(loss_key) or [], name_resolver, manager_color_map, label=RECORD_LABELS["longest_losing_streak"])
 
 
-def _render_records_metrics(records_data: dict, name_resolver: dict[str, str]) -> None:
+def _render_records_metrics(records_data: dict, name_resolver: dict[str, str], manager_color_map: dict[str, str]) -> None:
     st.subheader("All-Time Records")
 
     high_key, low_key = RECORD_ROW_PAIRS[0]
     with st.container(border=True):
         left_column, right_column = st.columns(2)
         with left_column:
-            _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
+            _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver, manager_color_map)
         with right_column:
-            _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
+            _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver, manager_color_map)
 
-    _render_streak_row(records_data, name_resolver)
+    _render_streak_row(records_data, name_resolver, manager_color_map)
 
     for high_key, low_key in RECORD_ROW_PAIRS[1:]:
         with st.container(border=True):
             left_column, right_column = st.columns(2)
             with left_column:
-                _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver)
+                _render_record_cell(high_key, records_data.get(high_key) or [], name_resolver, manager_color_map)
             with right_column:
-                _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver)
+                _render_record_cell(low_key, records_data.get(low_key) or [], name_resolver, manager_color_map)
 
 
 def _render_career_manager_standings_table(dataframe: pd.DataFrame) -> None:
@@ -739,6 +741,6 @@ def render_history_page() -> None:
     _render_league_summary_paragraph(champions_data, name_resolver)
     _render_wall_of_champions_table(champions_data, name_resolver, manager_color_map)
     _render_championship_charts(champions_data, name_resolver, manager_color_map)
-    _render_records_metrics(records_data, name_resolver)
+    _render_records_metrics(records_data, name_resolver, manager_color_map)
     _render_career_manager_standings_table(manager_standings_dataframe)
     _render_career_manager_stat_chart(manager_standings_dataframe, manager_color_map)
