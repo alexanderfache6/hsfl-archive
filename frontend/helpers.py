@@ -578,3 +578,55 @@ def render_html_table(headers: list[str], rows: list[list[str]]) -> None:
     header_html = "".join(f"<th style='text-align:left; padding:6px 10px; border-bottom:2px solid rgba(128,128,128,0.4);'>{header}</th>" for header in headers)
     body_html = "".join("<tr>" + "".join(f"<td style='padding:6px 10px; border-bottom:1px solid rgba(128,128,128,0.2);'>{cell}</td>" for cell in row) + "</tr>" for row in rows)
     st.markdown(f"<table style='width:100%; border-collapse:collapse;'><tr>{header_html}</tr>{body_html}</table>", unsafe_allow_html=True)
+
+
+def matchup_side_header_html(side: dict, is_left_side: bool, name_resolver: dict[str, str], manager_color_map: dict[str, str], extra_score_html: str = "") -> str:
+    """One side of a matchup as a colored block: manager name over team
+    name on its own edge, the score anchored to the opposite edge - shared
+    by the Matchups page cards and the Managers page depth chart.
+    extra_score_html is appended after the score (e.g. the optimal score)."""
+    display_name = resolve_manager_name(side["manager_id"], name_resolver, side.get("display_name", ""))
+    background_color = manager_color_map.get(side["manager_id"], COLOR_MANAGER_BACKUP)
+    text_color = contrasting_text_color(background_color)
+    # flex-direction reverses which child (name vs score) lands on which
+    # edge while keeping the name block's own text left/right-aligned.
+    name_align = "left" if is_left_side else "right"
+    flex_direction = "row" if is_left_side else "row-reverse"
+    return (
+        f"<div style='background-color:{background_color}; color:{text_color}; padding:6px 10px; "
+        f"border-radius:6px; display:flex; flex-direction:{flex_direction}; justify-content:space-between; "
+        f"align-items:center;'>"
+        f"<div style='text-align:{name_align};'><span style='font-weight:600; font-size:1em;'>{display_name}</span><br>"
+        f"<span style='font-weight:400; font-size:0.85em;'>{side['team_name']}</span></div>"
+        f"<div style='font-weight:600; font-size:2em;'>{side['score']:.2f}{extra_score_html}</div>"
+        f"</div>"
+    )
+
+
+# Highlight / button / highlight column split of a matchup row - shared by the Seasons schedule rows and the Managers depth chart matchup card.
+SCHEDULE_ROW_COLUMN_RATIOS = [4, 1.8, 4]
+
+
+def go_to_matchup_from_schedule(season: int, week: int, team1_manager_id: str, team2_manager_id: str, matchup_type: str = "regular") -> None:
+    """Jumps to the Matchups page pre-filtered to this exact matchup,
+    same st.switch_page pattern as the History tab's _go_to_matchup -
+    must be called from the main script body (not a button's on_click
+    callback), since st.switch_page is a no-op/error from within a
+    callback. matchup_type defaults to "regular" for the Schedule tab's
+    own call site, but the Bracket tab (see _render_bracket) passes
+    "championship"/"consolation" through the same function."""
+    st.session_state["matchups_team1_manager_id"] = team1_manager_id
+    st.session_state["matchups_season"] = season
+    st.session_state["matchups_week"] = week
+    st.session_state["matchups_team2_manager_id"] = team2_manager_id
+    st.session_state["matchups_matchup_type"] = matchup_type
+    st.session_state["matchups_filters_generation"] = st.session_state.get("matchups_filters_generation", 0) + 1
+    st.session_state["matchups_applied_filters"] = {
+        "season": season,
+        "week": week,
+        "team1_manager_id": team1_manager_id,
+        "team2_manager_id": team2_manager_id,
+        "matchup_type": matchup_type,
+    }
+    st.switch_page(st.session_state["_matchups_page"])
+

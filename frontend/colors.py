@@ -21,7 +21,7 @@ COLOR_MANAGER_PALETTE = [
     "#FF7F00",
     "#CAB2D6",
     "#6A3D9A",
-    "#FFF449",
+    "#EAAA00",
     "#B15928",
 ]
 

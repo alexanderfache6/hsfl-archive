@@ -41,14 +41,13 @@ from data_loader import (
     CHART_YAXIS_MAX_TICKS,
     build_manager_color_map,
     build_manager_name_resolver,
-    contrasting_text_color,
     load_all_time_manager_stats,
     load_matchups,
     load_post_season_stats,
     resolve_manager_name,
     team_id_to_manager_map,
 )
-from helpers import manager_pill, optimal_lineup_details, pad_missing_starters, render_record_metrics, render_season_qualification_metrics
+from helpers import manager_pill, matchup_side_header_html, optimal_lineup_details, pad_missing_starters, render_record_metrics, render_season_qualification_metrics
 from player_modal import open_player_stats_modal
 from strings import CLEAR_FILTERS, SELECT_MANAGER_1, TOGGLE_OPTIMAL_LINEUP
 
@@ -169,7 +168,7 @@ def _render_filters(name_resolver: dict[str, str]) -> dict | None:
     # Manager 1 is picked - showing the full unfiltered season list first
     # would let a user pick a season Manager 1 never actually played,
     # which is confusing even though it gets reset automatically below.
-    season_options = sorted({matchup["season"] for matchup in load_matchups(None, current_week, team1_manager_id, current_team2, current_type)}) if team1_manager_id else []
+    season_options = sorted({matchup["season"] for matchup in load_matchups(None, current_week, team1_manager_id, current_team2, current_type)}, reverse=True) if team1_manager_id else []
     # A previously-picked season can fall outside the new Manager 1's
     # season_options (e.g. Season=2015 picked before Manager 1 was set,
     # then a Manager 1 who never played 2015 gets chosen) - Streamlit
@@ -602,31 +601,12 @@ def _render_matchup_card(matchup: dict, team1_manager_id: str | None, name_resol
 
         for column, side, is_left_side in ((left_column, left, True), (right_column, right, False)):
             with column:
-                display_name = resolve_manager_name(side["manager_id"], name_resolver, side.get("display_name", ""))
-                background_color = manager_color_map.get(side["manager_id"], COLOR_MANAGER_BACKUP)
-                text_color = contrasting_text_color(background_color)
                 # Computed once per side and reused for both the header
                 # score and the bench table below, rather than solving
                 # the optimal lineup twice.
                 optimal_details = optimal_lineup_details(side, matchup["season"]) if show_optimal else None
                 optimal_score_html = f" <span style='font-size:0.5em; font-weight:400;'>({optimal_details['optimal_points']:.2f})</span>" if optimal_details else ""
-                # Name/team block aligns to its own side of the card; the
-                # score joins the same colored block but anchors to the
-                # OPPOSITE side - flex-direction reverses which child (name
-                # vs score) lands on which edge while keeping the name
-                # block's own text left/right-aligned within itself.
-                name_align = "left" if is_left_side else "right"
-                flex_direction = "row" if is_left_side else "row-reverse"
-                st.markdown(
-                    f"<div style='background-color:{background_color}; color:{text_color}; padding:6px 10px; "
-                    f"border-radius:6px; display:flex; flex-direction:{flex_direction}; justify-content:space-between; "
-                    f"align-items:center;'>"
-                    f"<div style='text-align:{name_align};'><span style='font-weight:600; font-size:1em;'>{display_name}</span><br>"
-                    f"<span style='font-weight:400; font-size:0.85em;'>{side['team_name']}</span></div>"
-                    f"<div style='font-weight:600; font-size:2em;'>{side['score']:.2f}{optimal_score_html}</div>"
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
+                st.markdown(matchup_side_header_html(side, is_left_side, name_resolver, manager_color_map, optimal_score_html), unsafe_allow_html=True)
                 # Unique per matchup+side so button keys never collide
                 # across the many cards that can be on screen at once
                 # (e.g. Season filter set to "Any").
